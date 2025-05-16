@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>EUT Upgrade Calculator - Accordion Style</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 700px;
+    margin: auto;
+    padding: 20px;
+  }
+  .accordion-item {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .accordion-header {
+    background: #f2f2f2;
+    cursor: pointer;
+    padding: 12px 15px;
+    font-weight: bold;
+    user-select: none;
+  }
+  .accordion-header:hover {
+    background: #ddd;
+  }
+  .accordion-content {
+    padding: 15px;
+    display: none;
+    background: #fafafa;
+  }
+  .accordion-content.active {
+    display: block;
+  }
+  label {
+    display: block;
+    margin: 8px 0 3px;
+  }
+  input[type=number] {
+    width: 100%;
+    padding: 6px;
+    font-size: 1em;
+    box-sizing: border-box;
+  }
+  .result {
+    margin-top: 10px;
+    font-weight: bold;
+  }
+  .affordable {
+    color: green;
+  }
+  .not-affordable {
+    color: red;
+  }
+  button {
+    margin-top: 15px;
+    padding: 10px 20px;
+    font-size: 1.1em;
+    cursor: pointer;
+    border-radius: 5px;
+    border: 1px solid #444;
+    background: #eee;
+  }
+  button:hover {
+    background: #ddd;
+  }
+</style>
+</head>
+<body>
+
+<h1>EUT Upgrade Calculator</h1>
+<p>Click a currency to expand its input fields.</p>
+
+<div id="accordion-container"></div>
+
+<button onclick="calculate()">Calculate All</button>
+
+<script>
+const currencies = [
+  { name: "Points (₽)", key: "points" },
+  { name: "Research Points (λ)", key: "research_points" },
+  { name: "Prestige Points (₹)", key: "prestige_points" },
+  { name: "Bits (฿)", key: "bits" },
+  { name: "Point-X (₽X)", key: "point_x" },
+  { name: "Solar Masses (⊙)", key: "solar_masses" },
+  { name: "Transcend Points (ꚍ)", key: "transcend_points" },
+  { name: "Ions (Λ)", key: "ions" },
+  { name: "Qubits (Ψ)", key: "qubits" },
+  { name: "Euros (€)", key: "euros" },
+  { name: "Level Experience (XP)", key: "level_xp" }
+];
+
+function geometricSum(base, mult, n) {
+  if (n === 0) return 0;
+  if (mult === 1) return base * n;
+  return base * (Math.pow(mult, n) - 1) / (mult - 1);
+}
+
+function createAccordionItem(currency) {
+  const container = document.createElement('div');
+  container.className = 'accordion-item';
+
+  const header = document.createElement('div');
+  header.className = 'accordion-header';
+  header.textContent = currency.name;
+  container.appendChild(header);
+
+  const content = document.createElement('div');
+  content.className = 'accordion-content';
+
+  content.innerHTML = `
+    <label for="${currency.key}-current">Current Amount:</label>
+    <input type="number" id="${currency.key}-current" min="0" step="any" value="0" />
+
+    <label for="${currency.key}-base">Base Upgrade Cost:</label>
+    <input type="number" id="${currency.key}-base" min="0" step="any" value="0" />
+
+    <label for="${currency.key}-multiplier">Cost Multiplier (≥1):</label>
+    <input type="number" id="${currency.key}-multiplier" min="1" step="any" value="1" />
+
+    <label for="${currency.key}-upgrades">Upgrades to Buy:</label>
+    <input type="number" id="${currency.key}-upgrades" min="0" step="1" value="0" />
+
+    <div class="result" id="${currency.key}-result">Result will show here after calculation.</div>
+  `;
+
+  container.appendChild(content);
+
+  header.addEventListener('click', () => {
+    // Close all others
+    document.querySelectorAll('.accordion-content').forEach(c => {
+      if (c !== content) c.classList.remove('active');
+    });
+    // Toggle current one
+    content.classList.toggle('active');
+  });
+
+  return container;
+}
+
+function buildAccordion() {
+  const container = document.getElementById('accordion-container');
+  currencies.forEach(c => {
+    container.appendChild(createAccordionItem(c));
+  });
+}
+
+function calculate() {
+  currencies.forEach(c => {
+    const current = parseFloat(document.getElementById(c.key + '-current').value) || 0;
+    const base = parseFloat(document.getElementById(c.key + '-base').value) || 0;
+    let mult = parseFloat(document.getElementById(c.key + '-multiplier').value);
+    if (isNaN(mult) || mult < 1) mult = 1;
+    let n = parseInt(document.getElementById(c.key + '-upgrades').value);
+    if (isNaN(n) || n < 0) n = 0;
+
+    const totalCost = geometricSum(base, mult, n);
+    const leftover = current - totalCost;
+    const affordable = leftover >= 0;
+
+    const resultDiv = document.getElementById(c.key + '-result');
+    if (n === 0) {
+      resultDiv.textContent = "No upgrades planned.";
+      resultDiv.className = 'result';
+    } else {
+      resultDiv.innerHTML = `
+        Total Cost: ${totalCost.toFixed(2)}<br>
+        Leftover: ${leftover.toFixed(2)}<br>
+        Status: <span class="${affordable ? 'affordable' : 'not-affordable'}">${affordable ? 'Affordable' : 'Not Affordable'}</span>
+      `;
+    }
+  });
+}
+
+window.onload = buildAccordion;
+</script>
+
+</body>
+</html>
