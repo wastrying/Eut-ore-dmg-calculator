@@ -13,14 +13,14 @@
     }
 
     h1 {
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
 
     .currency-tabs {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      margin: 0 auto 20px;
+      margin: 0 auto;
       width: fit-content;
       border-radius: 8px 8px 0 0;
       overflow: hidden;
@@ -45,7 +45,9 @@
     .currency-tabs button.active {
       background-color: white;
       border-bottom: 1px solid white;
-      color: black;
+      position: relative;
+      z-index: 2;
+      color: white;
     }
 
     .input-section {
@@ -53,132 +55,160 @@
       border: 1px solid #ccc;
       border-top: none;
       padding: 20px;
-      width: 80%;
+      width: 60%;
       margin: 0 auto;
       border-radius: 0 0 8px 8px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.15);
       background-color: white;
+      z-index: 1;
+      position: relative;
     }
 
     .input-section.active {
       display: block;
     }
 
-    .input-section label {
-      display: block;
-      margin-top: 10px;
-    }
-
     .input-section input {
       width: 90%;
       padding: 10px;
-      margin: 5px 0;
+      margin: 8px 0;
       font-size: 16px;
     }
 
-    .points-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
-      margin-top: 30px;
-    }
+    .tab-₽.active { background-color: gray; }
+    #section-₽ { border-left: 6px solid gray; }
 
-    .point-box {
-      background: #fff;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
+    .tab-λ.active { background-color: #007bff; }
+    #section-λ { border-left: 6px solid #007bff; }
 
-    .point-box h4 {
-      margin: 0 0 10px;
-    }
+    .tab-₹.active { background-color: #f1c40f; }
+    #section-₹ { border-left: 6px solid #f1c40f; }
 
-    .point-box input[type='number'] {
-      width: 80px;
-      font-size: 16px;
-      text-align: center;
-    }
+    .tab-฿.active { background-color: #e74c3c; }
+    #section-฿ { border-left: 6px solid #e74c3c; }
+
+    .tab-₽X.active { background-color: #9b59b6; }
+    #section-₽X { border-left: 6px solid #9b59b6; }
+
+    .tab-⊙.active { background-color: #ff9900; }
+    #section-⊙ { border-left: 6px solid #ff9900; }
+
+    .tab-τ.active { background-color: #00ffff; }
+    #section-τ { border-left: 6px solid #00ffff; }
+
+    .tab-Λ.active { background-color: #20c9c9; }
+    #section-Λ { border-left: 6px solid #20c9c9; }
+
+    .tab-Ψ.active { background-color: #008080; }
+    #section-Ψ { border-left: 6px solid #008080; }
+
+    .tab-€.active { background-color: #4b0082; }
+    #section-€ { border-left: 6px solid #4b0082; }
+
+    .tab-XP.active { background-color: #cccccc; }
+    #section-XP { border-left: 6px solid #cccccc; }
   </style>
 </head>
 <body>
+
   <h1>EUT Advance Calculator</h1>
 
   <div class="currency-tabs">
-    <button class="tab" onclick="showSection('₽')">₽</button>
-    <button class="tab" onclick="showSection('λ')">λ</button>
-    <button class="tab" onclick="showSection('₹')">₹</button>
-    <button class="tab" onclick="showSection('฿')">฿</button>
-    <button class="tab" onclick="showSection('₽X')">₽X</button>
-    <button class="tab" onclick="showSection('⊙')">⊙</button>
-    <button class="tab" onclick="showSection('τ')">τ</button>
-    <button class="tab" onclick="showSection('Λ')">Λ</button>
-    <button class="tab" onclick="showSection('Ψ')">Ψ</button>
-    <button class="tab" onclick="showSection('€')">€</button>
-    <button class="tab" onclick="showSection('XP')">XP</button>
-    <button class="tab" onclick="showSection('Points')">Points</button>
+    <button class="tab tab-₽" onclick="showSection('₽')">₽</button>
+    <button class="tab tab-λ" onclick="showSection('λ')">λ</button>
+    <button class="tab tab-₹" onclick="showSection('₹')">₹</button>
+    <button class="tab tab-฿" onclick="showSection('฿')">฿</button>
+    <button class="tab tab-₽X" onclick="showSection('₽X')">₽X</button>
+    <button class="tab tab-⊙" onclick="showSection('⊙')">⊙</button>
+    <button class="tab tab-τ" onclick="showSection('τ')">τ</button>
+    <button class="tab tab-Λ" onclick="showSection('Λ')">Λ</button>
+    <button class="tab tab-Ψ" onclick="showSection('Ψ')">Ψ</button>
+    <button class="tab tab-€" onclick="showSection('€')">€</button>
+    <button class="tab tab-XP" onclick="showSection('XP')">XP</button>
   </div>
 
+  <!-- ₽ POINTS PANEL -->
   <div id="section-₽" class="input-section">
-    <label>Current ₽:</label><input type="number">
-    <label>Upgrade Cost:</label><input type="number">
-    <label>Multiplier:</label><input type="number">
+    <h2>₽ Points</h2>
+    <div id="points-list"></div>
   </div>
 
-  <!-- Repeat same structure for all currencies -->
-  <div id="section-λ" class="input-section">
-    <label>Current λ:</label><input type="number">
-    <label>Upgrade Cost:</label><input type="number">
-    <label>Multiplier:</label><input type="number">
-  </div>
-
-  <!-- Add other currencies similarly... -->
-
-  <div id="section-Points" class="input-section">
-    <h2>Points</h2>
-    <div class="points-grid">
-      <!-- Example for point #1 -->
-      <div class="point-box">
-        <h4>#1 – Generic beginning</h4>
-        <label>Level (Max 3):</label>
-        <input type="number" min="0" max="3">
-      </div>
-      <div class="point-box">
-        <h4>#2 – An increase</h4>
-        <label>Level (Max 2):</label>
-        <input type="number" min="0" max="2">
-      </div>
-      <div class="point-box">
-        <h4>#3 – A bigger increase</h4>
-        <label>Level (Max 2):</label>
-        <input type="number" min="0" max="2">
-      </div>
-      <div class="point-box">
-        <h4>#4 – Multiple increase</h4>
-        <label>Level (Max 1041):</label>
-        <input type="number" min="0" max="1041">
-      </div>
-      <!-- Repeat this pattern for all #5 to #39 following the rules -->
-    </div>
-  </div>
+  <!-- Placeholder for other currencies -->
+  <div id="section-λ" class="input-section"><h2>λ Section</h2></div>
+  <div id="section-₹" class="input-section"><h2>₹ Section</h2></div>
+  <div id="section-฿" class="input-section"><h2>฿ Section</h2></div>
+  <div id="section-₽X" class="input-section"><h2>₽X Section</h2></div>
+  <div id="section-⊙" class="input-section"><h2>⊙ Section</h2></div>
+  <div id="section-τ" class="input-section"><h2>τ Section</h2></div>
+  <div id="section-Λ" class="input-section"><h2>Λ Section</h2></div>
+  <div id="section-Ψ" class="input-section"><h2>Ψ Section</h2></div>
+  <div id="section-€" class="input-section"><h2>€ Section</h2></div>
+  <div id="section-XP" class="input-section"><h2>XP Section</h2></div>
 
   <script>
-    function showSection(symbol) {
-      document.querySelectorAll('.input-section').forEach(div => {
-        div.classList.remove('active');
-      });
-      document.querySelectorAll('.currency-tabs button').forEach(btn => {
-        btn.classList.remove('active');
-      });
-      document.getElementById('section-' + symbol).classList.add('active');
-      const btns = document.querySelectorAll('.currency-tabs button');
-      btns.forEach(btn => {
-        if (btn.textContent === symbol) {
-          btn.classList.add('active');
-        }
-      });
+    const pointsConfig = {
+      1: { label: 'generic beginning', max: 3 },
+      2: { label: 'an increase', max: 2 },
+      3: { label: 'a bigger increase', max: 2 },
+      4: { label: 'multiple increase', max: 1041 },
+      5: { label: 'an advance increase', max: 2 },
+      6: { label: 'it grows', max: 2 },
+      7: { label: 'even more levels', max: 2 },
+      8: { label: 'New technologies', max: 2 },
+      9: { label: 'But its not all empty', max: 1 },
+      10: { label: 'there it is', max: 2 },
+      11: { label: 'push for research', max: 1 },
+      12: { label: 'now with the exponents', max: 2 },
+      13: { label: 'cost cutting', max: 5 },
+      14: { label: 'thats a lot', max: 1 },
+      15: { label: 'TOO MANY LEVELS', max: 1 },
+      16: { label: 'Growing up', max: 1 },
+      17: { label: 'A slight edge', max: 1 },
+      18: { label: 'Meaningless fun', max: 1 },
+      19: { label: 'a different, bigger increase', max: 1 },
+      20: { label: 'Competitive', max: 1 },
+      21: { label: 'upgrade genetics', max: 1 },
+      22: { label: '1UP!', max: 15 },
+      23: { label: 'Downsizing', max: 10 },
+      24: { label: 'Holy grail', max: 1 },
+      25: { label: 'After halcyon', max: 1 },
+      26: { label: 'Divine soul', max: 1 },
+      27: { label: 'Delayed gratification', max: 1 },
+      28: { label: 'Insane computation', max: 1 },
+      29: { label: 'Megabytes', max: 1 },
+      30: { label: 'absolue FRENZY', max: 1 },
+      31: { label: 'insignia', max: 1 },
+      32: { label: 'deflated oblivion', max: 8 },
+      33: { label: 'Cursed soul', max: 1 },
+      34: { label: 'light then dark', max: 1 },
+      35: { label: 'plentiful experience', max: 1 },
+      36: { label: 'Beyond beliefs', max: 1 },
+      37: { label: 'Fortune 500', max: 1 },
+      38: { label: 'Absurd Pricing', max: 1 },
+      39: { label: 'Gravitational soul', max: 1 },
+    };
+
+    const container = document.getElementById('points-list');
+    for (let i = 1; i <= 39; i++) {
+      if (!pointsConfig[i]) continue;
+      const { label, max } = pointsConfig[i];
+      const div = document.createElement('div');
+      div.innerHTML = `
+        <label>#${i} - ${label} (0-${max})</label><br>
+        <input type="number" id="point-${i}" min="0" max="${max}" value="0"><br>
+      `;
+      container.appendChild(div);
     }
+
+    function showSection(symbol) {
+      document.querySelectorAll('.input-section').forEach(div => div.classList.remove('active'));
+      document.querySelectorAll('.currency-tabs button').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('section-' + symbol).classList.add('active');
+      document.querySelector('.tab-' + CSS.escape(symbol)).classList.add('active');
+    }
+
     showSection('₽');
   </script>
+
 </body>
 </html>
