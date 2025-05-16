@@ -26,21 +26,21 @@
       margin: 3px;
       border: none;
       cursor: pointer;
-      background-color: #ddd;
       font-size: 20px;
       border-radius: 5px;
+      color: white;
     }
 
     .tab.active {
-      background-color: #bbb;
       font-weight: bold;
+      border: 2px solid black;
     }
 
     .input-section {
       display: none;
-      border: 1px solid #ccc;
       padding: 15px;
       border-radius: 10px;
+      color: white;
     }
 
     .input-section.active {
@@ -57,6 +57,19 @@
       padding: 8px;
       box-sizing: border-box;
     }
+
+    /* Color styles for each currency */
+    .tab[data-tab="₽"], #section-₽        { background-color: gray; }
+    .tab[data-tab="λ"], #section-λ        { background-color: #007bff; } /* Blue */
+    .tab[data-tab="₹"], #section-₹        { background-color: #f1c40f; color: black; } /* Yellow */
+    .tab[data-tab="฿"], #section-฿        { background-color: #e74c3c; } /* Red */
+    .tab[data-tab="₽X"], #section-₽X      { background-color: #9b59b6; } /* Purple */
+    .tab[data-tab="⊙"], #section-⊙        { background-color: #e67e22; } /* Orange */
+    .tab[data-tab="τ"], #section-τ        { background-color: #00ffff; color: black; } /* Aqua */
+    .tab[data-tab="Λ"], #section-Λ        { background-color: #20c9c9; } /* Teal-Aqua mix */
+    .tab[data-tab="Ψ"], #section-Ψ        { background-color: #008080; } /* Teal */
+    .tab[data-tab="€"], #section-€        { background-color: #4b0082; } /* Dark Purple */
+    .tab[data-tab="XP"], #section-XP      { background-color: #f0f0f0; color: black; } /* No color */
   </style>
 </head>
 <body>
@@ -112,7 +125,7 @@
       });
     });
 
-    // Auto click first tab
+    // Auto activate first tab
     if (tabs.length > 0) tabs[0].click();
   </script>
 
