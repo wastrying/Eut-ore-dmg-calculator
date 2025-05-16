@@ -12,8 +12,6 @@
     h1 {
       text-align: center;
     }
-
-    /* Tabs container */
     .tab-bar {
       display: flex;
       justify-content: center;
@@ -21,7 +19,6 @@
       margin-bottom: 20px;
       border-bottom: 2px solid #ccc;
     }
-
     .tab {
       padding: 10px 20px;
       margin: 5px;
@@ -31,58 +28,44 @@
       cursor: pointer;
       font-size: 20px;
     }
-
     .tab.active {
       background-color: #ddd;
       font-weight: bold;
     }
-
     .input-section {
       display: none;
       border: 1px solid #ccc;
       padding: 20px;
       border-radius: 0 0 10px 10px;
     }
-
     .input-section.active {
       display: block;
     }
-
     label {
       display: block;
       margin-top: 10px;
     }
-
     input {
       width: 100%;
       padding: 5px;
       margin-top: 5px;
     }
-
     .calculate-btn {
       display: block;
       margin: 30px auto;
       padding: 10px 20px;
       font-size: 16px;
     }
-
     .result {
       margin-top: 15px;
       font-weight: bold;
-    }
-
-    .status.good {
-      color: green;
-    }
-
-    .status.bad {
-      color: red;
     }
   </style>
 </head>
 <body>
 
 <h1>EUT Advance Calculator</h1>
+
 <div class="tab-bar">
   <button class="tab" data-id="₽">₽</button>
   <button class="tab" data-id="λ">λ</button>
@@ -90,27 +73,45 @@
   <button class="tab" data-id="฿">฿</button>
   <button class="tab" data-id="₽X">₽X</button>
   <button class="tab" data-id="⊙">⊙</button>
-  <button class="tab" data-id="ꚍ">ꚍ</button>
+  <button class="tab" data-id="τ">τ</button>
   <button class="tab" data-id="Λ">Λ</button>
   <button class="tab" data-id="Ψ">Ψ</button>
   <button class="tab" data-id="€">€</button>
   <button class="tab" data-id="XP">XP</button>
 </div>
 
-<!-- Repeat this section for each symbol -->
-<div id="₽" class="input-section">
-  <label>Current Amount: <input type="number" /></label>
-  <label>Base Upgrade Cost: <input type="number" /></label>
-  <label>Cost Multiplier (≥1): <input type="number" step="0.01" /></label>
-  <label>Upgrades to Buy: <input type="number" /></label>
-  <div class="result">Result will show here.</div>
-</div>
+<!-- Template for currency input section -->
+<script>
+  const currencySymbols = ["₽", "λ", "₹", "฿", "₽X", "⊙", "τ", "Λ", "Ψ", "€", "XP"];
+</script>
 
-<!-- Duplicate the above input-section div and change the ID to λ, ₹, etc. for each currency -->
+<div id="sections-container">
+  <!-- JS will fill this in -->
+</div>
 
 <button class="calculate-btn">Calculate All</button>
 
 <script>
+  const tabBar = document.querySelector('.tab-bar');
+  const sectionsContainer = document.getElementById('sections-container');
+  const currencySymbols = ["₽", "λ", "₹", "฿", "₽X", "⊙", "τ", "Λ", "Ψ", "€", "XP"];
+
+  // Generate input sections
+  currencySymbols.forEach(symbol => {
+    const div = document.createElement('div');
+    div.className = 'input-section';
+    div.id = symbol;
+
+    div.innerHTML = `
+      <label>Current Amount (${symbol}): <input type="number" /></label>
+      <label>Base Upgrade Cost: <input type="number" /></label>
+      <label>Cost Multiplier (≥1): <input type="number" step="0.01" /></label>
+      <label>Upgrades to Buy: <input type="number" /></label>
+      <div class="result">Result will show here.</div>
+    `;
+    sectionsContainer.appendChild(div);
+  });
+
   const tabs = document.querySelectorAll('.tab');
   const sections = document.querySelectorAll('.input-section');
 
@@ -124,6 +125,9 @@
       if (target) target.classList.add('active');
     });
   });
+
+  // Optional: Set default tab
+  tabs[0].click();
 </script>
 
 </body>
