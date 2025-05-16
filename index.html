@@ -1,132 +1,216 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>EUT Advance Calculator</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
-      font-family: sans-serif;
-      padding: 20px;
-    }
-
-    h1 {
+      font-family: Arial, sans-serif;
+      background-color: #f3f3f3;
+      margin: 0;
+      padding: 40px;
       text-align: center;
     }
 
-    .tab-bar {
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    .currency-tabs {
       display: flex;
-      flex-wrap: wrap;
       justify-content: center;
-      margin-bottom: 20px;
+      flex-wrap: wrap;
+      margin: 0 auto;
+      width: fit-content;
+      border-radius: 8px 8px 0 0;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
     }
 
-    .tab {
-      padding: 10px 15px;
-      margin: 3px;
-      border: none;
+    .currency-tabs button {
+      padding: 10px 16px;
+      border: 1px solid #ccc;
+      border-right: none;
+      background-color: #eee;
+      font-size: 18px;
       cursor: pointer;
-      font-size: 20px;
-      border-radius: 5px;
-      color: white;
+      outline: none;
+      transition: background-color 0.2s;
     }
 
-    .tab.active {
-      font-weight: bold;
-      border: 2px solid black;
+    .currency-tabs button:last-child {
+      border-right: 1px solid #ccc;
+    }
+
+    .currency-tabs button.active {
+      background-color: white;
+      border-bottom: 1px solid white;
+      position: relative;
+      z-index: 2;
+      color: white;
     }
 
     .input-section {
       display: none;
-      padding: 15px;
-      border-radius: 10px;
-      color: white;
+      border: 1px solid #ccc;
+      border-top: none;
+      padding: 20px;
+      width: 60%;
+      margin: 0 auto;
+      border-radius: 0 0 8px 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+      background-color: white;
+      z-index: 1;
+      position: relative;
     }
 
     .input-section.active {
       display: block;
     }
 
-    label {
-      display: block;
-      margin: 10px 0 5px;
+    .input-section input {
+      width: 90%;
+      padding: 10px;
+      margin: 8px 0;
+      font-size: 16px;
     }
 
-    input {
-      width: 100%;
-      padding: 8px;
-      box-sizing: border-box;
-    }
+    /* Color styling by currency */
+    .tab-₽.active { background-color: gray; }
+    #section-₽ { border-left: 6px solid gray; }
 
-    /* Color styles for each currency */
-    .tab[data-tab="₽"], #section-₽        { background-color: gray; }
-    .tab[data-tab="λ"], #section-λ        { background-color: #007bff; } /* Blue */
-    .tab[data-tab="₹"], #section-₹        { background-color: #f1c40f; color: black; } /* Yellow */
-    .tab[data-tab="฿"], #section-฿        { background-color: #e74c3c; } /* Red */
-    .tab[data-tab="₽X"], #section-₽X      { background-color: #9b59b6; } /* Purple */
-    .tab[data-tab="⊙"], #section-⊙        { background-color: #e67e22; } /* Orange */
-    .tab[data-tab="τ"], #section-τ        { background-color: #00ffff; color: black; } /* Aqua */
-    .tab[data-tab="Λ"], #section-Λ        { background-color: #20c9c9; } /* Teal-Aqua mix */
-    .tab[data-tab="Ψ"], #section-Ψ        { background-color: #008080; } /* Teal */
-    .tab[data-tab="€"], #section-€        { background-color: #4b0082; } /* Dark Purple */
-    .tab[data-tab="XP"], #section-XP      { background-color: #f0f0f0; color: black; } /* No color */
+    .tab-λ.active { background-color: #007bff; }
+    #section-λ { border-left: 6px solid #007bff; }
+
+    .tab-₹.active { background-color: #f1c40f; }
+    #section-₹ { border-left: 6px solid #f1c40f; }
+
+    .tab-฿.active { background-color: #e74c3c; }
+    #section-฿ { border-left: 6px solid #e74c3c; }
+
+    .tab-₽X.active { background-color: #9b59b6; }
+    #section-₽X { border-left: 6px solid #9b59b6; }
+
+    .tab-⊙.active { background-color: #ff9900; }
+    #section-⊙ { border-left: 6px solid #ff9900; }
+
+    .tab-τ.active { background-color: #00ffff; }
+    #section-τ { border-left: 6px solid #00ffff; }
+
+    .tab-Λ.active { background-color: #20c9c9; }
+    #section-Λ { border-left: 6px solid #20c9c9; }
+
+    .tab-Ψ.active { background-color: #008080; }
+    #section-Ψ { border-left: 6px solid #008080; }
+
+    .tab-€.active { background-color: #4b0082; }
+    #section-€ { border-left: 6px solid #4b0082; }
+
+    .tab-XP.active { background-color: #cccccc; }
+    #section-XP { border-left: 6px solid #cccccc; }
   </style>
 </head>
 <body>
 
   <h1>EUT Advance Calculator</h1>
 
-  <div class="tab-bar">
-    <button class="tab" data-tab="₽">₽</button>
-    <button class="tab" data-tab="λ">λ</button>
-    <button class="tab" data-tab="₹">₹</button>
-    <button class="tab" data-tab="฿">฿</button>
-    <button class="tab" data-tab="₽X">₽X</button>
-    <button class="tab" data-tab="⊙">⊙</button>
-    <button class="tab" data-tab="τ">τ</button>
-    <button class="tab" data-tab="Λ">Λ</button>
-    <button class="tab" data-tab="Ψ">Ψ</button>
-    <button class="tab" data-tab="€">€</button>
-    <button class="tab" data-tab="XP">XP</button>
+  <div class="currency-tabs">
+    <button class="tab tab-₽" onclick="showSection('₽')">₽</button>
+    <button class="tab tab-λ" onclick="showSection('λ')">λ</button>
+    <button class="tab tab-₹" onclick="showSection('₹')">₹</button>
+    <button class="tab tab-฿" onclick="showSection('฿')">฿</button>
+    <button class="tab tab-₽X" onclick="showSection('₽X')">₽X</button>
+    <button class="tab tab-⊙" onclick="showSection('⊙')">⊙</button>
+    <button class="tab tab-τ" onclick="showSection('τ')">τ</button>
+    <button class="tab tab-Λ" onclick="showSection('Λ')">Λ</button>
+    <button class="tab tab-Ψ" onclick="showSection('Ψ')">Ψ</button>
+    <button class="tab tab-€" onclick="showSection('€')">€</button>
+    <button class="tab tab-XP" onclick="showSection('XP')">XP</button>
   </div>
 
-  <div id="sections">
-    <!-- JS will generate input sections here -->
+  <!-- UI Panels -->
+  <div id="section-₽" class="input-section">
+    <label>Current ₽:</label><br><input type="number"><br>
+    <label>Upgrade Cost:</label><br><input type="number"><br>
+    <label>Multiplier:</label><br><input type="number">
+  </div>
+
+  <div id="section-λ" class="input-section">
+    <label>Current λ:</label><br><input type="number"><br>
+    <label>Upgrade Cost:</label><br><input type="number"><br>
+    <label>Multiplier:</label><br><input type="number">
+  </div>
+
+  <div id="section-₹" class="input-section">
+    <label>Current ₹:</label><br><input type="number"><br>
+    <label>Upgrade Cost:</label><br><input type="number"><br>
+    <label>Multiplier:</label><br><input type="number">
+  </div>
+
+  <div id="section-฿" class="input-section">
+    <label>Current ฿:</label><br><input type="number"><br>
+    <label>Upgrade Cost:</label><br><input type="number"><br>
+    <label>Multiplier:</label><br><input type="number">
+  </div>
+
+  <div id="section-₽X" class="input-section">
+    <label>Current ₽X:</label><br><input type="number"><br>
+    <label>Upgrade Cost:</label><br><input type="number"><br>
+    <label>Multiplier:</label><br><input type="number">
+  </div>
+
+  <div id="section-⊙" class="input-section">
+    <label>Current ⊙:</label><br><input type="number"><br>
+    <label>Upgrade Cost:</label><br><input type="number"><br>
+    <label>Multiplier:</label><br><input type="number">
+  </div>
+
+  <div id="section-τ" class="input-section">
+    <label>Current τ:</label><br><input type="number"><br>
+    <label>Upgrade Cost:</label><br><input type="number"><br>
+    <label>Multiplier:</label><br><input type="number">
+  </div>
+
+  <div id="section-Λ" class="input-section">
+    <label>Current Λ:</label><br><input type="number"><br>
+    <label>Upgrade Cost:</label><br><input type="number"><br>
+    <label>Multiplier:</label><br><input type="number">
+  </div>
+
+  <div id="section-Ψ" class="input-section">
+    <label>Current Ψ:</label><br><input type="number"><br>
+    <label>Upgrade Cost:</label><br><input type="number"><br>
+    <label>Multiplier:</label><br><input type="number">
+  </div>
+
+  <div id="section-€" class="input-section">
+    <label>Current €:</label><br><input type="number"><br>
+    <label>Upgrade Cost:</label><br><input type="number"><br>
+    <label>Multiplier:</label><br><input type="number">
+  </div>
+
+  <div id="section-XP" class="input-section">
+    <label>Current XP:</label><br><input type="number"><br>
+    <label>Upgrade Cost:</label><br><input type="number"><br>
+    <label>Multiplier:</label><br><input type="number">
   </div>
 
   <script>
-    const symbols = ["₽", "λ", "₹", "฿", "₽X", "⊙", "τ", "Λ", "Ψ", "€", "XP"];
-    const sectionsContainer = document.getElementById("sections");
-
-    symbols.forEach(symbol => {
-      const div = document.createElement("div");
-      div.className = "input-section";
-      div.id = `section-${symbol}`;
-      div.innerHTML = `
-        <label>Current ${symbol}: <input type="number"></label>
-        <label>Upgrade Cost: <input type="number"></label>
-        <label>Multiplier: <input type="number" step="0.01"></label>
-      `;
-      sectionsContainer.appendChild(div);
-    });
-
-    const tabs = document.querySelectorAll(".tab");
-    const sections = document.querySelectorAll(".input-section");
-
-    tabs.forEach(tab => {
-      tab.addEventListener("click", () => {
-        tabs.forEach(t => t.classList.remove("active"));
-        sections.forEach(s => s.classList.remove("active"));
-
-        tab.classList.add("active");
-        const id = tab.dataset.tab;
-        const section = document.getElementById(`section-${id}`);
-        if (section) section.classList.add("active");
+    function showSection(symbol) {
+      document.querySelectorAll('.input-section').forEach(div => {
+        div.classList.remove('active');
       });
-    });
 
-    // Auto activate first tab
-    if (tabs.length > 0) tabs[0].click();
+      document.querySelectorAll('.currency-tabs button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+
+      document.getElementById('section-' + symbol).classList.add('active');
+      document.querySelector('.tab-' + CSS.escape(symbol)).classList.add('active');
+    }
+
+    // Default tab
+    showSection('₽');
   </script>
 
 </body>
