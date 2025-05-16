@@ -44,23 +44,19 @@
     }
 
     .currency-tabs button.active {
-      border-bottom: 1px solid white;
-      position: relative;
-      z-index: 2;
+      background-color: gray;
+      border-bottom: none;
       color: white;
     }
 
     .input-section {
       display: none;
-      border: 1px solid #ccc;
-      border-top: none;
       padding: 20px;
       width: 60%;
       margin: 0 auto;
       border-radius: 0 0 8px 8px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.15);
       background-color: white;
-      z-index: 1;
       position: relative;
     }
 
@@ -68,161 +64,132 @@
       display: block;
     }
 
-    .input-section input {
+    .points-list label {
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+    }
+
+    .points-list input {
       width: 90%;
-      padding: 10px;
-      margin: 8px 0;
+      padding: 8px;
+      margin-bottom: 10px;
       font-size: 16px;
     }
 
-    /* Color styling by currency */
+    /* Full background color per tab */
     .tab-₽.active { background-color: gray; }
-    #section-₽ { background-color: gray; color: white; }
-    #section-₽ input { background-color: white; color: black; }
+    #section-₽ { background-color: gray; }
 
     .tab-λ.active { background-color: #007bff; }
-    #section-λ { background-color: #007bff; color: white; }
-    #section-λ input { background-color: white; color: black; }
+    #section-λ { background-color: #007bff; }
 
     .tab-₹.active { background-color: #f1c40f; }
-    #section-₹ { background-color: #f1c40f; color: white; }
-    #section-₹ input { background-color: white; color: black; }
+    #section-₹ { background-color: #f1c40f; }
 
     .tab-฿.active { background-color: #e74c3c; }
-    #section-฿ { background-color: #e74c3c; color: white; }
-    #section-฿ input { background-color: white; color: black; }
+    #section-฿ { background-color: #e74c3c; }
 
     .tab-₽X.active { background-color: #9b59b6; }
-    #section-₽X { background-color: #9b59b6; color: white; }
-    #section-₽X input { background-color: white; color: black; }
+    #section-₽X { background-color: #9b59b6; }
 
     .tab-⊙.active { background-color: #ff9900; }
-    #section-⊙ { background-color: #ff9900; color: white; }
-    #section-⊙ input { background-color: white; color: black; }
+    #section-⊙ { background-color: #ff9900; }
 
     .tab-τ.active { background-color: #00ffff; }
-    #section-τ { background-color: #00ffff; color: black; }
-    #section-τ input { background-color: white; color: black; }
+    #section-τ { background-color: #00ffff; }
 
     .tab-Λ.active { background-color: #20c9c9; }
-    #section-Λ { background-color: #20c9c9; color: black; }
-    #section-Λ input { background-color: white; color: black; }
+    #section-Λ { background-color: #20c9c9; }
 
     .tab-Ψ.active { background-color: #008080; }
-    #section-Ψ { background-color: #008080; color: white; }
-    #section-Ψ input { background-color: white; color: black; }
+    #section-Ψ { background-color: #008080; }
 
     .tab-€.active { background-color: #4b0082; }
-    #section-€ { background-color: #4b0082; color: white; }
-    #section-€ input { background-color: white; color: black; }
+    #section-€ { background-color: #4b0082; }
 
     .tab-XP.active { background-color: #cccccc; }
-    #section-XP { background-color: #cccccc; color: black; }
-    #section-XP input { background-color: white; color: black; }
+    #section-XP { background-color: #cccccc; }
   </style>
 </head>
 <body>
 
-  <h1>EUT Advance Calculator</h1>
+<h1>EUT Advance Calculator</h1>
 
-  <div class="currency-tabs">
-    <button class="tab tab-₽" onclick="showSection('₽')">₽</button>
-    <button class="tab tab-λ" onclick="showSection('λ')">λ</button>
-    <button class="tab tab-₹" onclick="showSection('₹')">₹</button>
-    <button class="tab tab-฿" onclick="showSection('฿')">฿</button>
-    <button class="tab tab-₽X" onclick="showSection('₽X')">₽X</button>
-    <button class="tab tab-⊙" onclick="showSection('⊙')">⊙</button>
-    <button class="tab tab-τ" onclick="showSection('τ')">τ</button>
-    <button class="tab tab-Λ" onclick="showSection('Λ')">Λ</button>
-    <button class="tab tab-Ψ" onclick="showSection('Ψ')">Ψ</button>
-    <button class="tab tab-€" onclick="showSection('€')">€</button>
-    <button class="tab tab-XP" onclick="showSection('XP')">XP</button>
+<div class="currency-tabs">
+  <button class="tab tab-₽" onclick="showSection('₽')">₽</button>
+  <button class="tab tab-λ" onclick="showSection('λ')">λ</button>
+  <button class="tab tab-₹" onclick="showSection('₹')">₹</button>
+  <button class="tab tab-฿" onclick="showSection('฿')">฿</button>
+  <button class="tab tab-₽X" onclick="showSection('₽X')">₽X</button>
+  <button class="tab tab-⊙" onclick="showSection('⊙')">⊙</button>
+  <button class="tab tab-τ" onclick="showSection('τ')">τ</button>
+  <button class="tab tab-Λ" onclick="showSection('Λ')">Λ</button>
+  <button class="tab tab-Ψ" onclick="showSection('Ψ')">Ψ</button>
+  <button class="tab tab-€" onclick="showSection('€')">€</button>
+  <button class="tab tab-XP" onclick="showSection('XP')">XP</button>
+</div>
+
+<!-- ₽ Tab with Custom Points -->
+<div id="section-₽" class="input-section active">
+  <div class="points-list">
+    <label>#1: generic beginning</label><input type="number">
+    <label>#2: an increase</label><input type="number">
+    <label>#3: a bigger increase</label><input type="number">
+    <label>#4: multiple increase</label><input type="number">
+    <label>#5: an advance increase</label><input type="number">
+    <label>#6: it grows</label><input type="number">
+    <label>#7: even more levels</label><input type="number">
+    <label>#10: there it is</label><input type="number">
+    <label>#11: push for research</label><input type="number">
+    <label>#12: now with the exponents</label><input type="number">
+    <label>#13: cost cutting</label><input type="number">
+    <label>#14: thats a lot</label><input type="number">
+    <label>#15: TOO MANY LEVELS</label><input type="number">
+    <label>#19: a different, bigger increase</label><input type="number">
+    <label>#22: 1UP!</label><input type="number">
+    <label>#23: Downsizing</label><input type="number">
+    <label>#24: Holy grail</label><input type="number">
+    <label>#25: After halcyon</label><input type="number">
+    <label>#27: Delayed gratification</label><input type="number">
+    <label>#29: Megabytes</label><input type="number">
+    <label>#30: absolue FRENZY</label><input type="number">
+    <label>#31: insignia</label><input type="number">
+    <label>#32: deflated oblivion</label><input type="number">
+    <label>#34: light then dark</label><input type="number">
+    <label>#35: plentiful experience</label><input type="number">
   </div>
+</div>
 
-  <!-- UI Panels -->
-  <div id="section-₽" class="input-section">
-    <label>Current ₽:</label><br><input type="number"><br>
-    <label>Upgrade Cost:</label><br><input type="number"><br>
-    <label>Multiplier:</label><br><input type="number">
-  </div>
+<!-- Placeholder tabs for other currencies -->
+<div id="section-λ" class="input-section"></div>
+<div id="section-₹" class="input-section"></div>
+<div id="section-฿" class="input-section"></div>
+<div id="section-₽X" class="input-section"></div>
+<div id="section-⊙" class="input-section"></div>
+<div id="section-τ" class="input-section"></div>
+<div id="section-Λ" class="input-section"></div>
+<div id="section-Ψ" class="input-section"></div>
+<div id="section-€" class="input-section"></div>
+<div id="section-XP" class="input-section"></div>
 
-  <div id="section-λ" class="input-section">
-    <label>Current λ:</label><br><input type="number"><br>
-    <label>Upgrade Cost:</label><br><input type="number"><br>
-    <label>Multiplier:</label><br><input type="number">
-  </div>
+<script>
+  function showSection(symbol) {
+    document.querySelectorAll('.input-section').forEach(div => {
+      div.classList.remove('active');
+    });
 
-  <div id="section-₹" class="input-section">
-    <label>Current ₹:</label><br><input type="number"><br>
-    <label>Upgrade Cost:</label><br><input type="number"><br>
-    <label>Multiplier:</label><br><input type="number">
-  </div>
+    document.querySelectorAll('.currency-tabs button').forEach(btn => {
+      btn.classList.remove('active');
+    });
 
-  <div id="section-฿" class="input-section">
-    <label>Current ฿:</label><br><input type="number"><br>
-    <label>Upgrade Cost:</label><br><input type="number"><br>
-    <label>Multiplier:</label><br><input type="number">
-  </div>
+    document.getElementById('section-' + symbol).classList.add('active');
+    document.querySelector('.tab-' + CSS.escape(symbol)).classList.add('active');
+  }
 
-  <div id="section-₽X" class="input-section">
-    <label>Current ₽X:</label><br><input type="number"><br>
-    <label>Upgrade Cost:</label><br><input type="number"><br>
-    <label>Multiplier:</label><br><input type="number">
-  </div>
-
-  <div id="section-⊙" class="input-section">
-    <label>Current ⊙:</label><br><input type="number"><br>
-    <label>Upgrade Cost:</label><br><input type="number"><br>
-    <label>Multiplier:</label><br><input type="number">
-  </div>
-
-  <div id="section-τ" class="input-section">
-    <label>Current τ:</label><br><input type="number"><br>
-    <label>Upgrade Cost:</label><br><input type="number"><br>
-    <label>Multiplier:</label><br><input type="number">
-  </div>
-
-  <div id="section-Λ" class="input-section">
-    <label>Current Λ:</label><br><input type="number"><br>
-    <label>Upgrade Cost:</label><br><input type="number"><br>
-    <label>Multiplier:</label><br><input type="number">
-  </div>
-
-  <div id="section-Ψ" class="input-section">
-    <label>Current Ψ:</label><br><input type="number"><br>
-    <label>Upgrade Cost:</label><br><input type="number"><br>
-    <label>Multiplier:</label><br><input type="number">
-  </div>
-
-  <div id="section-€" class="input-section">
-    <label>Current €:</label><br><input type="number"><br>
-    <label>Upgrade Cost:</label><br><input type="number"><br>
-    <label>Multiplier:</label><br><input type="number">
-  </div>
-
-  <div id="section-XP" class="input-section">
-    <label>Current XP:</label><br><input type="number"><br>
-    <label>Upgrade Cost:</label><br><input type="number"><br>
-    <label>Multiplier:</label><br><input type="number">
-  </div>
-
-  <script>
-    function showSection(symbol) {
-      document.querySelectorAll('.input-section').forEach(div => {
-        div.classList.remove('active');
-      });
-
-      document.querySelectorAll('.currency-tabs button').forEach(btn => {
-        btn.classList.remove('active');
-      });
-
-      document.getElementById('section-' + symbol).classList.add('active');
-      document.querySelector('.tab-' + CSS.escape(symbol)).classList.add('active');
-    }
-
-    // Default tab
-    showSection('₽');
-  </script>
+  // Default tab
+  showSection('₽');
+</script>
 
 </body>
 </html>
