@@ -1,209 +1,194 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>EUT Advance Calculator</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f3f3f3;
-      margin: 0;
-      padding: 20px;
-      text-align: center;
-    }
-
-    h1 {
-      margin-bottom: 10px;
-    }
-
-    .currency-tabs {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin: 0 auto 20px;
-      width: fit-content;
-      border-radius: 8px 8px 0 0;
-      overflow: hidden;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-    }
-
-    .currency-tabs button {
-      padding: 8px 12px;
-      border: 1px solid #ccc;
-      border-right: none;
-      background-color: #eee;
-      font-size: 16px;
-      cursor: pointer;
-      outline: none;
-      transition: background-color 0.2s;
-    }
-
-    .currency-tabs button:last-child {
-      border-right: 1px solid #ccc;
-    }
-
-    .currency-tabs button.active {
-      background-color: white;
-      border-bottom: 1px solid white;
-      position: relative;
-      z-index: 2;
-    }
-
-    .input-section {
-      display: none;
-      border: 1px solid #ccc;
-      border-top: none;
-      padding: 20px;
-      width: 80%;
-      margin: 0 auto;
-      border-radius: 0 0 8px 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-      background-color: white;
-      z-index: 1;
-      position: relative;
-    }
-
-    .input-section.active {
-      display: block;
-    }
-
-    .input-section input {
-      width: 60px;
-      padding: 6px;
-      font-size: 14px;
-      margin-left: 6px;
-    }
-
-    .upgrade-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 10px;
-      margin-top: 20px;
-      text-align: left;
-    }
-
-    label {
-      font-size: 14px;
-    }
-
-    /* Color styling by currency */
-    .tab-₽.active { background-color: gray; color: white; }
-    #section-₽ { border-left: 6px solid gray; }
-
-    .tab-λ.active { background-color: #007bff; color: white; }
-    #section-λ { border-left: 6px solid #007bff; }
-
-    .tab-₹.active { background-color: #f1c40f; color: white; }
-    #section-₹ { border-left: 6px solid #f1c40f; }
-
-    .tab-฿.active { background-color: #e74c3c; color: white; }
-    #section-฿ { border-left: 6px solid #e74c3c; }
-
-    .tab-₽X.active { background-color: #9b59b6; color: white; }
-    #section-₽X { border-left: 6px solid #9b59b6; }
-
-    .tab-⊙.active { background-color: #ff9900; color: white; }
-    #section-⊙ { border-left: 6px solid #ff9900; }
-
-    .tab-τ.active { background-color: #00ffff; color: black; }
-    #section-τ { border-left: 6px solid #00ffff; }
-
-    .tab-Λ.active { background-color: #20c9c9; color: white; }
-    #section-Λ { border-left: 6px solid #20c9c9; }
-
-    .tab-Ψ.active { background-color: #008080; color: white; }
-    #section-Ψ { border-left: 6px solid #008080; }
-
-    .tab-€.active { background-color: #4b0082; color: white; }
-    #section-€ { border-left: 6px solid #4b0082; }
-
-    .tab-XP.active { background-color: #cccccc; color: black; }
-    #section-XP { border-left: 6px solid #cccccc; }
-  </style>
+<meta charset="UTF-8" />
+<title>EUT Advance Calculator</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f3f3f3;
+    margin: 0; padding: 20px;
+    text-align: center;
+  }
+  h1 {
+    margin-bottom: 10px;
+  }
+  .currency-tabs {
+    display: flex;
+    justify-content: center;
+    flex-wrap: nowrap;
+    margin-bottom: 20px;
+    border-radius: 8px 8px 0 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    width: fit-content;
+    margin-left: auto; margin-right: auto;
+  }
+  .currency-tabs button {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-right: none;
+    background: #eee;
+    font-size: 16px;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.2s;
+    user-select: none;
+  }
+  .currency-tabs button:last-child {
+    border-right: 1px solid #ccc;
+  }
+  .currency-tabs button.active {
+    background: white;
+    border-bottom: 1px solid white;
+    position: relative;
+    z-index: 2;
+    font-weight: bold;
+  }
+  .input-section {
+    display: none;
+    border: 1px solid #ccc;
+    border-top: none;
+    padding: 20px;
+    width: 850px;
+    margin: 0 auto;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    background: white;
+    text-align: left;
+  }
+  .input-section.active {
+    display: block;
+  }
+  h3 {
+    text-align: center;
+    margin-bottom: 15px;
+  }
+  .upgrade-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px 30px;
+  }
+  label {
+    font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  input[type=number] {
+    width: 50px;
+    padding: 5px;
+    font-size: 14px;
+  }
+  /* Tab colors */
+  .tab-₽.active { background: gray; color: white; }
+  #section-₽ { border-left: 6px solid gray; }
+  .tab-λ.active { background: #007bff; color: white; }
+  #section-λ { border-left: 6px solid #007bff; }
+  .tab-₹.active { background: #f1c40f; color: white; }
+  #section-₹ { border-left: 6px solid #f1c40f; }
+  .tab-฿.active { background: #e74c3c; color: white; }
+  #section-฿ { border-left: 6px solid #e74c3c; }
+  .tab-₽X.active { background: #9b59b6; color: white; }
+  #section-₽X { border-left: 6px solid #9b59b6; }
+  .tab-⊙.active { background: #ff9900; color: white; }
+  #section-⊙ { border-left: 6px solid #ff9900; }
+  .tab-τ.active { background: #00ffff; color: black; }
+  #section-τ { border-left: 6px solid #00ffff; }
+  .tab-Λ.active { background: #20c9c9; color: white; }
+  #section-Λ { border-left: 6px solid #20c9c9; }
+  .tab-Ψ.active { background: #008080; color: white; }
+  #section-Ψ { border-left: 6px solid #008080; }
+  .tab-€.active { background: #4b0082; color: white; }
+  #section-€ { border-left: 6px solid #4b0082; }
+  .tab-XP.active { background: #cccccc; color: black; }
+  #section-XP { border-left: 6px solid #cccccc; }
+</style>
 </head>
 <body>
-  <h1>EUT Advance Calculator</h1>
 
-  <div class="currency-tabs">
-    <button class="tab tab-₽" onclick="showSection('₽')">₽</button>
-    <button class="tab tab-λ" onclick="showSection('λ')">λ</button>
-    <button class="tab tab-₹" onclick="showSection('₹')">₹</button>
-    <button class="tab tab-฿" onclick="showSection('฿')">฿</button>
-    <button class="tab tab-₽X" onclick="showSection('₽X')">₽X</button>
-    <button class="tab tab-⊙" onclick="showSection('⊙')">⊙</button>
-    <button class="tab tab-τ" onclick="showSection('τ')">τ</button>
-    <button class="tab tab-Λ" onclick="showSection('Λ')">Λ</button>
-    <button class="tab tab-Ψ" onclick="showSection('Ψ')">Ψ</button>
-    <button class="tab tab-€" onclick="showSection('€')">€</button>
-    <button class="tab tab-XP" onclick="showSection('XP')">XP</button>
+<h1>EUT Advance Calculator</h1>
+
+<div class="currency-tabs">
+  <button class="tab tab-₽" onclick="showSection('₽')">₽</button>
+  <button class="tab tab-λ" onclick="showSection('λ')">λ</button>
+  <button class="tab tab-₹" onclick="showSection('₹')">₹</button>
+  <button class="tab tab-฿" onclick="showSection('฿')">฿</button>
+  <button class="tab tab-₽X" onclick="showSection('₽X')">₽X</button>
+  <button class="tab tab-⊙" onclick="showSection('⊙')">⊙</button>
+  <button class="tab tab-τ" onclick="showSection('τ')">τ</button>
+  <button class="tab tab-Λ" onclick="showSection('Λ')">Λ</button>
+  <button class="tab tab-Ψ" onclick="showSection('Ψ')">Ψ</button>
+  <button class="tab tab-€" onclick="showSection('€')">€</button>
+  <button class="tab tab-XP" onclick="showSection('XP')">XP</button>
+</div>
+
+<div id="section-₽" class="input-section active">
+  <h3>₽ Point Upgrades</h3>
+  <div class="upgrade-grid">
+    <label>#1 generic beginning <input type="number" min="0" max="3" /></label>
+    <label>#2 an increase <input type="number" min="0" max="2" /></label>
+    <label>#3 a bigger increase <input type="number" min="0" max="2" /></label>
+    <label>#4 multiple increase <input type="number" min="0" max="1041" /></label>
+    <label>#5 an advance increase <input type="number" min="0" max="2" /></label>
+    <label>#6 it grows <input type="number" min="0" max="2" /></label>
+    <label>#7 even more levels <input type="number" min="0" max="2" /></label>
+    <label>#8 New technologies <input type="number" min="0" max="2" /></label>
+    <label>#9 But its not all empty <input type="number" min="0" max="1" /></label>
+    <label>#10 there it is <input type="number" min="0" max="2" /></label>
+    <label>#11 push for research <input type="number" min="0" max="1" /></label>
+    <label>#12 now with the exponents <input type="number" min="0" max="2" /></label>
+    <label>#13 cost cutting <input type="number" min="0" max="5" /></label>
+    <label>#14 thats a lot <input type="number" min="0" max="1" /></label>
+    <label>#15 TOO MANY LEVELS <input type="number" min="0" max="1" /></label>
+    <label>#16 Growing up <input type="number" min="0" max="1" /></label>
+    <label>#17 A slight edge <input type="number" min="0" max="1" /></label>
+    <label>#18 Meaningless fun <input type="number" min="0" max="1" /></label>
+    <label>#19 a different, bigger increase <input type="number" min="0" max="1" /></label>
+    <label>#20 Competitive <input type="number" min="0" max="1" /></label>
+    <label>#21 upgrade genetics <input type="number" min="0" max="1" /></label>
+    <label>#22 1UP! <input type="number" min="0" max="15" /></label>
+    <label>#23 Downsizing <input type="number" min="0" max="10" /></label>
+    <label>#24 Holy grail <input type="number" min="0" max="1" /></label>
+    <label>#25 After halcyon <input type="number" min="0" max="1" /></label>
+    <label>#26 Divine soul <input type="number" min="0" max="1" /></label>
+    <label>#27 Delayed gratification <input type="number" min="0" max="1" /></label>
+    <label>#28 Insane computation <input type="number" min="0" max="1" /></label>
+    <label>#29 Megabytes <input type="number" min="0" max="1" /></label>
+    <label>#30 absolue FRENZY <input type="number" min="0" max="1" /></label>
+    <label>#31 insignia <input type="number" min="0" max="1" /></label>
+    <label>#32 deflated oblivion <input type="number" min="0" max="8" /></label>
+    <label>#33 Cursed soul <input type="number" min="0" max="1" /></label>
+    <label>#34 light then dark <input type="number" min="0" max="1" /></label>
+    <label>#35 plentiful experience <input type="number" min="0" max="1" /></label>
+    <label>#36 Beyond beliefs <input type="number" min="0" max="1" /></label>
+    <label>#37 Fortune 500 <input type="number" min="0" max="1" /></label>
+    <label>#38 Absurd Pricing <input type="number" min="0" max="1" /></label>
+    <label>#39 Gravitational soul <input type="number" min="0" max="1" /></label>
   </div>
+</div>
 
-  <div id="section-₽" class="input-section">
-    <h3>₽ Point Upgrades</h3>
-    <div class="upgrade-grid">
-      <label>#1 generic beginning <input type="number" min="0" max="3"></label>
-      <label>#2 an increase <input type="number" min="0" max="2"></label>
-      <label>#3 a bigger increase <input type="number" min="0" max="2"></label>
-      <label>#4 multiple increase <input type="number" min="0" max="1041"></label>
-      <label>#5 an advance increase <input type="number" min="0" max="2"></label>
-      <label>#6 it grows <input type="number" min="0" max="2"></label>
-      <label>#7 even more levels <input type="number" min="0" max="2"></label>
-      <label>#8 New technologies <input type="number" min="0" max="2"></label>
-      <label>#9 But its not all empty <input type="number" min="0" max="1"></label>
-      <label>#10 there it is <input type="number" min="0" max="2"></label>
-      <label>#11 push for research <input type="number" min="0" max="1"></label>
-      <label>#12 now with the exponents <input type="number" min="0" max="2"></label>
-      <label>#13 cost cutting <input type="number" min="0" max="5"></label>
-      <label>#14 thats a lot <input type="number" min="0" max="1"></label>
-      <label>#15 TOO MANY LEVELS <input type="number" min="0" max="1"></label>
-      <label>#16 Growing up <input type="number" min="0" max="1"></label>
-      <label>#17 A slight edge <input type="number" min="0" max="1"></label>
-      <label>#18 Meaningless fun <input type="number" min="0" max="1"></label>
-      <label>#19 a different, bigger increase <input type="number" min="0" max="1"></label>
-      <label>#20 Competitive <input type="number" min="0" max="1"></label>
-      <label>#21 upgrade genetics <input type="number" min="0" max="1"></label>
-      <label>#22 1UP! <input type="number" min="0" max="15"></label>
-      <label>#23 Downsizing <input type="number" min="0" max="10"></label>
-      <label>#24 Holy grail <input type="number" min="0" max="1"></label>
-      <label>#25 After halcyon <input type="number" min="0" max="1"></label>
-      <label>#26 Divine soul <input type="number" min="0" max="1"></label>
-      <label>#27 Delayed gratification <input type="number" min="0" max="1"></label>
-      <label>#28 Insane computation <input type="number" min="0" max="1"></label>
-      <label>#29 Megabytes <input type="number" min="0" max="1"></label>
-      <label>#30 absolue FRENZY <input type="number" min="0" max="1"></label>
-      <label>#31 insignia <input type="number" min="0" max="1"></label>
-      <label>#32 deflated oblivion <input type="number" min="0" max="8"></label>
-      <label>#33 Cursed soul <input type="number" min="0" max="1"></label>
-      <label>#34 light then dark <input type="number" min="0" max="1"></label>
-      <label>#35 plentiful experience <input type="number" min="0" max="1"></label>
-      <label>#36 Beyond beliefs <input type="number" min="0" max="1"></label>
-      <label>#37 Fortune 500 <input type="number" min="0" max="1"></label>
-      <label>#38 Absurd Pricing <input type="number" min="0" max="1"></label>
-      <label>#39 Gravitational soul <input type="number" min="0" max="1"></label>
-    </div>
-  </div>
+<!-- Placeholder sections for other currencies -->
+<div id="section-λ" class="input-section"><p>λ inputs here</p></div>
+<div id="section-₹" class="input-section"><p>₹ inputs here</p></div>
+<div id="section-฿" class="input-section"><p>฿ inputs here</p></div>
+<div id="section-₽X" class="input-section"><p>₽X inputs here</p></div>
+<div id="section-⊙" class="input-section"><p>⊙ inputs here</p></div>
+<div id="section-τ" class="input-section"><p>τ inputs here</p></div>
+<div id="section-Λ" class="input-section"><p>Λ inputs here</p></div>
+<div id="section-Ψ" class="input-section"><p>Ψ inputs here</p></div>
+<div id="section-€" class="input-section"><p>€ inputs here</p></div>
+<div id="section-XP" class="input-section"><p>XP inputs here</p></div>
 
-  <!-- Placeholder sections -->
-  <div id="section-λ" class="input-section"><p>λ inputs here</p></div>
-  <div id="section-₹" class="input-section"><p>₹ inputs here</p></div>
-  <div id="section-฿" class="input-section"><p>฿ inputs here</p></div>
-  <div id="section-₽X" class="input-section"><p>₽X inputs here</p></div>
-  <div id="section-⊙" class="input-section"><p>⊙ inputs here</p></div>
-  <div id="section-τ" class="input-section"><p>τ inputs here</p></div>
-  <div id="section-Λ" class="input-section"><p>Λ inputs here</p></div>
-  <div id="section-Ψ" class="input-section"><p>Ψ inputs here</p></div>
-  <div id="section-€" class="input-section"><p>€ inputs here</p></div>
-  <div id="section-XP" class="input-section"><p>XP inputs here</p></div>
+<script>
+  function showSection(symbol) {
+    document.querySelectorAll('.input-section').forEach(div => div.classList.remove('active'));
+    document.querySelectorAll('.currency-tabs button').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('section-' + symbol).classList.add('active');
+    document.querySelector('.tab-' + CSS.escape(symbol)).classList.add('active');
+  }
+  showSection('₽'); // default tab
+</script>
 
-  <script>
-    function showSection(symbol) {
-      document.querySelectorAll('.input-section').forEach(div => div.classList.remove('active'));
-      document.querySelectorAll('.currency-tabs button').forEach(btn => btn.classList.remove('active'));
-      document.getElementById('section-' + symbol).classList.add('active');
-      document.querySelector('.tab-' + CSS.escape(symbol)).classList.add('active');
-    }
-
-    showSection('₽');
-  </script>
 </body>
 </html>
