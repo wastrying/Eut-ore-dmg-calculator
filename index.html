@@ -5,11 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Ore Mastery</title>
   <style>
+    :root {
+      --bg-color: #f3c2e4;
+      --primary: #8b2e6a;
+      --secondary: #d36ca5;
+      --text-color: white;
+    }
+
+    body.dark {
+      --bg-color: #2b2b2b;
+      --primary: #444;
+      --secondary: #666;
+      --text-color: #f3f3f3;
+    }
+
     body {
-      background: #f3c2e4;
+      background: var(--bg-color);
       font-family: 'Segoe UI', sans-serif;
       margin: 0;
       padding: 20px;
+      transition: background 0.3s;
     }
 
     .top-bar {
@@ -21,8 +36,8 @@
     }
 
     .settings-btn {
-      background: #8b2e6a;
-      color: white;
+      background: var(--primary);
+      color: var(--text-color);
       padding: 8px 10px;
       border: none;
       border-radius: 8px;
@@ -32,12 +47,12 @@
     }
 
     .settings-btn:hover {
-      background: #a7448a;
+      background: var(--secondary);
     }
 
     h1 {
-      color: #fff;
-      background: #d36ca5;
+      color: var(--text-color);
+      background: var(--secondary);
       padding: 10px 16px;
       border-radius: 8px;
       margin: 0;
@@ -52,10 +67,10 @@
     }
 
     .ore-card {
-      background: #8b2e6a;
+      background: var(--primary);
       border-radius: 10px;
       padding: 10px;
-      color: white;
+      color: var(--text-color);
       text-align: center;
       cursor: pointer;
       transition: transform 0.2s;
@@ -84,12 +99,60 @@
       font-weight: bold;
       font-size: 13px;
     }
+
+    /* Settings Panel */
+    .settings-panel {
+      position: fixed;
+      top: 0;
+      left: -200px;
+      width: 200px;
+      height: 100%;
+      background: var(--primary);
+      color: var(--text-color);
+      padding: 20px;
+      transition: left 0.3s ease;
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+    }
+
+    .settings-panel.open {
+      left: 0;
+    }
+
+    .settings-panel h2 {
+      font-size: 16px;
+      margin-top: 0;
+      margin-bottom: 15px;
+    }
+
+    .settings-panel button {
+      display: block;
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 8px;
+      background: var(--secondary);
+      color: var(--text-color);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .settings-panel button:hover {
+      background: #b85a99;
+    }
   </style>
 </head>
 <body>
 
+  <!-- Settings Panel -->
+  <div class="settings-panel" id="settingsPanel">
+    <h2>Settings</h2>
+    <button onclick="toggleTheme()">🌗 Toggle Light/Dark Mode</button>
+    <button onclick="alert('Bug report form coming soon!')">🐞 Report a Bug</button>
+  </div>
+
   <div class="top-bar">
-    <button class="settings-btn" onclick="openSettings()">⚙</button>
+    <button class="settings-btn" onclick="toggleSettings()">⚙</button>
     <h1>ORE MASTERY</h1>
   </div>
 
@@ -142,8 +205,13 @@
       });
     }
 
-    function openSettings() {
-      alert("Settings menu coming soon!");
+    function toggleSettings() {
+      const panel = document.getElementById('settingsPanel');
+      panel.classList.toggle('open');
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle('dark');
     }
 
     renderOres();
