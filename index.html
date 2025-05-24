@@ -10,30 +10,24 @@
       font-family: 'Segoe UI', sans-serif;
       margin: 0;
       padding: 20px;
-      position: relative;
     }
 
-    h1 {
-      text-align: center;
-      color: #fff;
-      background: #d36ca5;
-      padding: 10px;
-      border-radius: 8px;
-      margin-left: 40px; /* avoid overlap with settings button */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
     }
 
     .settings-btn {
-      position: absolute;
-      top: 20px;
-      left: 20px;
       background: #8b2e6a;
       color: white;
-      padding: 10px 12px;
+      padding: 8px 10px;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      font-size: 14px;
-      font-weight: bold;
+      font-size: 18px;
       transition: background 0.2s;
     }
 
@@ -41,12 +35,20 @@
       background: #a7448a;
     }
 
+    h1 {
+      color: #fff;
+      background: #d36ca5;
+      padding: 10px 16px;
+      border-radius: 8px;
+      margin: 0;
+    }
+
     .ore-grid {
       display: grid;
       grid-template-columns: repeat(6, 1fr);
       gap: 15px;
       max-width: 1200px;
-      margin: 20px auto;
+      margin: 0 auto;
     }
 
     .ore-card {
@@ -86,9 +88,11 @@
 </head>
 <body>
 
-  <button class="settings-btn" onclick="openSettings()">⚙ Settings</button>
+  <div class="top-bar">
+    <button class="settings-btn" onclick="openSettings()">⚙</button>
+    <h1>ORE MASTERY</h1>
+  </div>
 
-  <h1>ORE MASTERY</h1>
   <div class="ore-grid" id="oreGrid"></div>
 
   <script>
