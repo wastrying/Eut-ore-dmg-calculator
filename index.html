@@ -22,9 +22,11 @@
 
     .ore-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      grid-template-columns: repeat(6, 1fr);
+      grid-auto-rows: 150px;
       gap: 15px;
-      margin-top: 20px;
+      max-width: 1200px;
+      margin: 20px auto;
     }
 
     .ore-card {
@@ -33,37 +35,46 @@
       padding: 8px;
       color: white;
       text-align: center;
-      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
 
     .ore-card img {
       max-width: 100%;
-      border-radius: 5px;
-      height: 60px;
+      height: 50px;
       object-fit: contain;
+      border-radius: 4px;
     }
 
     .ore-level {
       font-weight: bold;
       margin: 4px 0;
+      font-size: 14px;
     }
 
     .ore-stats {
-      font-size: 0.75em;
+      font-size: 12px;
     }
 
     .progress-bar {
       height: 6px;
       background: #ddd;
       border-radius: 4px;
-      margin-top: 5px;
+      margin-top: 4px;
     }
 
     .progress {
       height: 100%;
       border-radius: 4px;
       background: limegreen;
-      width: 70%; /* dynamic */
+      width: 70%;
+    }
+
+    @media (max-width: 768px) {
+      .ore-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
     }
   </style>
 </head>
@@ -72,7 +83,7 @@
   <h1>ORE MASTERY</h1>
 
   <div class="ore-grid" id="oreGrid">
-    <!-- JS will populate ore cards here -->
+    <!-- JavaScript populates ore cards here -->
   </div>
 
   <script>
@@ -85,7 +96,7 @@
       { level: 52, current: 3.49, max: 4.50, unit: 'qd' },
       { level: 31, current: 335.54, max: 617.67, unit: 'T' },
       { level: 31, current: 324.64, max: 617.67, unit: 'T' },
-      { level: 50, current: 81.31, max: 1.13, unit: 'qd' },
+      { level: 50, current: 81.31, max: 1130, unit: 'qd' },
       { level: 30, current: 54.97, max: 205.89, unit: 'T' },
       { level: 30, current: 53.24, max: 205.89, unit: 'T' },
       { level: 30, current: 54.74, max: 205.89, unit: 'T' },
@@ -95,17 +106,7 @@
       { level: 31, current: 3.36, max: 617.67, unit: 'T' },
       { level: 31, current: 42.83, max: 617.67, unit: 'T' },
       { level: 30, current: 108.77, max: 205.89, unit: 'T' },
-      { level: 26, current: 2.31, max: 2.54, unit: 'T' },
-      { level: 30, current: 47.16, max: 205.89, unit: 'T' },
-      { level: 30, current: 5.83, max: 205.89, unit: 'T' },
-      { level: 29, current: 64.96, max: 68.63, unit: 'T' },
-      { level: 27, current: 1.62, max: 7.63, unit: 'T' },
-      { level: 30, current: 86.11, max: 205.89, unit: 'T' },
-      { level: 19, current: 6.99, max: 19.07, unit: 'T' },
-      { level: 21, current: 1.49, max: 4.41, unit: 'T' },
-      { level: 21, current: 1.47, max: 4.41, unit: 'T' },
-      { level: 16, current: 383.81, max: 2.82, unit: 'T' },
-      { level: 19, current: 137.7, max: 274.88, unit: 'B' }
+      // You can add more ores if needed
     ];
 
     const oreGrid = document.getElementById('oreGrid');
