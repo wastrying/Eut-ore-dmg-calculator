@@ -1,155 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>EUT Advance Calculator</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ore Mastery</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f3f3f3;
+      background: #f3c2e4;
+      font-family: 'Segoe UI', sans-serif;
       margin: 0;
       padding: 20px;
-      text-align: center;
     }
 
     h1 {
-      margin-bottom: 20px;
-    }
-
-    .currency-tabs {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-
-    .currency-tabs button {
-      padding: 10px 15px;
-      margin: 3px;
-      border: none;
-      background-color: #ddd;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    .currency-tabs button.active {
-      background-color: #aaa;
-      color: white;
-    }
-
-    .input-section {
-      display: none;
-      background: white;
+      text-align: center;
+      color: #fff;
+      background: #d36ca5;
+      padding: 10px;
       border-radius: 8px;
-      padding: 20px;
-      max-width: 1100px;
-      margin: 0 auto;
     }
 
-    .input-section.active {
-      display: block;
-    }
-
-    .upgrade-grid {
+    .ore-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 12px 24px;
-      justify-content: center;
-      text-align: left;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
     }
 
-    label {
-      font-size: 14px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #f9f9f9;
-      padding: 8px 12px;
+    .ore-card {
+      background: #8b2e6a;
+      border-radius: 10px;
+      padding: 8px;
+      color: white;
+      text-align: center;
+      position: relative;
+    }
+
+    .ore-card img {
+      max-width: 100%;
       border-radius: 5px;
-      border: 1px solid #ccc;
+      height: 60px;
+      object-fit: contain;
     }
 
-    input[type=number] {
-      width: 60px;
-      padding: 4px;
-      font-size: 14px;
+    .ore-level {
+      font-weight: bold;
+      margin: 4px 0;
     }
 
-    input[type=number]:invalid {
-      background-color: #ffecec;
+    .ore-stats {
+      font-size: 0.75em;
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: #ddd;
+      border-radius: 4px;
+      margin-top: 5px;
+    }
+
+    .progress {
+      height: 100%;
+      border-radius: 4px;
+      background: limegreen;
+      width: 70%; /* adjust per ore */
     }
   </style>
 </head>
 <body>
-  <h1>EUT Advance Calculator</h1>
 
-  <div class="currency-tabs">
-    <button class="tab" onclick="showSection('₽')">₽</button>
-    <button class="tab" onclick="showSection('λ')">λ</button>
-    <button class="tab" onclick="showSection('₹')">₹</button>
-    <button class="tab" onclick="showSection('฿')">฿</button>
-    <button class="tab" onclick="showSection('₽X')">₽X</button>
-    <button class="tab" onclick="showSection('⊙')">⊙</button>
-    <button class="tab" onclick="showSection('τ')">τ</button>
-    <button class="tab" onclick="showSection('Λ')">Λ</button>
-    <button class="tab" onclick="showSection('Ψ')">Ψ</button>
-    <button class="tab" onclick="showSection('€')">€</button>
-    <button class="tab" onclick="showSection('XP')">XP</button>
+  <h1>ORE MASTERY</h1>
+
+  <div class="ore-grid">
+    <div class="ore-card">
+      <img src="https://via.placeholder.com/100" alt="Ore">
+      <div class="ore-level">LV. 32</div>
+      <div class="ore-stats">1.70q / 1.85q</div>
+      <div class="progress-bar">
+        <div class="progress" style="width: 92%;"></div>
+      </div>
+    </div>
+
+    <div class="ore-card">
+      <img src="https://via.placeholder.com/100" alt="Ore">
+      <div class="ore-level">LV. 30</div>
+      <div class="ore-stats">54.97T / 205.89T</div>
+      <div class="progress-bar">
+        <div class="progress" style="width: 27%;"></div>
+      </div>
+    </div>
+
+    <!-- Repeat more .ore-card blocks with different data -->
   </div>
 
-  <div id="section-₽" class="input-section active">
-    <h3>₽ Point Upgrades</h3>
-    <div class="upgrade-grid" id="upgrade-grid"></div>
-  </div>
-
-  <!-- Placeholder sections for other currencies -->
-  <div id="section-λ" class="input-section"><p>λ content</p></div>
-  <div id="section-₹" class="input-section"><p>₹ content</p></div>
-  <div id="section-฿" class="input-section"><p>฿ content</p></div>
-  <div id="section-₽X" class="input-section"><p>₽X content</p></div>
-  <div id="section-⊙" class="input-section"><p>⊙ content</p></div>
-  <div id="section-τ" class="input-section"><p>τ content</p></div>
-  <div id="section-Λ" class="input-section"><p>Λ content</p></div>
-  <div id="section-Ψ" class="input-section"><p>Ψ content</p></div>
-  <div id="section-€" class="input-section"><p>€ content</p></div>
-  <div id="section-XP" class="input-section"><p>XP content</p></div>
-
-  <script>
-    const upgrades = [
-      "generic beginning", "an increase", "a bigger increase", "multiple increase", "an advance increase",
-      "it grows", "even more levels", "New technologies", "But its not all empty", "there it is",
-      "push for research", "now with the exponents", "cost cutting", "thats a lot", "TOO MANY LEVELS",
-      "Growing up", "A slight edge", "Meaningless fun", "a different, bigger increase", "Competitive",
-      "upgrade genetics", "1UP!", "Downsizing", "Holy grail", "After halcyon", "Divine soul", "Delayed gratification",
-      "Insane computation", "Megabytes", "absolue FRENZY", "insignia", "deflated oblivion", "Cursed soul",
-      "light then dark", "plentiful experience", "Beyond beliefs", "Fortune 500", "Absurd Pricing", "Gravitational soul"
-    ];
-
-    const maxLevels = [
-      3, 2, 2, 1041, 2, 2, 2, 2, 1, 2, 1, 2, 5, 1, 1, 1, 1, 1, 1, 1,
-      1, 15, 10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 8, 1, 1, 1, 1, 1, 1
-    ];
-
-    const container = document.getElementById("upgrade-grid");
-
-    upgrades.forEach((name, i) => {
-      const label = document.createElement("label");
-      label.innerHTML = `#${i+1} ${name} <input type="number" min="0" max="${maxLevels[i]}" oninput="enforceMax(this)">`;
-      container.appendChild(label);
-    });
-
-    function showSection(id) {
-      document.querySelectorAll('.input-section').forEach(s => s.classList.remove('active'));
-      document.getElementById('section-' + id).classList.add('active');
-      document.querySelectorAll('.currency-tabs button').forEach(btn => btn.classList.remove('active'));
-      event.target.classList.add('active');
-    }
-
-    function enforceMax(el) {
-      const max = parseInt(el.max);
-      if (+el.value > max) el.value = max;
-      if (+el.value < 0) el.value = 0;
-    }
-  </script>
 </body>
 </html>
