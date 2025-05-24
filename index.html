@@ -63,7 +63,7 @@
       height: 100%;
       border-radius: 4px;
       background: limegreen;
-      width: 70%; /* adjust per ore */
+      width: 70%; /* dynamic */
     }
   </style>
 </head>
@@ -71,27 +71,60 @@
 
   <h1>ORE MASTERY</h1>
 
-  <div class="ore-grid">
-    <div class="ore-card">
-      <img src="https://via.placeholder.com/100" alt="Ore">
-      <div class="ore-level">LV. 32</div>
-      <div class="ore-stats">1.70q / 1.85q</div>
-      <div class="progress-bar">
-        <div class="progress" style="width: 92%;"></div>
-      </div>
-    </div>
-
-    <div class="ore-card">
-      <img src="https://via.placeholder.com/100" alt="Ore">
-      <div class="ore-level">LV. 30</div>
-      <div class="ore-stats">54.97T / 205.89T</div>
-      <div class="progress-bar">
-        <div class="progress" style="width: 27%;"></div>
-      </div>
-    </div>
-
-    <!-- Repeat more .ore-card blocks with different data -->
+  <div class="ore-grid" id="oreGrid">
+    <!-- JS will populate ore cards here -->
   </div>
+
+  <script>
+    const oreData = [
+      { level: 32, current: 1.70, max: 1.85, unit: 'qd' },
+      { level: 28, current: 361.06, max: 122.88, unit: 'T' },
+      { level: 31, current: 278.55, max: 617.67, unit: 'T' },
+      { level: 50, current: 1.06, max: 1.13, unit: 'qd' },
+      { level: 49, current: 84.55, max: 562.95, unit: 'T' },
+      { level: 52, current: 3.49, max: 4.50, unit: 'qd' },
+      { level: 31, current: 335.54, max: 617.67, unit: 'T' },
+      { level: 31, current: 324.64, max: 617.67, unit: 'T' },
+      { level: 50, current: 81.31, max: 1.13, unit: 'qd' },
+      { level: 30, current: 54.97, max: 205.89, unit: 'T' },
+      { level: 30, current: 53.24, max: 205.89, unit: 'T' },
+      { level: 30, current: 54.74, max: 205.89, unit: 'T' },
+      { level: 31, current: 205.89, max: 617.67, unit: 'T' },
+      { level: 30, current: 85.61, max: 205.89, unit: 'T' },
+      { level: 30, current: 93.16, max: 205.89, unit: 'T' },
+      { level: 31, current: 3.36, max: 617.67, unit: 'T' },
+      { level: 31, current: 42.83, max: 617.67, unit: 'T' },
+      { level: 30, current: 108.77, max: 205.89, unit: 'T' },
+      { level: 26, current: 2.31, max: 2.54, unit: 'T' },
+      { level: 30, current: 47.16, max: 205.89, unit: 'T' },
+      { level: 30, current: 5.83, max: 205.89, unit: 'T' },
+      { level: 29, current: 64.96, max: 68.63, unit: 'T' },
+      { level: 27, current: 1.62, max: 7.63, unit: 'T' },
+      { level: 30, current: 86.11, max: 205.89, unit: 'T' },
+      { level: 19, current: 6.99, max: 19.07, unit: 'T' },
+      { level: 21, current: 1.49, max: 4.41, unit: 'T' },
+      { level: 21, current: 1.47, max: 4.41, unit: 'T' },
+      { level: 16, current: 383.81, max: 2.82, unit: 'T' },
+      { level: 19, current: 137.7, max: 274.88, unit: 'B' }
+    ];
+
+    const oreGrid = document.getElementById('oreGrid');
+
+    oreData.forEach((ore, index) => {
+      const percent = Math.min(100, (ore.current / ore.max) * 100).toFixed(1);
+      const card = document.createElement('div');
+      card.className = 'ore-card';
+      card.innerHTML = `
+        <img src="https://via.placeholder.com/100?text=Ore+${index+1}" alt="Ore ${index+1}">
+        <div class="ore-level">LV. ${ore.level}</div>
+        <div class="ore-stats">${ore.current}${ore.unit} / ${ore.max}${ore.unit}</div>
+        <div class="progress-bar">
+          <div class="progress" style="width: ${percent}%"></div>
+        </div>
+      `;
+      oreGrid.appendChild(card);
+    });
+  </script>
 
 </body>
 </html>
