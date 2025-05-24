@@ -34,9 +34,12 @@
       padding: 8px;
       color: white;
       text-align: center;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .ore-card:hover {
+      transform: scale(1.03);
     }
 
     .ore-card img {
@@ -69,6 +72,44 @@
       background: limegreen;
       width: 70%;
     }
+
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 400px;
+      text-align: center;
+      color: #333;
+      position: relative;
+    }
+
+    .modal-content h2 {
+      margin-top: 0;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 10px; right: 15px;
+      cursor: pointer;
+      font-size: 20px;
+      font-weight: bold;
+      color: #888;
+    }
+
+    .close-btn:hover {
+      color: #000;
+    }
   </style>
 </head>
 <body>
@@ -77,6 +118,15 @@
 
   <div class="ore-grid" id="oreGrid">
     <!-- JavaScript populates ore cards here -->
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="oreModal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal()">&times;</span>
+      <h2 id="modalTitle">Ore Details</h2>
+      <p id="modalBody"></p>
+    </div>
   </div>
 
   <script>
@@ -113,6 +163,25 @@
     ];
 
     const oreGrid = document.getElementById('oreGrid');
+    const modal = document.getElementById('oreModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+
+    function openModal(title, details) {
+      modalTitle.textContent = title;
+      modalBody.textContent = details;
+      modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+      modal.style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+      if (event.target === modal) {
+        closeModal();
+      }
+    }
 
     oreData.forEach((ore, index) => {
       const percent = Math.min(100, (ore.current / ore.max) * 100).toFixed(1);
@@ -126,6 +195,12 @@
           <div class="progress" style="width: ${percent}%"></div>
         </div>
       `;
+      card.addEventListener('click', () => {
+        openModal(
+          `Ore #${index + 1} (Level ${ore.level})`,
+          `Progress: ${ore.current}${ore.unit} / ${ore.max}${ore.unit} (${percent}%)`
+        );
+      });
       oreGrid.appendChild(card);
     });
   </script>
