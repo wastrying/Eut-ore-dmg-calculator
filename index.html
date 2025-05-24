@@ -10,6 +10,7 @@
       font-family: 'Segoe UI', sans-serif;
       margin: 0;
       padding: 20px;
+      position: relative;
     }
 
     h1 {
@@ -18,6 +19,26 @@
       background: #d36ca5;
       padding: 10px;
       border-radius: 8px;
+      margin-left: 40px; /* avoid overlap with settings button */
+    }
+
+    .settings-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: #8b2e6a;
+      color: white;
+      padding: 10px 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+
+    .settings-btn:hover {
+      background: #a7448a;
     }
 
     .ore-grid {
@@ -47,7 +68,7 @@
       height: 64px;
       margin: 0 auto;
       background-image: url("cec97e28-6d41-46cf-83b8-b59a38f62250.png");
-      background-size: 384px 320px; /* 6 cols × 64px, 5 rows × 64px */
+      background-size: 384px 320px;
       background-repeat: no-repeat;
     }
 
@@ -64,6 +85,8 @@
   </style>
 </head>
 <body>
+
+  <button class="settings-btn" onclick="openSettings()">⚙ Settings</button>
 
   <h1>ORE MASTERY</h1>
   <div class="ore-grid" id="oreGrid"></div>
@@ -113,6 +136,10 @@
 
         oreGrid.appendChild(card);
       });
+    }
+
+    function openSettings() {
+      alert("Settings menu coming soon!");
     }
 
     renderOres();
