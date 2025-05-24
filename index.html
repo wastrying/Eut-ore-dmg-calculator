@@ -47,14 +47,19 @@
       height: 64px;
       margin: 0 auto;
       background-image: url("cec97e28-6d41-46cf-83b8-b59a38f62250.png");
-      background-size: 384px 320px; /* 6 cols × 64px = 384, 5 rows × 64px = 320 */
+      background-size: 384px 320px; /* 6 cols × 64px, 5 rows × 64px */
       background-repeat: no-repeat;
+    }
+
+    .ore-name {
+      margin-top: 6px;
+      font-size: 14px;
+      font-weight: 600;
     }
 
     .ore-level {
       font-weight: bold;
-      margin-top: 6px;
-      font-size: 14px;
+      font-size: 13px;
     }
   </style>
 </head>
@@ -64,18 +69,25 @@
   <div class="ore-grid" id="oreGrid"></div>
 
   <script>
+    const oreNames = [
+      "Stone", "Basalt", "Coal", "Iron", "Aluminum", "Tin",
+      "Copper", "Gold", "Steel", "Ruby", "Sapphire", "Emerald",
+      "Diamond", "Uranium", "Plutonium", "Amethyst", "Aventurine", "Titanium",
+      "Hearstone", "Bismuth", "Garnet", "Aquamarine", "Prismastone", "Dragonstone",
+      "Obsidian", "Sulfur", "Pyrite", "Bloodstone", "Netherite"
+    ];
+
     const SPRITE_COLS = 6;
-    const SPRITE_ROWS = 5;
     const TILE_SIZE = 64;
 
-    // Create 30 ores with level 0
-    const oreData = Array.from({ length: SPRITE_COLS * SPRITE_ROWS }, (_, i) => ({
+    const oreGrid = document.getElementById('oreGrid');
+
+    const oreData = Array.from({ length: oreNames.length }, (_, i) => ({
+      name: oreNames[i],
       level: 0,
       col: i % SPRITE_COLS,
       row: Math.floor(i / SPRITE_COLS)
     }));
-
-    const oreGrid = document.getElementById('oreGrid');
 
     function renderOres() {
       oreGrid.innerHTML = '';
@@ -87,11 +99,12 @@
 
         card.innerHTML = `
           <div class="ore-image" style="background-position: ${bgX}px ${bgY}px;"></div>
+          <div class="ore-name">${ore.name}</div>
           <div class="ore-level" id="level-${index}">LV. ${ore.level}</div>
         `;
 
         card.addEventListener('click', () => {
-          const newLevel = prompt(`Enter new level for Ore #${index + 1}:`, ore.level);
+          const newLevel = prompt(`Enter new level for ${ore.name}:`, ore.level);
           if (newLevel !== null && !isNaN(newLevel)) {
             ore.level = parseInt(newLevel);
             document.getElementById(`level-${index}`).textContent = `LV. ${ore.level}`;
