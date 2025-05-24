@@ -47,7 +47,7 @@
       height: 64px;
       margin: 0 auto;
       background-image: url("cec97e28-6d41-46cf-83b8-b59a38f62250.png");
-      background-size: 384px 320px; /* 6 cols × 64px, 5 rows × 64px */
+      background-size: 384px 320px; /* 6 cols × 64px = 384, 5 rows × 64px = 320 */
       background-repeat: no-repeat;
     }
 
@@ -64,11 +64,15 @@
   <div class="ore-grid" id="oreGrid"></div>
 
   <script>
-    // 6 columns × 5 rows = 30 ores
-    const oreData = Array.from({ length: 30 }, (_, i) => ({
-      level: Math.floor(Math.random() * 50) + 1,
-      col: i % 6,
-      row: Math.floor(i / 6)
+    const SPRITE_COLS = 6;
+    const SPRITE_ROWS = 5;
+    const TILE_SIZE = 64;
+
+    // Create 30 ores with level 0
+    const oreData = Array.from({ length: SPRITE_COLS * SPRITE_ROWS }, (_, i) => ({
+      level: 0,
+      col: i % SPRITE_COLS,
+      row: Math.floor(i / SPRITE_COLS)
     }));
 
     const oreGrid = document.getElementById('oreGrid');
@@ -78,8 +82,8 @@
       oreData.forEach((ore, index) => {
         const card = document.createElement('div');
         card.className = 'ore-card';
-        const bgX = -ore.col * 64;
-        const bgY = -ore.row * 64;
+        const bgX = -ore.col * TILE_SIZE;
+        const bgY = -ore.row * TILE_SIZE;
 
         card.innerHTML = `
           <div class="ore-image" style="background-position: ${bgX}px ${bgY}px;"></div>
