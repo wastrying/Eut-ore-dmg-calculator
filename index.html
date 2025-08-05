@@ -1,198 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Ore Damage Calculator</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      transition: background-color 0.3s, color 0.3s;
-    }
-    .dark-mode {
-      background-color: #121212;
-      color: #ffffff;
-    }
-    .container {
-      padding: 20px;
-    }
-    label, input, button {
-      margin: 5px 0;
-      font-size: 1em;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    th, td {
-      border: 1px solid #999;
-      padding: 8px;
-      text-align: center;
-    }
-    th {
-      background-color: #ddd;
-    }
-    .dark-mode th {
-      background-color: #333;
-    }
-    .dark-mode table, .dark-mode td, .dark-mode th {
-      border-color: #555;
-    }
-    #settings-toggle {
-      position: fixed;
-      right: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      background: #333;
-      color: #fff;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 6px 0 0 6px;
-      cursor: pointer;
-      z-index: 999;
-    }
-    .dark-mode #settings-toggle {
-      background: #666;
-    }
-    #settings-panel {
-      position: fixed;
-      top: 0;
-      right: -300px;
-      width: 300px;
-      height: 100%;
-      background: #f4f4f4;
-      border-left: 2px solid #ccc;
-      padding: 20px;
-      box-shadow: -2px 0 5px rgba(0,0,0,0.2);
-      transition: right 0.3s ease;
-      z-index: 998;
-    }
-    .dark-mode #settings-panel {
-      background: #1e1e1e;
-      border-color: #555;
-    }
-    #settings-panel.open {
-      right: 0;
-    }
-    textarea {
-      width: 100%;
-      height: 80px;
-      margin-top: 10px;
-    }
-    .mode-toggle {
-      margin: 10px 0;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>Ore Damage Calculator</h1>
-    <label for="damage">Enter Your Damage:</label><br/>
-    <input type="number" id="damage" placeholder="Enter damage" /><br/>
-    <button onclick="calculateDamage()">Calculate</button>
-    <table id="result-table">
-      <thead>
-        <tr>
-          <th>Ore</th>
-          <th>HP</th>
-          <th>Defense</th>
-          <th>Damage Dealt</th>
-          <th>One-Shot?</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ore Damage Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-white text-black transition-colors duration-300">
+    <div class="min-h-screen p-8">
+      <h1 class="text-2xl font-bold mb-4">Ore Damage Calculator</h1>
+      <div class="grid grid-cols-2 gap-4 mb-4">
+        <label>
+          Base Damage:
+          <input id="baseDmg" type="number" class="border px-2" />
+        </label>
+        <label>
+          MR Level:
+          <input id="mrLevel" type="number" value="0" class="border px-2" />
+        </label>
+        <label>
+          Enchant Level:
+          <input id="enchantLevel" type="number" value="0" class="border px-2" />
+        </label>
+        <label>
+          Aqua Level:
+          <input id="aquaLevel" type="number" value="0" class="border px-2" />
+        </label>
+      </div>
+      <button onclick="calculateDamage()" class="bg-blue-500 text-white px-4 py-2 rounded">Calculate</button>
 
-  <!-- ⚙️ Settings Button -->
-  <button id="settings-toggle">⚙️</button>
-
-  <!-- Settings Side Panel -->
-  <div id="settings-panel">
-    <h3>Settings</h3>
-    <div class="mode-toggle">
-      <label>
-        <input type="checkbox" id="dark-mode-toggle" />
-        Dark Mode
-      </label>
+      <table class="table-auto w-full mt-6 border">
+        <thead>
+          <tr class="bg-gray-200">
+            <th class="border px-4 py-2">Ore</th>
+            <th class="border px-4 py-2">HP</th>
+            <th class="border px-4 py-2">Defense</th>
+            <th class="border px-4 py-2">Reduced Dmg</th>
+            <th class="border px-4 py-2">One Shot?</th>
+          </tr>
+        </thead>
+        <tbody id="resultsBody"></tbody>
+      </table>
     </div>
-    <div>
-      <label for="feedback">Bug Report / Feedback:</label>
-      <textarea id="feedback" placeholder="Write your feedback..."></textarea>
-      <button onclick="submitFeedback()">Submit</button>
+
+    <!-- Sidebar Toggle Button -->
+    <button onclick="toggleSidebar()" class="fixed right-0 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white px-2 py-1 rounded-l z-50">
+      ⚙️
+    </button>
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed top-0 right-0 h-full w-64 bg-white dark:bg-gray-900 text-black dark:text-white shadow-lg p-4 transform translate-x-full transition-transform duration-300 z-40">
+      <h2 class="text-xl font-bold mb-4">Settings</h2>
+      <button onclick="toggleDarkMode()" class="bg-gray-300 dark:bg-gray-700 text-black dark:text-white px-4 py-2 rounded mb-4">
+        Toggle Dark/Light Mode
+      </button>
+      <h3 class="text-lg font-semibold mb-2">Feedback</h3>
+      <textarea id="feedbackBox" placeholder="Report a bug or give feedback..." class="w-full h-32 p-2 border dark:bg-gray-800 dark:border-gray-600"></textarea>
+      <button onclick="submitFeedback()" class="bg-green-500 text-white px-4 py-2 mt-2 rounded">Submit</button>
     </div>
-  </div>
 
-  <script>
-    const ores = {
-      Stone: { hp: 10, def: 0 },
-      Coal: { hp: 50, def: 5 },
-      Iron: { hp: 150, def: 15 },
-      Gold: { hp: 250, def: "log1.3" },
-      Diamond: { hp: 500, def: "20%" },
-      Mythic: { hp: 1000, def: 100 }
-    };
+    <script>
+      const ores = {
+    "Stone":        {hp: 5, def: "0%"},
+    "Bedrock":      {hp: 500, def: 10},
+    "Evil Rock":    {hp: 1, def: 5},
+    "Coal":         {hp: 10, def: "0%"},
+    "Iron":         {hp: 45, def: "0%"},
+    "Aluminium":    {hp: 30, def: "0%"},
+    "Tin":          {hp: 15, def: "0%"},
+    "Copper":       {hp: 30, def: "0%"},
+    "Gold":         {hp: 50, def: 2},
+    "Ruby":         {hp: 90, def: 3},
+    "Sapphire":     {hp: 90, def: 3},
+    "Emerald":      {hp: 90, def: 3},
+    "Diamond":      {hp: 125, def: 8},
+    "Uranium":      {hp: 1500, def: 20},
+    "Plutonium":    {hp: 1500, def: 20},
+    "Amethyst":     {hp: 300, def: 5},
+    "Aventurine":   {hp: 1250, def: 2},
+    "Titanium":     {hp: 750, def: 10},
+    "Heartstone":   {hp: 1000, def: "log1.3"},
+    "Bismuth":      {hp: 75000, def: "log1.2"},
+    "Dragonstone":  {hp: 400000, def: 70},
+    "Garnet":       {hp: 12500000, def: "0%"},
+    "Aquamarine":   {hp: 1000000, def: 50},
+    "Prismastone":  {hp: 10000, def: "log10"},
+    "Basalt":       {hp: 100000, def: "0%"},
+    "Obsidian":     {hp: 250, def: 1000},
+    "Sulfur":       {hp: 5000000, def: 3},
+    "Pyrite":       {hp: 250000, def: 70},
+    "Bloodstone":   {hp: 1000000, def: 50},
+    "Netherite":    {hp: 30000, def: "log3"},
+  };
 
-    function evaluateDefense(def, damage) {
-      if (typeof def === "string") {
-        if (def.startsWith("log")) {
-          const base = parseFloat(def.replace("log", ""));
-          return Math.log(damage) / Math.log(base);
+      function calculateDamage() {
+        const base = parseFloat(document.getElementById("baseDmg").value);
+        const mr = parseInt(document.getElementById("mrLevel").value);
+        const enchant = parseInt(document.getElementById("enchantLevel").value);
+        const aqua = parseInt(document.getElementById("aquaLevel").value);
+
+        const pierceMult = 1 + 0.06 * mr + 0.01 * enchant + 0.02 * aqua;
+        const damage = base * pierceMult;
+
+        const tbody = document.getElementById("resultsBody");
+        tbody.innerHTML = "";
+
+        Object.entries(ores).forEach(([oreName, oreData]) => {
+          let defenseValue;
+
+          if (typeof oreData.def === "string" && oreData.def.includes("log")) {
+            const logBase = parseFloat(oreData.def.replace("log", ""));
+            defenseValue = Math.log10(base) / Math.log10(logBase);
+          } else if (typeof oreData.def === "string" && oreData.def.includes("%")) {
+            defenseValue = base * (parseFloat(oreData.def.replace("%", "")) / 100);
+          } else {
+            defenseValue = parseFloat(oreData.def);
+          }
+
+          const reduced = damage * (100 / (100 + defenseValue));
+          const isOneShot = reduced >= oreData.hp ? "✅" : "❌";
+
+          tbody.innerHTML += `
+            <tr>
+              <td>${oreName}</td>
+              <td>${oreData.hp}</td>
+              <td>${oreData.def}</td>
+              <td>${Math.floor(reduced)}</td>
+              <td>${isOneShot}</td>
+            </tr>
+          `;
+        });
+      }
+
+      function toggleSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        sidebar.classList.toggle("translate-x-full");
+      }
+
+      function toggleDarkMode() {
+        document.body.classList.toggle("dark");
+        document.body.classList.toggle("bg-white");
+        document.body.classList.toggle("text-black");
+        document.body.classList.toggle("bg-gray-900");
+        document.body.classList.toggle("text-white");
+      }
+
+      function submitFeedback() {
+        const feedback = document.getElementById("feedbackBox").value;
+        if (feedback.trim() === "") {
+          alert("Please enter some feedback.");
+        } else {
+          console.log("Feedback submitted:", feedback);
+          alert("Thank you for your feedback!");
+          document.getElementById("feedbackBox").value = "";
         }
-        if (def.endsWith("%")) {
-          return (parseFloat(def) / 100) * damage;
-        }
       }
-      return parseFloat(def);
-    }
-
-    function calculateDamage() {
-      const damage = parseFloat(document.getElementById("damage").value);
-      const tbody = document.querySelector("#result-table tbody");
-      tbody.innerHTML = "";
-
-      if (isNaN(damage) || damage <= 0) {
-        alert("Please enter a valid damage number.");
-        return;
-      }
-
-      Object.entries(ores).forEach(([name, ore]) => {
-        const def = evaluateDefense(ore.def, damage);
-        const reduced = damage * (100 / (100 + def));
-        const isOneShot = reduced >= ore.hp ? "✅" : "❌";
-
-        tbody.innerHTML += `
-          <tr>
-            <td>${name}</td>
-            <td>${ore.hp}</td>
-            <td>${typeof ore.def === "string" ? ore.def : def}</td>
-            <td>${Math.floor(reduced)}</td>
-            <td>${isOneShot}</td>
-          </tr>`;
-      });
-    }
-
-    // Settings panel toggle
-    document.getElementById("settings-toggle").onclick = () => {
-      document.getElementById("settings-panel").classList.toggle("open");
-    };
-
-    // Dark mode toggle
-    document.getElementById("dark-mode-toggle").onchange = (e) => {
-      document.body.classList.toggle("dark-mode", e.target.checked);
-    };
-
-    function submitFeedback() {
-      const feedback = document.getElementById("feedback").value;
-      if (feedback.trim()) {
-        alert("Thanks for your feedback!");
-        document.getElementById("feedback").value = "";
-      } else {
-        alert("Please enter your feedback before submitting.");
-      }
-    }
-  </script>
-</body>
+    </script>
+  </body>
 </html>
