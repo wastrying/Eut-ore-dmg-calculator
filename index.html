@@ -1,215 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Ore Damage Calculator</title>
-<style>
-  body {
-    background-color: #121212;
-    color: #ddd;
-    font-family: Arial, sans-serif;
-    margin: 20px;
-  }
-
-  h1 {
-    text-align: center;
-  }
-
-  .container {
-    max-width: 1100px;
-    margin: auto;
-    display: flex;
-    gap: 20px;
-  }
-
-  .inputs {
-    width: 300px;
-    padding: 20px;
-    background: #222;
-    border-radius: 8px;
-  }
-
-  .inputs label {
-    display: block;
-    margin-top: 15px;
-  }
-
-  .inputs input {
-    width: 100%;
-    padding: 8px;
-    margin-top: 5px;
-    border-radius: 4px;
-    border: none;
-  }
-
-  button {
-    margin-top: 20px;
-    width: 100%;
-    padding: 10px;
-    background-color: #007bff;
-    border: none;
-    color: white;
-    font-weight: bold;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-
-  button:hover {
-    background-color: #0056b3;
-  }
-
-  .results {
-    flex: 1;
-    overflow-x: auto;
-  }
-
-  table {
-    width: 100%;
-    min-width: 700px;
-    border-collapse: collapse;
-    font-size: 16px;
-  }
-
-  th, td {
-    border: 1px solid #444;
-    padding: 12px 16px;
-    text-align: right;
-    white-space: nowrap;
-  }
-
-  th:first-child, td:first-child {
-    text-align: left;
-  }
-
-  th:last-child, td:last-child {
-    text-align: center;
-    min-width: 90px;
-  }
-
-  .yes {
-    color: #4caf50;
-    font-weight: bold;
-  }
-
-  .no {
-    color: #f44336;
-    font-weight: bold;
-  }
-
-  #sidePanel {
-    position: fixed;
-    top: 0;
-    right: -300px;
-    width: 300px;
-    height: 100%;
-    background-color: #222;
-    color: #ddd;
-    box-shadow: -3px 0 5px rgba(0,0,0,0.5);
-    padding: 20px;
-    transition: right 0.3s ease;
-    z-index: 999;
-  }
-
-  #sidePanel.open {
-    right: 0;
-  }
-
-  body.light-mode {
-    background-color: #f4f4f4;
-    color: #222;
-  }
-
-  body.light-mode .inputs,
-  body.light-mode #sidePanel {
-    background-color: #fff;
-    color: #000;
-  }
-
-  body.light-mode table th,
-  body.light-mode table td {
-    border-color: #ccc;
-    background-color: #fff;
-    color: #000;
-  }
-
-  body.light-mode button {
-    background-color: #007bff;
-    color: white;
-  }
-</style>
-</head>
-<body>
-
-<h1>Ore Damage Per Hit Calculator</h1>
-<div class="container">
-  <div class="inputs">
-    <label>Eren's Base Damage:
-      <input type="number" id="damage" value="" step="any" />
-    </label>
-    <label>#4mr (Piercing) Level (0-5):
-      <input type="number" id="piercing" min="0" max="5" value="0" />
-    </label>
-    <label>Piercing Enchant Level (0-50):
-      <input type="number" id="piercingEnchant" min="0" max="50" value="0" />
-    </label>
-    <label>Aquamarine Mastery Level (0-10):
-      <input type="number" id="aqua" min="0" max="10" value="0" />
-    </label>
-    <button onclick="calculateAll()">Calculate</button>
-  </div>
-  <div class="results">
-    <table id="resultsTable">
-      <thead>
-        <tr>
-          <th>Ore</th>
-          <th>HP</th>
-          <th>Defense</th>
-          <th>Damage Dealt</th>
-          <th>1-Shot?</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</div>
-
-<!-- Slide-Out Panel Toggle Button -->
-<button id="sidePanelToggle" style="position:fixed; top:50%; right:0; transform:translateY(-50%); background:#007bff; color:white; padding:10px; border:none; border-radius:8px 0 0 8px; cursor:pointer; z-index:1000;">⚙️</button>
-
-<!-- Slide-Out Panel -->
-<div id="sidePanel">
-  <h2>Settings & Feedback</h2>
-  <label for="themeToggle" style="display: block; margin-bottom: 10px;">
-    <input type="checkbox" id="themeToggle"> Light Mode
-  </label>
-  <textarea placeholder="Report bugs or feedback..." style="width: 100%; height: 150px; resize: none; padding: 10px; border-radius: 4px;"></textarea>
-  <button style="margin-top: 10px; width: 100%; padding: 10px; background-color: #28a745; border: none; color: white; font-weight: bold; border-radius: 4px; cursor: pointer;">Submit</button>
-</div>
-
-<script>
-  document.getElementById('sidePanelToggle').onclick = function () {
-    document.getElementById('sidePanel').classList.toggle('open');
-  };
-
-  const themeToggle = document.getElementById('themeToggle');
-  const currentTheme = localStorage.getItem('theme');
-
-  if (currentTheme === 'light') {
-    document.body.classList.add('light-mode');
-    themeToggle.checked = true;
-  }
-
-  themeToggle.addEventListener('change', () => {
-    if (themeToggle.checked) {
-      document.body.classList.add('light-mode');
-      localStorage.setItem('theme', 'light');
-    } else {
-      document.body.classList.remove('light-mode');
-      localStorage.setItem('theme', 'dark');
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ore Damage Calculator</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body.dark-mode {
+      background-color: #121212;
+      color: white;
     }
-  });
-</script>
 
+    .settings-tab {
+      position: fixed;
+      top: 50%;
+      right: 0;
+      transform: translateY(-50%);
+      background: #007bff;
+      color: white;
+      padding: 10px;
+      border-radius: 8px 0 0 8px;
+      cursor: pointer;
+      z-index: 9999;
+    }
+
+    .settings-panel {
+      position: fixed;
+      top: 0;
+      right: -300px;
+      width: 300px;
+      height: 100vh;
+      background: #f4f4f4;
+      box-shadow: -2px 0 5px rgba(0, 0, 0, 0.3);
+      transition: right 0.3s ease;
+      padding: 20px;
+      z-index: 9998;
+    }
+
+    .settings-panel.show {
+      right: 0;
+    }
+
+    .dark-mode .settings-panel {
+      background: #333;
+      color: white;
+    }
+
+    .dark-mode input,
+    .dark-mode textarea {
+      background: #222;
+      color: white;
+      border: 1px solid #555;
+    }
+  </style>
+</head>
+<body class="dark-mode">
+  <div class="container mt-5">
+    <h1 class="text-center">Ore Damage Per Hit Calculator</h1>
+
+    <div class="row mt-4">
+      <div class="col-md-4">
+        <div class="card p-3 bg-dark text-white">
+          <label for="baseDmg">Eren's Base Damage:</label>
+          <input type="number" id="baseDmg" class="form-control" value="0" />
+
+          <label class="mt-2">#4mr (Piercing) Level (0-5):</label>
+          <input type="number" id="mrLevel" class="form-control" value="0" />
+
+          <label class="mt-2">Piercing Enchant Level (0-50):</label>
+          <input type="number" id="enchantLevel" class="form-control" value="0" />
+
+          <label class="mt-2">Aquamarine Mastery Level (0-10):</label>
+          <input type="number" id="aquaLevel" class="form-control" value="0" />
+
+          <button class="btn btn-primary mt-3" onclick="calculateDamage()">Calculate</button>
+        </div>
+      </div>
+
+      <div class="col-md-8">
+        <table class="table table-dark table-bordered">
+          <thead>
+            <tr>
+              <th>Ore</th>
+              <th>HP</th>
+              <th>Defense</th>
+              <th>Damage Dealt</th>
+              <th>1-Shot?</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="settings-tab" onclick="toggleSettings()">⚙️</div>
+
+  <div class="settings-panel" id="settingsPanel">
+    <h5>Settings</h5>
+    <hr />
+    <div class="form-check form-switch">
+      <input class="form-check-input" type="checkbox" role="switch" id="darkModeSwitch" checked onchange="toggleDarkMode()">
+      <label class="form-check-label" for="darkModeSwitch">Dark Mode</label>
+    </div>
+
+    <hr />
+    <h6>Report Bug / Feedback</h6>
+    <textarea class="form-control mb-2" rows="4" placeholder="Describe the issue..."></textarea>
+    <button class="btn btn-success w-100">Submit</button>
+  </div>
+
+  <script>
+    const ores = [
+      { name: "Iron", hp: 1000, defense: 10 },
+      { name: "Gold", hp: 3000, defense: 25 },
+      { name: "Diamond", hp: 6000, defense: 50 },
+    ];
+
+    function calculateDamage() {
+      const base = parseFloat(document.getElementById("baseDmg").value);
+      const mr = parseInt(document.getElementById("mrLevel").value);
+      const enchant = parseInt(document.getElementById("enchantLevel").value);
+      const aqua = parseInt(document.getElementById("aquaLevel").value);
+
+      const pierceMult = 1 + 0.06 * mr + 0.01 * enchant + 0.02 * aqua;
+      const damage = base * pierceMult;
+
+      const tbody = document.getElementById("resultsBody");
+      tbody.innerHTML = "";
+      ores.forEach((ore) => {
+        const reduced = damage * (100 / (100 + ore.defense));
+        const isOneShot = reduced >= ore.hp ? "✅" : "❌";
+
+        tbody.innerHTML += `
+          <tr>
+            <td>${ore.name}</td>
+            <td>${ore.hp}</td>
+            <td>${ore.defense}</td>
+            <td>${Math.floor(reduced)}</td>
+            <td>${isOneShot}</td>
+          </tr>`;
+      });
+    }
+
+    function toggleSettings() {
+      document.getElementById("settingsPanel").classList.toggle("show");
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark-mode");
+    }
+  </script>
 </body>
 </html>
