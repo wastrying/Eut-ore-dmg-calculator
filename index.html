@@ -46,6 +46,13 @@
         <button onclick="calculateDamage()" class="bg-blue-500 text-white px-4 py-2 rounded w-48">
           Calculate
         </button>
+        <button onclick="toggleDarkMode()" class="bg-gray-500 text-white px-4 py-2 rounded w-48">
+          Toggle Dark/Light Mode
+        </button>
+        <textarea id="feedbackBox" placeholder="Report a bug or give feedback..." class="w-full max-w-md h-24 p-2 border dark:bg-gray-800 dark:border-gray-600 dark:text-white"></textarea>
+        <button onclick="submitFeedback()" class="bg-green-500 text-white px-4 py-2 rounded w-48">
+          Submit Feedback
+        </button>
       </div>
 
       <!-- Results Table (Centered) -->
@@ -97,6 +104,86 @@
         "Bloodstone":  { hp: 1000000, def: 50, group: ["crimson"] },
         "Netherite":   { hp: 30000, def: "log3", group: ["crimson"] }
       };
+
+      function toggleDarkMode() {
+        document.body.classList.toggle("dark");
+        document.body.classList.toggle("bg-white");
+        document.body.classList.toggle("text-black");
+        document.body.classList.toggle("bg-gray-900");
+        document.body.classList.toggle("text-white");
+      }
+
+      function submitFeedback() {
+        const feedback = document.getElementById("feedbackBox").value;
+        if (feedback.trim() === "") {
+          alert("Please enter some feedback.");
+        } else {
+          console.log("Feedback submitted:", feedback);
+          alert("Thank you for your feedback!");
+          document.getElementById("feedbackBox").value = "";
+        }
+      }
+
+      function calculateDamage() {
+        const base = parseFloat(document.getElementById("baseDmg").value);
+        const mr = parseInt(document.getElementById("mrLevel").value);
+        const enchant = parseInt(document.getElementById("enchantLevel").value);
+        const aqua = parseInt(document.getElementById("aquaLevel").value);
+        const groupFilter = document.getElementById("oreGroup").value;
+
+        const piercingMult = Math.pow(1.1, mr);
+        const enchantMult = 0.5 * enchant + 1;
+
+        let aquaBaseReduction = 1.0;
+        if (aqua >= 5) aquaBaseReduction *= 1.25;
+        if (aqua >= 10) aquaBaseReduction *= 1.25;
+
+        const tbody = document.getElementById("resultsBody");
+        tbody.innerHTML = "";
+
+        Object.entries(ores).forEach(([oreName, oreData]) => {
+          if (groupFilter !== "all" && !oreData.group.includes(groupFilter)) return;
+
+          const hp = oreData.hp;
+          const defRaw = oreData.def;
+          let defense = 1;
+          let reduced = 0;
+
+          if (typeof defRaw === "string" && defRaw.startsWith("log")) {
+            const logBase = parseFloat(defRaw.substring(3)) / aquaBaseReduction;
+            const safeBase = Math.max(1.00001, logBase);
+            reduced = Math.max(1.0, Math.log(base) / Math.log(safeBase));
+            defense = `log${safeBase.toFixed(3)}`;
+          } else if (typeof defRaw === "string" && defRaw.endsWith("%")) {
+            const percent = parseFloat(defRaw.replace("%", ""));
+            if (percent === 0) {
+              defense = Math.max(1, 1 / piercingMult / enchantMult);
+              reduced = base / defense;
+            } else {
+              const multiplier = Math.max(0.00001, (1 - (percent / 100)) / piercingMult / enchantMult);
+              reduced = base * multiplier;
+              defense = `${percent.toFixed(2)}%`;
+            }
+          } else {
+            const def = parseFloat(defRaw);
+            defense = Math.max(1, def / piercingMult / enchantMult);
+            reduced = base / defense;
+            defense = defense.toFixed(2);
+          }
+
+          const isOneShot = reduced >= hp ? "✅" : "❌";
+
+          tbody.innerHTML += `
+            <tr class="text-black dark:text-white">
+              <td class="border px-4 py-1">${oreName}</td>
+              <td class="border px-4 py-1">${hp}</td>
+              <td class="border px-4 py-1">${defense}</td>
+              <td class="border px-4 py-1">${Math.floor(reduced)}</td>
+              <td class="border px-4 py-1">${isOneShot}</td>
+            </tr>
+          `;
+        });
+      }
     </script>
   </body>
 </html>
