@@ -1,91 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ore Damage Per Hit Calculator</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #121212;
-      color: #ffffff;
-      margin: 0;
-      padding: 20px;
-    }
-    .container {
-      max-width: 1100px;
-      margin: auto;
-    }
-    h1, h2 {
-      text-align: center;
-    }
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      margin-bottom: 15px;
-    }
-    label {
-      margin-bottom: 5px;
-    }
-    input[type="number"] {
-      padding: 10px;
-      border: none;
-      border-radius: 5px;
-    }
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      border-radius: 5px;
-      background-color: #007bff;
-      color: white;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 30px;
-    }
-    th, td {
-      border: 1px solid #444;
-      padding: 10px;
-      text-align: center;
-    }
-    th {
-      background-color: #222;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ore Damage Calculator</title>
+<style>
+  body {
+    background-color: #121212;
+    color: #ddd;
+    font-family: Arial, sans-serif;
+    margin: 20px;
+  }
+  h1 {
+    text-align: center;
+  }
+  .container {
+    max-width: 1100px;
+    margin: auto;
+    display: flex;
+  }
+  .inputs {
+    width: 300px;
+    padding: 20px;
+    background: #222;
+    border-radius: 8px;
+  }
+  .inputs label {
+    display: block;
+    margin-top: 15px;
+  }
+  .inputs input {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border-radius: 4px;
+    border: none;
+  }
+  button {
+    margin-top: 20px;
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    border: none;
+    color: white;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  button:hover {
+    background-color: #0056b3;
+  }
+  table {
+    margin-left: 20px;
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th, td {
+    border: 1px solid #444;
+    padding: 8px 12px;
+    text-align: right;
+  }
+  th {
+    background-color: #333;
+  }
+  td:first-child, th:first-child {
+    text-align: left;
+  }
+  .yes {
+    color: #4caf50;
+    font-weight: bold;
+  }
+  .no {
+    color: #f44336;
+    font-weight: bold;
+  }
+</style>
 </head>
 <body>
-  <div class="container">
-    <h1>Ore Damage Per Hit Calculator</h1>
-    <p style="text-align:center">Requires 100% Critical Chance</p>
 
-    <div class="input-group">
-      <label for="damage">Base Damage:</label>
-      <input type="number" id="damage" />
-    </div>
-    <div class="input-group">
-      <label for="critPower">Crit Power:</label>
-      <input type="number" id="critPower" />
-    </div>
-    <div class="input-group">
-      <label for="piercing">#4mr Piercing Level (0-5):</label>
-      <input type="number" id="piercing" />
-    </div>
-    <div class="input-group">
-      <label for="piercingEnchant">Piercing Enchant Level (0-50):</label>
-      <input type="number" id="piercingEnchant" />
-    </div>
-    <div class="input-group">
-      <label for="aqua">Aquamarine Mastery Level (0-10):</label>
-      <input type="number" id="aqua" />
-    </div>
-
-    <button onclick="calculate()">Calculate</button>
-
-    <table id="results">
+<h1>Ore Damage Per Hit Calculator</h1>
+<div class="container">
+  <div class="inputs">
+    <label>Base Damage:
+      <input type="number" id="damage" value="" step="any" />
+    </label>
+    <label>#4mr (Piercing) Level (0-5):
+      <input type="number" id="piercing" min="0" max="5" value="0" />
+    </label>
+    <label>Piercing Enchant Level (0-50):
+      <input type="number" id="piercingEnchant" min="0" max="50" value="0" />
+    </label>
+    <label>Aquamarine Mastery Level (0-10):
+      <input type="number" id="aqua" min="0" max="10" value="0" />
+    </label>
+    <button onclick="calculateAll()">Calculate</button>
+  </div>
+  <div class="results" style="flex:1; overflow-x:auto;">
+    <table id="resultsTable">
       <thead>
         <tr>
           <th>Ore</th>
@@ -95,59 +106,143 @@
           <th>1-Shot?</th>
         </tr>
       </thead>
-      <tbody>
-      </tbody>
+      <tbody></tbody>
     </table>
   </div>
+</div>
 
-  <script>
-    // Placeholder: You'll need to define ores and replicate the Python logic
-    const ores = {
-      "Stone": { hp: 5, def: "0%" },
-      "Bedrock": { hp: 500, def: 10 },
-      // Add the rest here...
-    };
+<script>
+  // Ore data
+  const ores = {
+    "Stone":        {hp: 5, def: "0%"},
+    "Bedrock":      {hp: 500, def: 10},
+    "Evil Rock":    {hp: 1, def: 5},
+    "Coal":         {hp: 10, def: "0%"},
+    "Iron":         {hp: 45, def: "0%"},
+    "Aluminium":    {hp: 30, def: "0%"},
+    "Tin":          {hp: 15, def: "0%"},
+    "Copper":       {hp: 30, def: "0%"},
+    "Gold":         {hp: 50, def: 2},
+    "Ruby":         {hp: 90, def: 3},
+    "Sapphire":     {hp: 90, def: 3},
+    "Emerald":      {hp: 90, def: 3},
+    "Diamond":      {hp: 125, def: 8},
+    "Uranium":      {hp: 1500, def: 20},
+    "Plutonium":    {hp: 1500, def: 20},
+    "Amethyst":     {hp: 300, def: 5},
+    "Aventurine":   {hp: 1250, def: 2},
+    "Titanium":     {hp: 750, def: 10},
+    "Heartstone":   {hp: 1000, def: "log1.3"},
+    "Bismuth":      {hp: 75000, def: "log1.2"},
+    "Dragonstone":  {hp: 400000, def: 70},
+    "Garnet":       {hp: 12500000, def: "0%"},
+    "Aquamarine":   {hp: 1000000, def: 50},
+    "Prismastone":  {hp: 10000, def: "log10"},
+    "Basalt":       {hp: 100000, def: "0%"},
+    "Obsidian":     {hp: 250, def: 1000},
+    "Sulfur":       {hp: 5000000, def: 3},
+    "Pyrite":       {hp: 250000, def: 70},
+    "Bloodstone":   {hp: 1000000, def: 50},
+    "Netherite":    {hp: 30000, def: "log3"},
+  };
 
-    function calculate() {
-      const damage = parseFloat(document.getElementById("damage").value);
-      const critPower = parseFloat(document.getElementById("critPower").value);
-      const piercing = parseInt(document.getElementById("piercing").value);
-      const piercingEnchant = parseInt(document.getElementById("piercingEnchant").value);
-      const aqua = parseInt(document.getElementById("aqua").value);
+  function safeLog(x, base) {
+    if (x <= 0 || base <= 1) return 0;
+    return Math.log(x) / Math.log(base);
+  }
 
-      const totalDamage = damage * critPower;
-      const mult = Math.pow(1.1, piercing);
-      const enchantMult = 0.5 * piercingEnchant + 1;
-
-      const resultsBody = document.querySelector("#results tbody");
-      resultsBody.innerHTML = "";
-
-      for (const ore in ores) {
-        const { hp, def } = ores[ore];
-        let actualDef = 1;
-
-        if (typeof def === "string" && def.endsWith("%")) {
-          const percent = parseFloat(def);
-          actualDef = 1 / (mult * enchantMult * (1 - percent / 100));
-        } else {
-          actualDef = def / (mult * enchantMult);
-        }
-
-        const dmgDealt = totalDamage / actualDef;
-        const oneShot = dmgDealt >= hp ? "YES" : "NO";
-
-        const row = `<tr>
-          <td>${ore}</td>
-          <td>${hp.toLocaleString()}</td>
-          <td>${typeof def === "string" ? def : actualDef.toFixed(2)}</td>
-          <td>${dmgDealt.toFixed(2)}</td>
-          <td style="color:${oneShot === "YES" ? "lightgreen" : "red"}">${oneShot}</td>
-        </tr>`;
-        resultsBody.innerHTML += row;
-      }
+  function toSuffix(num) {
+    const suffixes = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
+    if (num === 0) return "0";
+    const absNum = Math.abs(num);
+    if (absNum < 1000) return num.toFixed(2);
+    const exp = Math.floor(Math.log10(absNum));
+    const i = Math.floor(exp / 3);
+    if (i < suffixes.length) {
+      return (absNum / Math.pow(10, i * 3)).toFixed(2) + suffixes[i];
     }
-  </script>
+    return num.toExponential(2);
+  }
+
+  function calculateAll() {
+    const damage = parseFloat(document.getElementById('damage').value);
+    const piercingLvl = parseInt(document.getElementById('piercing').value);
+    const piercingEnchantLvl = parseInt(document.getElementById('piercingEnchant').value);
+    const aquaLvl = parseInt(document.getElementById('aqua').value);
+
+    if (isNaN(damage) || damage <= 0) {
+      alert('Please enter a valid Base Damage > 0');
+      return;
+    }
+    if (piercingLvl < 0 || piercingLvl > 5) {
+      alert('#4mr (Piercing) Level must be 0 to 5');
+      return;
+    }
+    if (piercingEnchantLvl < 0 || piercingEnchantLvl > 50) {
+      alert('Piercing Enchant Level must be 0 to 50');
+      return;
+    }
+    if (aquaLvl < 0 || aquaLvl > 10) {
+      alert('Aquamarine Mastery Level must be 0 to 10');
+      return;
+    }
+
+    const piercingMult = Math.pow(1.1, piercingLvl);
+    const piercingEnchant = 0.5 * piercingEnchantLvl + 1;
+
+    let aquaBaseReduction = 1.0;
+    if (aquaLvl >= 5) aquaBaseReduction *= 1.25;
+    if (aquaLvl >= 10) aquaBaseReduction *= 1.25;
+
+    const tbody = document.querySelector('#resultsTable tbody');
+    tbody.innerHTML = '';
+
+    Object.entries(ores).forEach(([ore, data]) => {
+      let hp = data.hp;
+      let rawDef = data.def;
+      let damageDealt = 0;
+      let defDisplay = '';
+
+      if (typeof rawDef === 'string' && rawDef.startsWith('log')) {
+        const baseStr = rawDef.slice(3);
+        const originalBase = parseFloat(baseStr);
+        const adjustedBase = originalBase / aquaBaseReduction;
+        const safeBase = Math.max(1.00001, adjustedBase);
+        damageDealt = Math.max(1.0, safeLog(damage, safeBase));
+        defDisplay = `log${safeBase.toFixed(3)}`;
+      } else if (typeof rawDef === 'string' && rawDef.endsWith('%')) {
+        const percentVal = parseFloat(rawDef.replace('%', ''));
+        if (percentVal === 0) {
+          // Treat 0% as flat 1 defense
+          const defense = Math.max(1.0, 1 / piercingMult / piercingEnchant);
+          damageDealt = damage / defense;
+          defDisplay = defense.toFixed(2);
+        } else {
+          const defenseMultiplier = Math.max(0.00001, (1 - (percentVal / 100)) / piercingMult / piercingEnchant);
+          damageDealt = damage * defenseMultiplier;
+          defDisplay = `${percentVal.toFixed(2)}%`;
+        }
+      } else {
+        const rawDefVal = parseFloat(rawDef);
+        const defense = Math.max(1.0, rawDefVal / piercingMult / piercingEnchant);
+        damageDealt = damage / defense;
+        defDisplay = defense.toFixed(2);
+      }
+
+      const canOneShot = hp <= damageDealt;
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${ore}</td>
+        <td>${hp.toLocaleString()}</td>
+        <td>${defDisplay}</td>
+        <td>${toSuffix(damageDealt)}</td>
+        <td class="${canOneShot ? 'yes' : 'no'}">${canOneShot ? 'YES' : 'NO'}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+</script>
+
 </body>
 </html>
-
-
