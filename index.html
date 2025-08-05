@@ -8,28 +8,37 @@
   </head>
   <body class="bg-white text-black transition-colors duration-300">
     <div class="min-h-screen p-8">
-      <h1 class="text-2xl font-bold mb-4">Ore Damage Calculator</h1>
-      <div class="grid grid-cols-2 gap-4 mb-4">
+  <h1 class="text-2xl font-bold mb-6">Ore Damage Calculator</h1>
+
+  <div class="flex flex-col lg:flex-row gap-8">
+    <!-- Left: Inputs -->
+    <div class="lg:w-1/2">
+      <div class="grid grid-cols-1 gap-4">
         <label>
           Base Damage:
-          <input id="baseDmg" type="number" class="border px-2" />
+          <input id="baseDmg" type="number" class="border px-2 w-full" />
         </label>
         <label>
-          MR Level:
-          <input id="mrLevel" type="number" value="0" class="border px-2" />
+          #4mr (Piercing) Level (0-5):
+          <input id="mrLevel" type="number" value="0" class="border px-2 w-full" />
         </label>
         <label>
-          Enchant Level:
-          <input id="enchantLevel" type="number" value="0" class="border px-2" />
+          Piercing Enchant Level (0-50):
+          <input id="enchantLevel" type="number" value="0" class="border px-2 w-full" />
         </label>
         <label>
-          Aqua Level:
-          <input id="aquaLevel" type="number" value="0" class="border px-2" />
+          Aquamarine Mastery Level:
+          <input id="aquaLevel" type="number" value="0" class="border px-2 w-full" />
         </label>
+        <button onclick="calculateDamage()" class="bg-blue-500 text-white px-4 py-2 rounded mt-2 w-full">
+          Calculate
+        </button>
       </div>
-      <button onclick="calculateDamage()" class="bg-blue-500 text-white px-4 py-2 rounded">Calculate</button>
+    </div>
 
-      <table class="table-auto w-full mt-6 border">
+    <!-- Right: Results -->
+    <div class="lg:w-1/2 overflow-auto">
+      <table class="table-auto w-full border">
         <thead>
           <tr class="bg-gray-200">
             <th class="border px-4 py-2">Ore</th>
@@ -42,6 +51,9 @@
         <tbody id="resultsBody"></tbody>
       </table>
     </div>
+  </div>
+</div>
+
 
     <!-- Sidebar Toggle Button -->
     <button onclick="toggleSidebar()" class="fixed right-0 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white px-2 py-1 rounded-l z-50">
