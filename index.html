@@ -16,21 +16,21 @@
           <div class="grid grid-cols-1 gap-4">
             <label>
               Eren's Base dmg:
-              <input id="baseDmg" type="number" class="border px-2 w-full" />
+              <input id="baseDmg" type="number" class="border px-2 w-48" />
             </label>
             <label>
               #4mr (Piercing) Level (0-5):
-              <input id="mrLevel" type="number" value="0" class="border px-2 w-full" />
+              <input id="mrLevel" type="number" value="0" min="0" max="5" class="border px-2 w-48" />
             </label>
             <label>
               Piercing Enchant Level (0-50):
-              <input id="enchantLevel" type="number" value="0" class="border px-2 w-full" />
+              <input id="enchantLevel" type="number" value="0" min="0" max="50" class="border px-2 w-48" />
             </label>
             <label>
               Aquamarine Mastery Level:
-              <input id="aquaLevel" type="number" value="0" class="border px-2 w-full" />
+              <input id="aquaLevel" type="number" value="0" min="0" max="10" class="border px-2 w-48" />
             </label>
-            <button onclick="calculateDamage()" class="bg-blue-500 text-white px-4 py-2 rounded mt-2 w-full">
+            <button onclick="calculateDamage()" class="bg-blue-500 text-white px-4 py-2 rounded mt-2 w-48">
               Calculate
             </button>
           </div>
@@ -104,39 +104,64 @@
         "Netherite": { hp: 30000, def: "log3" },
       };
 
+      function safeLog(value, base) {
+        if (value <= 0 || base <= 1) return 0;
+        return Math.log(value) / Math.log(base);
+      }
+
       function calculateDamage() {
         const base = parseFloat(document.getElementById("baseDmg").value);
-        const mr = parseInt(document.getElementById("mrLevel").value);
-        const enchant = parseInt(document.getElementById("enchantLevel").value);
-        const aqua = parseInt(document.getElementById("aquaLevel").value);
+        const mr = Math.min(5, Math.max(0, parseInt(document.getElementById("mrLevel").value)));
+        const enchant = Math.min(50, Math.max(0, parseInt(document.getElementById("enchantLevel").value)));
+        const aqua = Math.min(10, Math.max(0, parseInt(document.getElementById("aquaLevel").value)));
 
-        const pierceMult = 1 + 0.06 * mr + 0.01 * enchant + 0.02 * aqua;
-        const damage = base * pierceMult;
+        const pierceMult = Math.pow(1.1, mr);
+        const enchantMult = 0.5 * enchant + 1;
 
+        let aquaReduction = 1.0;
+        if (aqua >= 5) aquaReduction *= 1.25;
+        if (aqua >= 10) aquaReduction *= 1.25;
+
+        const finalDmg = base;
         const tbody = document.getElementById("resultsBody");
         tbody.innerHTML = "";
 
-        Object.entries(ores).forEach(([oreName, oreData]) => {
-          let defenseValue;
+        Object.entries(ores).forEach(([ore, data]) => {
+          const hp = data.hp;
+          const defRaw = data.def;
+          let dmgDealt = 0;
+          let defDisplay = defRaw;
 
-          if (typeof oreData.def === "string" && oreData.def.includes("log")) {
-            const logBase = parseFloat(oreData.def.replace("log", ""));
-            defenseValue = Math.log10(base) / Math.log10(logBase);
-          } else if (typeof oreData.def === "string" && oreData.def.includes("%")) {
-            defenseValue = base * (parseFloat(oreData.def.replace("%", "")) / 100);
+          if (typeof defRaw === "string" && defRaw.includes("log")) {
+            let baseLog = parseFloat(defRaw.replace("log", "")) / aquaReduction;
+            baseLog = Math.max(1.00001, baseLog);
+            dmgDealt = Math.max(1, safeLog(finalDmg, baseLog));
+            defDisplay = `log${baseLog.toFixed(3)}`;
+          } else if (typeof defRaw === "string" && defRaw.includes("%")) {
+            let percent = parseFloat(defRaw.replace("%", ""));
+            if (percent === 0) {
+              let flatDef = Math.max(1.0, 1 / (pierceMult * enchantMult));
+              dmgDealt = finalDmg / flatDef;
+              defDisplay = flatDef.toFixed(2);
+            } else {
+              const multiplier = (1 - (percent / 100)) / (pierceMult * enchantMult);
+              dmgDealt = finalDmg * Math.max(0.00001, multiplier);
+              defDisplay = `${percent.toFixed(2)}%`;
+            }
           } else {
-            defenseValue = parseFloat(oreData.def);
+            let flatDef = Math.max(1.0, parseFloat(defRaw) / (pierceMult * enchantMult));
+            dmgDealt = finalDmg / flatDef;
+            defDisplay = flatDef.toFixed(2);
           }
 
-          const reduced = damage * (100 / (100 + defenseValue));
-          const isOneShot = reduced >= oreData.hp ? "✅" : "❌";
+          const isOneShot = dmgDealt >= hp ? "✅" : "❌";
 
           tbody.innerHTML += `
             <tr>
-              <td>${oreName}</td>
-              <td>${oreData.hp}</td>
-              <td>${oreData.def}</td>
-              <td>${Math.floor(reduced)}</td>
+              <td>${ore}</td>
+              <td>${hp}</td>
+              <td>${defDisplay}</td>
+              <td>${Math.floor(dmgDealt)}</td>
               <td>${isOneShot}</td>
             </tr>
           `;
