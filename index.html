@@ -10,25 +10,25 @@
     <div class="min-h-screen p-8">
       <h1 class="text-2xl font-bold mb-6">Ore Damage Calculator</h1>
 
-      <div class="flex flex-col lg:flex-row gap-8">
+      <div class="flex flex-col lg:flex-row gap-4">
         <!-- Left: Inputs -->
         <div class="lg:w-1/2">
           <div class="grid grid-cols-1 gap-4">
             <label>
               Eren's Base dmg:
-              <input id="baseDmg" type="number" class="border px-2 w-48" />
+              <input id="baseDmg" type="number" class="border px-2 w-48 bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600" />
             </label>
             <label>
               #4mr (Piercing) Level (0-5):
-              <input id="mrLevel" type="number" value="0" min="0" max="5" class="border px-2 w-48" />
+              <input id="mrLevel" type="number" value="0" min="0" max="5" class="border px-2 w-48 bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600" />
             </label>
             <label>
               Piercing Enchant Level (0-50):
-              <input id="enchantLevel" type="number" value="0" min="0" max="50" class="border px-2 w-48" />
+              <input id="enchantLevel" type="number" value="0" min="0" max="50" class="border px-2 w-48 bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600" />
             </label>
             <label>
               Aquamarine Mastery Level:
-              <input id="aquaLevel" type="number" value="0" min="0" max="10" class="border px-2 w-48" />
+              <input id="aquaLevel" type="number" value="0" min="0" max="10" class="border px-2 w-48 bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600" />
             </label>
             <button onclick="calculateDamage()" class="bg-blue-500 text-white px-4 py-2 rounded mt-2 w-48">
               Calculate
@@ -37,10 +37,10 @@
         </div>
 
         <!-- Right: Results -->
-        <div class="lg:w-1/2 overflow-auto">
+        <div class="lg:w-1/2 overflow-auto pl-2">
           <table class="table-auto w-full border">
             <thead>
-              <tr class="bg-gray-200">
+              <tr class="bg-gray-200 dark:bg-gray-700 dark:text-white">
                 <th class="border px-4 py-2">Ore</th>
                 <th class="border px-4 py-2">HP</th>
                 <th class="border px-4 py-2">Defense</th>
@@ -48,7 +48,7 @@
                 <th class="border px-4 py-2">One Shot?</th>
               </tr>
             </thead>
-            <tbody id="resultsBody"></tbody>
+            <tbody id="resultsBody" class="dark:text-white"></tbody>
           </table>
         </div>
       </div>
