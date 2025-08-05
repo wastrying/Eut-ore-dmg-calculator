@@ -1,218 +1,215 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Ore Damage Calculator</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #121212;
-      color: #ddd;
-      transition: background-color 0.3s, color 0.3s;
-      padding: 20px;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ore Damage Calculator</title>
+<style>
+  body {
+    background-color: #121212;
+    color: #ddd;
+    font-family: Arial, sans-serif;
+    margin: 20px;
+  }
 
-    .light-mode {
-      background-color: #f4f4f4;
-      color: #222;
-    }
+  h1 {
+    text-align: center;
+  }
 
-    h1 {
-      margin-top: 0;
-    }
+  .container {
+    max-width: 1100px;
+    margin: auto;
+    display: flex;
+    gap: 20px;
+  }
 
-    label {
-      display: block;
-      margin-top: 10px;
-    }
+  .inputs {
+    width: 300px;
+    padding: 20px;
+    background: #222;
+    border-radius: 8px;
+  }
 
-    input {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      margin-bottom: 10px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-    }
+  .inputs label {
+    display: block;
+    margin-top: 15px;
+  }
 
-    #result {
-      margin-top: 20px;
-      font-weight: bold;
-    }
+  .inputs input {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border-radius: 4px;
+    border: none;
+  }
 
-    #calculateBtn {
-      padding: 10px 20px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
+  button {
+    margin-top: 20px;
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    border: none;
+    color: white;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+  }
 
-    #calculateBtn:hover {
-      background-color: #0056b3;
-    }
+  button:hover {
+    background-color: #0056b3;
+  }
 
-    #sidePanelToggle {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 1001;
-      padding: 10px 16px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
+  .results {
+    flex: 1;
+    overflow-x: auto;
+  }
 
-    #sidePanel {
-      position: fixed;
-      top: 0;
-      right: -300px;
-      width: 300px;
-      height: 100%;
-      background-color: #1e1e1e;
-      color: #fff;
-      padding: 20px;
-      box-shadow: -2px 0 10px rgba(0, 0, 0, 0.5);
-      transition: right 0.3s ease;
-      z-index: 1000;
-    }
+  table {
+    width: 100%;
+    min-width: 700px;
+    border-collapse: collapse;
+    font-size: 16px;
+  }
 
-    .light-mode #sidePanel {
-      background-color: #fff;
-      color: #000;
-    }
+  th, td {
+    border: 1px solid #444;
+    padding: 12px 16px;
+    text-align: right;
+    white-space: nowrap;
+  }
 
-    #sidePanel.open {
-      right: 0;
-    }
+  th:first-child, td:first-child {
+    text-align: left;
+  }
 
-    #sidePanel h2 {
-      margin-top: 0;
-    }
+  th:last-child, td:last-child {
+    text-align: center;
+    min-width: 90px;
+  }
 
-    #sidePanel textarea {
-      width: 100%;
-      height: 120px;
-      margin-bottom: 10px;
-      padding: 10px;
-      border: none;
-      border-radius: 4px;
-      font-family: inherit;
-      resize: none;
-    }
+  .yes {
+    color: #4caf50;
+    font-weight: bold;
+  }
 
-    #sidePanel label {
-      display: flex;
-      align-items: center;
-      margin-bottom: 10px;
-    }
+  .no {
+    color: #f44336;
+    font-weight: bold;
+  }
 
-    #sidePanel input[type="checkbox"] {
-      margin-right: 8px;
-    }
+  #sidePanel {
+    position: fixed;
+    top: 0;
+    right: -300px;
+    width: 300px;
+    height: 100%;
+    background-color: #222;
+    color: #ddd;
+    box-shadow: -3px 0 5px rgba(0,0,0,0.5);
+    padding: 20px;
+    transition: right 0.3s ease;
+    z-index: 999;
+  }
 
-    #submitFeedback {
-      background-color: #28a745;
-      color: white;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
+  #sidePanel.open {
+    right: 0;
+  }
 
-    #submitFeedback:hover {
-      background-color: #218838;
-    }
-  </style>
+  body.light-mode {
+    background-color: #f4f4f4;
+    color: #222;
+  }
+
+  body.light-mode .inputs,
+  body.light-mode #sidePanel {
+    background-color: #fff;
+    color: #000;
+  }
+
+  body.light-mode table th,
+  body.light-mode table td {
+    border-color: #ccc;
+    background-color: #fff;
+    color: #000;
+  }
+
+  body.light-mode button {
+    background-color: #007bff;
+    color: white;
+  }
+</style>
 </head>
 <body>
 
-  <button id="sidePanelToggle">☰ Feedback / Theme</button>
-
-  <div id="sidePanel">
-    <h2>Report Bug / Feedback</h2>
-    <textarea placeholder="Describe the issue or suggestion..."></textarea>
-    <label>
-      <input type="checkbox" id="themeToggle" />
-      Light Mode
+<h1>Ore Damage Per Hit Calculator</h1>
+<div class="container">
+  <div class="inputs">
+    <label>Eren's Base Damage:
+      <input type="number" id="damage" value="" step="any" />
     </label>
-    <button id="submitFeedback">Submit</button>
+    <label>#4mr (Piercing) Level (0-5):
+      <input type="number" id="piercing" min="0" max="5" value="0" />
+    </label>
+    <label>Piercing Enchant Level (0-50):
+      <input type="number" id="piercingEnchant" min="0" max="50" value="0" />
+    </label>
+    <label>Aquamarine Mastery Level (0-10):
+      <input type="number" id="aqua" min="0" max="10" value="0" />
+    </label>
+    <button onclick="calculateAll()">Calculate</button>
   </div>
+  <div class="results">
+    <table id="resultsTable">
+      <thead>
+        <tr>
+          <th>Ore</th>
+          <th>HP</th>
+          <th>Defense</th>
+          <th>Damage Dealt</th>
+          <th>1-Shot?</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
 
-  <h1>Ore Damage Calculator</h1>
+<!-- Slide-Out Panel Toggle Button -->
+<button id="sidePanelToggle" style="position:fixed; top:50%; right:0; transform:translateY(-50%); background:#007bff; color:white; padding:10px; border:none; border-radius:8px 0 0 8px; cursor:pointer; z-index:1000;">⚙️</button>
 
-  <label for="baseDmg">Base Damage:</label>
-  <input type="number" id="baseDmg" placeholder="Enter base ore damage"/>
+<!-- Slide-Out Panel -->
+<div id="sidePanel">
+  <h2>Settings & Feedback</h2>
+  <label for="themeToggle" style="display: block; margin-bottom: 10px;">
+    <input type="checkbox" id="themeToggle"> Light Mode
+  </label>
+  <textarea placeholder="Report bugs or feedback..." style="width: 100%; height: 150px; resize: none; padding: 10px; border-radius: 4px;"></textarea>
+  <button style="margin-top: 10px; width: 100%; padding: 10px; background-color: #28a745; border: none; color: white; font-weight: bold; border-radius: 4px; cursor: pointer;">Submit</button>
+</div>
 
-  <label for="multiplier">Multiplier (e.g. pickaxe boost):</label>
-  <input type="number" id="multiplier" placeholder="Enter damage multiplier" value="1"/>
+<script>
+  document.getElementById('sidePanelToggle').onclick = function () {
+    document.getElementById('sidePanel').classList.toggle('open');
+  };
 
-  <label for="criticalChance">Critical Hit Chance (0 to 1):</label>
-  <input type="number" id="criticalChance" step="0.01" min="0" max="1" value="0"/>
+  const themeToggle = document.getElementById('themeToggle');
+  const currentTheme = localStorage.getItem('theme');
 
-  <label for="criticalMultiplier">Critical Damage Multiplier:</label>
-  <input type="number" id="criticalMultiplier" value="1.5"/>
+  if (currentTheme === 'light') {
+    document.body.classList.add('light-mode');
+    themeToggle.checked = true;
+  }
 
-  <button id="calculateBtn">Calculate Damage</button>
-
-  <div id="result"></div>
-
-  <script>
-    // Panel toggle
-    document.getElementById('sidePanelToggle').onclick = function () {
-      document.getElementById('sidePanel').classList.toggle('open');
-    };
-
-    // Theme toggle logic
-    const themeToggle = document.getElementById('themeToggle');
-    const currentTheme = localStorage.getItem('theme');
-
-    if (currentTheme === 'light') {
+  themeToggle.addEventListener('change', () => {
+    if (themeToggle.checked) {
       document.body.classList.add('light-mode');
-      themeToggle.checked = true;
+      localStorage.setItem('theme', 'light');
+    } else {
+      document.body.classList.remove('light-mode');
+      localStorage.setItem('theme', 'dark');
     }
+  });
+</script>
 
-    themeToggle.addEventListener('change', () => {
-      if (themeToggle.checked) {
-        document.body.classList.add('light-mode');
-        localStorage.setItem('theme', 'light');
-      } else {
-        document.body.classList.remove('light-mode');
-        localStorage.setItem('theme', 'dark');
-      }
-    });
-
-    // Submit feedback
-    document.getElementById('submitFeedback').onclick = function () {
-      const text = document.querySelector('#sidePanel textarea').value.trim();
-      if (text.length === 0) {
-        alert("Please enter feedback before submitting.");
-        return;
-      }
-      alert("Thank you for your feedback!");
-      document.querySelector('#sidePanel textarea').value = "";
-    };
-
-    // Ore Damage Calculator
-    document.getElementById('calculateBtn').onclick = function () {
-      const base = parseFloat(document.getElementById('baseDmg').value);
-      const mult = parseFloat(document.getElementById('multiplier').value);
-      const critChance = parseFloat(document.getElementById('criticalChance').value);
-      const critMult = parseFloat(document.getElementById('criticalMultiplier').value);
-
-      if (isNaN(base) || isNaN(mult) || isNaN(critChance) || isNaN(critMult)) {
-        document.getElementById('result').textContent = "Please enter all values.";
-        return;
-      }
-
-      const avgDmg = base * mult * (1 + critChance * (critMult - 1));
-      document.getElementById('result').textContent = `Expected Average Damage: ${avgDmg.toFixed(2)}`;
-    };
-  </script>
 </body>
 </html>
