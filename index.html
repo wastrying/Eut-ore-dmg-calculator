@@ -8,55 +8,54 @@
   </head>
   <body class="bg-white text-black transition-colors duration-300">
     <div class="min-h-screen p-8">
-  <h1 class="text-2xl font-bold mb-6">Ore Damage Calculator</h1>
+      <h1 class="text-2xl font-bold mb-6">Ore Damage Calculator</h1>
 
-  <div class="flex flex-col lg:flex-row gap-8">
-    <!-- Left: Inputs -->
-    <div class="lg:w-1/2">
-      <div class="grid grid-cols-1 gap-4">
-        <label>
-          Base Damage:
-          <input id="baseDmg" type="number" class="border px-2 w-full" />
-        </label>
-        <label>
-          #4mr (Piercing) Level (0-5):
-          <input id="mrLevel" type="number" value="0" class="border px-2 w-full" />
-        </label>
-        <label>
-          Piercing Enchant Level (0-50):
-          <input id="enchantLevel" type="number" value="0" class="border px-2 w-full" />
-        </label>
-        <label>
-          Aquamarine Mastery Level:
-          <input id="aquaLevel" type="number" value="0" class="border px-2 w-full" />
-        </label>
-        <button onclick="calculateDamage()" class="bg-blue-500 text-white px-4 py-2 rounded mt-2 w-full">
-          Calculate
-        </button>
+      <div class="flex flex-col lg:flex-row gap-8">
+        <!-- Left: Inputs -->
+        <div class="lg:w-1/2">
+          <div class="grid grid-cols-1 gap-4">
+            <label>
+              Eren's Base dmg:
+              <input id="baseDmg" type="number" class="border px-2 w-full" />
+            </label>
+            <label>
+              #4mr (Piercing) Level (0-5):
+              <input id="mrLevel" type="number" value="0" class="border px-2 w-full" />
+            </label>
+            <label>
+              Piercing Enchant Level (0-50):
+              <input id="enchantLevel" type="number" value="0" class="border px-2 w-full" />
+            </label>
+            <label>
+              Aquamarine Mastery Level:
+              <input id="aquaLevel" type="number" value="0" class="border px-2 w-full" />
+            </label>
+            <button onclick="calculateDamage()" class="bg-blue-500 text-white px-4 py-2 rounded mt-2 w-full">
+              Calculate
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: Results -->
+        <div class="lg:w-1/2 overflow-auto">
+          <table class="table-auto w-full border">
+            <thead>
+              <tr class="bg-gray-200">
+                <th class="border px-4 py-2">Ore</th>
+                <th class="border px-4 py-2">HP</th>
+                <th class="border px-4 py-2">Defense</th>
+                <th class="border px-4 py-2">Reduced Dmg</th>
+                <th class="border px-4 py-2">One Shot?</th>
+              </tr>
+            </thead>
+            <tbody id="resultsBody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- Right: Results -->
-    <div class="lg:w-1/2 overflow-auto">
-      <table class="table-auto w-full border">
-        <thead>
-          <tr class="bg-gray-200">
-            <th class="border px-4 py-2">Ore</th>
-            <th class="border px-4 py-2">HP</th>
-            <th class="border px-4 py-2">Defense</th>
-            <th class="border px-4 py-2">Reduced Dmg</th>
-            <th class="border px-4 py-2">One Shot?</th>
-          </tr>
-        </thead>
-        <tbody id="resultsBody"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-
     <!-- Sidebar Toggle Button -->
-    <button onclick="toggleSidebar()" class="fixed right-0 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white px-2 py-1 rounded-l z-50">
+    <button onclick="toggleSidebar()" class="fixed right-0 top-1/2 -translate-y-1/2 bg-gray-700 text-white px-2 py-1 rounded-l z-50">
       ⚙️
     </button>
 
@@ -73,37 +72,37 @@
 
     <script>
       const ores = {
-    "Stone":        {hp: 5, def: "0%"},
-    "Bedrock":      {hp: 500, def: 10},
-    "Evil Rock":    {hp: 1, def: 5},
-    "Coal":         {hp: 10, def: "0%"},
-    "Iron":         {hp: 45, def: "0%"},
-    "Aluminium":    {hp: 30, def: "0%"},
-    "Tin":          {hp: 15, def: "0%"},
-    "Copper":       {hp: 30, def: "0%"},
-    "Gold":         {hp: 50, def: 2},
-    "Ruby":         {hp: 90, def: 3},
-    "Sapphire":     {hp: 90, def: 3},
-    "Emerald":      {hp: 90, def: 3},
-    "Diamond":      {hp: 125, def: 8},
-    "Uranium":      {hp: 1500, def: 20},
-    "Plutonium":    {hp: 1500, def: 20},
-    "Amethyst":     {hp: 300, def: 5},
-    "Aventurine":   {hp: 1250, def: 2},
-    "Titanium":     {hp: 750, def: 10},
-    "Heartstone":   {hp: 1000, def: "log1.3"},
-    "Bismuth":      {hp: 75000, def: "log1.2"},
-    "Dragonstone":  {hp: 400000, def: 70},
-    "Garnet":       {hp: 12500000, def: "0%"},
-    "Aquamarine":   {hp: 1000000, def: 50},
-    "Prismastone":  {hp: 10000, def: "log10"},
-    "Basalt":       {hp: 100000, def: "0%"},
-    "Obsidian":     {hp: 250, def: 1000},
-    "Sulfur":       {hp: 5000000, def: 3},
-    "Pyrite":       {hp: 250000, def: 70},
-    "Bloodstone":   {hp: 1000000, def: 50},
-    "Netherite":    {hp: 30000, def: "log3"},
-  };
+        "Stone": { hp: 5, def: "0%" },
+        "Bedrock": { hp: 500, def: 10 },
+        "Evil Rock": { hp: 1, def: 5 },
+        "Coal": { hp: 10, def: "0%" },
+        "Iron": { hp: 45, def: "0%" },
+        "Aluminium": { hp: 30, def: "0%" },
+        "Tin": { hp: 15, def: "0%" },
+        "Copper": { hp: 30, def: "0%" },
+        "Gold": { hp: 50, def: 2 },
+        "Ruby": { hp: 90, def: 3 },
+        "Sapphire": { hp: 90, def: 3 },
+        "Emerald": { hp: 90, def: 3 },
+        "Diamond": { hp: 125, def: 8 },
+        "Uranium": { hp: 1500, def: 20 },
+        "Plutonium": { hp: 1500, def: 20 },
+        "Amethyst": { hp: 300, def: 5 },
+        "Aventurine": { hp: 1250, def: 2 },
+        "Titanium": { hp: 750, def: 10 },
+        "Heartstone": { hp: 1000, def: "log1.3" },
+        "Bismuth": { hp: 75000, def: "log1.2" },
+        "Dragonstone": { hp: 400000, def: 70 },
+        "Garnet": { hp: 12500000, def: "0%" },
+        "Aquamarine": { hp: 1000000, def: 50 },
+        "Prismastone": { hp: 10000, def: "log10" },
+        "Basalt": { hp: 100000, def: "0%" },
+        "Obsidian": { hp: 250, def: 1000 },
+        "Sulfur": { hp: 5000000, def: 3 },
+        "Pyrite": { hp: 250000, def: 70 },
+        "Bloodstone": { hp: 1000000, def: 50 },
+        "Netherite": { hp: 30000, def: "log3" },
+      };
 
       function calculateDamage() {
         const base = parseFloat(document.getElementById("baseDmg").value);
