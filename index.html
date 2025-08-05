@@ -65,147 +65,38 @@
       </div>
     </div>
 
-    <!-- Sidebar Toggle Button -->
-    <button onclick="toggleSidebar()" class="fixed right-0 top-1/2 -translate-y-1/2 bg-gray-700 text-white px-2 py-1 rounded-l z-50">
-      ⚙️
-    </button>
-
-    <!-- Sidebar -->
-    <div id="sidebar" class="fixed top-0 right-0 h-full w-64 bg-white dark:bg-gray-900 text-black dark:text-white shadow-lg p-4 transform translate-x-full transition-transform duration-300 z-40">
-      <h2 class="text-xl font-bold mb-4">Settings</h2>
-      <button onclick="toggleDarkMode()" class="bg-gray-300 dark:bg-gray-700 text-black dark:text-white px-4 py-2 rounded mb-4">
-        Toggle Dark/Light Mode
-      </button>
-      <h3 class="text-lg font-semibold mb-2">Feedback</h3>
-      <textarea id="feedbackBox" placeholder="Report a bug or give feedback..." class="w-full h-32 p-2 border dark:bg-gray-800 dark:border-gray-600"></textarea>
-      <button onclick="submitFeedback()" class="bg-green-500 text-white px-4 py-2 mt-2 rounded">Submit</button>
-    </div>
-
     <script>
       const ores = {
-  "Stone": { hp: 5, def: "0%", group: "crystalline" },
-  "Bedrock": { hp: 500, def: 10, group: "cerulean" },
-  "Evil Rock": { hp: 1, def: 5, group: "shallow" },
-  "Coal": { hp: 10, def: "0%", group: "deep" },
-  "Iron": { hp: 45, def: "0%", group: "deep" },
-  "Aluminium": { hp: 30, def: "0%", group: "deep" },
-  "Tin": { hp: 15, def: "0%", group: "deep" },
-  "Copper": { hp: 30, def: "0%", group: "deep" },
-  "Gold": { hp: 50, def: 2, group: "midnight" },
-  "Ruby": { hp: 90, def: 3, group: "midnight" },
-  "Sapphire": { hp: 90, def: 3, group: "midnight" },
-  "Emerald": { hp: 90, def: 3, group: "midnight" },
-  "Diamond": { hp: 125, def: 8, group: "crust" },
-  "Uranium": { hp: 1500, def: 20, group: "crust" },
-  "Plutonium": { hp: 1500, def: 20, group: "scorching" },
-  "Amethyst": { hp: 300, def: 5, group: "crust" },
-  "Aventurine": { hp: 1250, def: 2, group: "crust" },
-  "Titanium": { hp: 750, def: 10, group: "crust" },
-  "Heartstone": { hp: 1000, def: "log1.3", group: "scorching" },
-  "Bismuth": { hp: 75000, def: "log1.2", group: "cerulean" },
-  "Dragonstone": { hp: 400000, def: 70, group: "cerulean" },
-  "Garnet": { hp: 12500000, def: "0%", group: "cerulean" },
-  "Aquamarine": { hp: 1000000, def: 50, group: "cerulean" },
-  "Prismastone": { hp: 10000, def: "log10", group: "cerulean" },
-  "Basalt": { hp: 100000, def: "0%", group: "crimson" },
-  "Obsidian": { hp: 250, def: 1000, group: "crimson" },
-  "Sulfur": { hp: 5000000, def: 3, group: "crimson" },
-  "Pyrite": { hp: 250000, def: 70, group: "crimson" },
-  "Bloodstone": { hp: 1000000, def: 50, group: "crimson" },
-  "Netherite": { hp: 30000, def: "log3", group: "crimson" },
-};
-
-
-      function safeLog(value, base) {
-        if (value <= 0 || base <= 1) return 0;
-        return Math.log(value) / Math.log(base);
-      }
-
-      function calculateDamage() {
-        const base = parseFloat(document.getElementById("baseDmg").value);
-        const mr = Math.min(5, Math.max(0, parseInt(document.getElementById("mrLevel").value)));
-        const enchant = Math.min(50, Math.max(0, parseInt(document.getElementById("enchantLevel").value)));
-        const aqua = Math.min(10, Math.max(0, parseInt(document.getElementById("aquaLevel").value)));
-        const selectedGroup = document.getElementById("oreGroup").value;
-
-        const pierceMult = Math.pow(1.1, mr);
-        const enchantMult = 0.5 * enchant + 1;
-
-        let aquaReduction = 1.0;
-        if (aqua >= 5) aquaReduction *= 1.25;
-        if (aqua >= 10) aquaReduction *= 1.25;
-
-        const finalDmg = base;
-        const tbody = document.getElementById("resultsBody");
-        tbody.innerHTML = "";
-
-        Object.entries(ores).forEach(([ore, data]) => {
-          if (selectedGroup !== "all" && data.group !== selectedGroup) return;
-
-          const hp = data.hp;
-          const defRaw = data.def;
-          let dmgDealt = 0;
-          let defDisplay = defRaw;
-
-          if (typeof defRaw === "string" && defRaw.includes("log")) {
-            let baseLog = parseFloat(defRaw.replace("log", "")) / aquaReduction;
-            baseLog = Math.max(1.00001, baseLog);
-            dmgDealt = Math.max(1, safeLog(finalDmg, baseLog));
-            defDisplay = `log${baseLog.toFixed(3)}`;
-          } else if (typeof defRaw === "string" && defRaw.includes("%")) {
-            let percent = parseFloat(defRaw.replace("%", ""));
-            if (percent === 0) {
-              let flatDef = Math.max(1.0, 1 / (pierceMult * enchantMult));
-              dmgDealt = finalDmg / flatDef;
-              defDisplay = flatDef.toFixed(2);
-            } else {
-              const multiplier = (1 - (percent / 100)) / (pierceMult * enchantMult);
-              dmgDealt = finalDmg * Math.max(0.00001, multiplier);
-              defDisplay = `${percent.toFixed(2)}%`;
-            }
-          } else {
-            let flatDef = Math.max(1.0, parseFloat(defRaw) / (pierceMult * enchantMult));
-            dmgDealt = finalDmg / flatDef;
-            defDisplay = flatDef.toFixed(2);
-          }
-
-          const isOneShot = dmgDealt >= hp ? "✅" : "❌";
-
-          tbody.innerHTML += `
-            <tr class="text-black dark:text-white">
-              <td class="border px-4 py-1">${ore}</td>
-              <td class="border px-4 py-1">${hp}</td>
-              <td class="border px-4 py-1">${defDisplay}</td>
-              <td class="border px-4 py-1">${Math.floor(dmgDealt)}</td>
-              <td class="border px-4 py-1">${isOneShot}</td>
-            </tr>
-          `;
-        });
-      }
-
-      function toggleSidebar() {
-        const sidebar = document.getElementById("sidebar");
-        sidebar.classList.toggle("translate-x-full");
-      }
-
-      function toggleDarkMode() {
-        document.body.classList.toggle("dark");
-        document.body.classList.toggle("bg-white");
-        document.body.classList.toggle("text-black");
-        document.body.classList.toggle("bg-gray-900");
-        document.body.classList.toggle("text-white");
-      }
-
-      function submitFeedback() {
-        const feedback = document.getElementById("feedbackBox").value;
-        if (feedback.trim() === "") {
-          alert("Please enter some feedback.");
-        } else {
-          console.log("Feedback submitted:", feedback);
-          alert("Thank you for your feedback!");
-          document.getElementById("feedbackBox").value = "";
-        }
-      }
+        "Stone":       { hp: 5, def: "0%", group: ["shallow", "intermediate", "crystalline"] },
+        "Evil Rock":   { hp: 1, def: 5, group: ["shallow"] },
+        "Coal":        { hp: 10, def: "0%", group: ["shallow", "intermediate", "deep"] },
+        "Iron":        { hp: 45, def: "0%", group: ["shallow", "intermediate", "deep"] },
+        "Aluminium":   { hp: 30, def: "0%", group: ["shallow", "intermediate", "deep"] },
+        "Tin":         { hp: 15, def: "0%", group: ["shallow", "intermediate", "deep"] },
+        "Copper":      { hp: 30, def: "0%", group: ["shallow", "intermediate", "deep"] },
+        "Gold":        { hp: 50, def: 2, group: ["intermediate", "deep", "midnight"] },
+        "Ruby":        { hp: 90, def: 3, group: ["intermediate", "deep", "midnight", "crystalline"] },
+        "Sapphire":    { hp: 90, def: 3, group: ["intermediate", "deep", "midnight", "crystalline"] },
+        "Emerald":     { hp: 90, def: 3, group: ["intermediate", "deep", "midnight", "crystalline"] },
+        "Diamond":     { hp: 125, def: 8, group: ["deep", "midnight", "crust"] },
+        "Uranium":     { hp: 1500, def: 20, group: ["deep", "midnight", "crust"] },
+        "Plutonium":   { hp: 1500, def: 20, group: ["deep", "midnight", "crust", "scorching"] },
+        "Amethyst":    { hp: 300, def: 5, group: ["deep", "midnight", "crust"] },
+        "Aventurine":  { hp: 1250, def: 2, group: ["deep", "midnight", "crust"] },
+        "Titanium":    { hp: 750, def: 10, group: ["deep", "midnight", "crust"] },
+        "Heartstone":  { hp: 1000, def: "log1.3", group: ["midnight", "crust", "scorching"] },
+        "Bismuth":     { hp: 75000, def: "log1.2", group: ["cerulean"] },
+        "Dragonstone": { hp: 400000, def: 70, group: ["crust", "scorching", "cerulean"] },
+        "Garnet":      { hp: 12500000, def: "0%", group: ["cerulean"] },
+        "Aquamarine":  { hp: 1000000, def: 50, group: ["cerulean"] },
+        "Prismastone": { hp: 10000, def: "log10", group: ["cerulean"] },
+        "Basalt":      { hp: 100000, def: "0%", group: ["crimson"] },
+        "Obsidian":    { hp: 250, def: 1000, group: ["crimson"] },
+        "Sulfur":      { hp: 5000000, def: 3, group: ["crimson"] },
+        "Pyrite":      { hp: 250000, def: 70, group: ["crimson"] },
+        "Bloodstone":  { hp: 1000000, def: 50, group: ["crimson"] },
+        "Netherite":   { hp: 30000, def: "log3", group: ["crimson"] }
+      };
     </script>
   </body>
 </html>
