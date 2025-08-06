@@ -46,13 +46,6 @@
         <button onclick="calculateDamage()" class="bg-blue-500 text-white px-4 py-2 rounded w-48">
           Calculate
         </button>
-        <button onclick="toggleDarkMode()" class="bg-gray-500 text-white px-4 py-2 rounded w-48">
-          Toggle Dark/Light Mode
-        </button>
-        <textarea id="feedbackBox" placeholder="Report a bug or give feedback..." class="w-full max-w-md h-24 p-2 border dark:bg-gray-800 dark:border-gray-600 dark:text-white"></textarea>
-        <button onclick="submitFeedback()" class="bg-green-500 text-white px-4 py-2 rounded w-48">
-          Submit Feedback
-        </button>
       </div>
 
       <!-- Results Table (Centered) -->
@@ -70,39 +63,55 @@
           <tbody id="resultsBody"></tbody>
         </table>
       </div>
+
+      <!-- Settings Icon -->
+      <button onclick="toggleSettings()" class="fixed right-0 top-1/2 -translate-y-1/2 bg-gray-700 text-white px-3 py-2 rounded-l z-50">
+        ⚙️
+      </button>
+
+      <!-- Settings Sidebar -->
+      <div id="settingsPanel" class="fixed top-0 right-0 h-full w-64 bg-white dark:bg-gray-900 text-black dark:text-white shadow-lg p-4 transform translate-x-full transition-transform duration-300 z-40">
+        <h2 class="text-xl font-bold mb-4">Settings</h2>
+        <button onclick="toggleDarkMode()" class="bg-gray-300 dark:bg-gray-700 text-black dark:text-white px-4 py-2 rounded mb-4">
+          Toggle Dark/Light Mode
+        </button>
+        <h3 class="text-lg font-semibold mb-2">Feedback</h3>
+        <textarea id="feedbackBox" placeholder="Report a bug or give feedback..." class="w-full h-32 p-2 border dark:bg-gray-800 dark:border-gray-600"></textarea>
+        <button onclick="submitFeedback()" class="bg-green-500 text-white px-4 py-2 mt-2 rounded">Submit</button>
+      </div>
     </div>
 
     <script>
       const ores = {
-        "Stone":       { hp: 5, def: "0%", group: ["shallow", "intermediate", "crystalline"] },
-        "Evil Rock":   { hp: 1, def: 5, group: ["shallow"] },
-        "Coal":        { hp: 10, def: "0%", group: ["shallow", "intermediate", "deep"] },
-        "Iron":        { hp: 45, def: "0%", group: ["shallow", "intermediate", "deep"] },
-        "Aluminium":   { hp: 30, def: "0%", group: ["shallow", "intermediate", "deep"] },
-        "Tin":         { hp: 15, def: "0%", group: ["shallow", "intermediate", "deep"] },
-        "Copper":      { hp: 30, def: "0%", group: ["shallow", "intermediate", "deep"] },
-        "Gold":        { hp: 50, def: 2, group: ["intermediate", "deep", "midnight"] },
-        "Ruby":        { hp: 90, def: 3, group: ["intermediate", "deep", "midnight", "crystalline"] },
-        "Sapphire":    { hp: 90, def: 3, group: ["intermediate", "deep", "midnight", "crystalline"] },
-        "Emerald":     { hp: 90, def: 3, group: ["intermediate", "deep", "midnight", "crystalline"] },
-        "Diamond":     { hp: 125, def: 8, group: ["deep", "midnight", "crust"] },
-        "Uranium":     { hp: 1500, def: 20, group: ["deep", "midnight", "crust"] },
-        "Plutonium":   { hp: 1500, def: 20, group: ["deep", "midnight", "crust", "scorching"] },
-        "Amethyst":    { hp: 300, def: 5, group: ["deep", "midnight", "crust"] },
-        "Aventurine":  { hp: 1250, def: 2, group: ["deep", "midnight", "crust"] },
-        "Titanium":    { hp: 750, def: 10, group: ["deep", "midnight", "crust"] },
-        "Heartstone":  { hp: 1000, def: "log1.3", group: ["midnight", "crust", "scorching"] },
-        "Bismuth":     { hp: 75000, def: "log1.2", group: ["cerulean"] },
+        "Stone": { hp: 5, def: "0%", group: ["shallow", "intermediate", "crystalline"] },
+        "Evil Rock": { hp: 1, def: 5, group: ["shallow"] },
+        "Coal": { hp: 10, def: "0%", group: ["shallow", "intermediate", "deep"] },
+        "Iron": { hp: 45, def: "0%", group: ["shallow", "intermediate", "deep"] },
+        "Aluminium": { hp: 30, def: "0%", group: ["shallow", "intermediate", "deep"] },
+        "Tin": { hp: 15, def: "0%", group: ["shallow", "intermediate", "deep"] },
+        "Copper": { hp: 30, def: "0%", group: ["shallow", "intermediate", "deep"] },
+        "Gold": { hp: 50, def: 2, group: ["intermediate", "deep", "midnight"] },
+        "Ruby": { hp: 90, def: 3, group: ["intermediate", "deep", "midnight", "crystalline"] },
+        "Sapphire": { hp: 90, def: 3, group: ["intermediate", "deep", "midnight", "crystalline"] },
+        "Emerald": { hp: 90, def: 3, group: ["intermediate", "deep", "midnight", "crystalline"] },
+        "Diamond": { hp: 125, def: 8, group: ["deep", "midnight", "crust"] },
+        "Uranium": { hp: 1500, def: 20, group: ["deep", "midnight", "crust"] },
+        "Plutonium": { hp: 1500, def: 20, group: ["deep", "midnight", "crust", "scorching"] },
+        "Amethyst": { hp: 300, def: 5, group: ["deep", "midnight", "crust"] },
+        "Aventurine": { hp: 1250, def: 2, group: ["deep", "midnight", "crust"] },
+        "Titanium": { hp: 750, def: 10, group: ["deep", "midnight", "crust"] },
+        "Heartstone": { hp: 1000, def: "log1.3", group: ["midnight", "crust", "scorching"] },
+        "Bismuth": { hp: 75000, def: "log1.2", group: ["cerulean"] },
         "Dragonstone": { hp: 400000, def: 70, group: ["crust", "scorching", "cerulean"] },
-        "Garnet":      { hp: 12500000, def: "0%", group: ["cerulean"] },
-        "Aquamarine":  { hp: 1000000, def: 50, group: ["cerulean"] },
+        "Garnet": { hp: 12500000, def: "0%", group: ["cerulean"] },
+        "Aquamarine": { hp: 1000000, def: 50, group: ["cerulean"] },
         "Prismastone": { hp: 10000, def: "log10", group: ["cerulean"] },
-        "Basalt":      { hp: 100000, def: "0%", group: ["crimson"] },
-        "Obsidian":    { hp: 250, def: 1000, group: ["crimson"] },
-        "Sulfur":      { hp: 5000000, def: 3, group: ["crimson"] },
-        "Pyrite":      { hp: 250000, def: 70, group: ["crimson"] },
-        "Bloodstone":  { hp: 1000000, def: 50, group: ["crimson"] },
-        "Netherite":   { hp: 30000, def: "log3", group: ["crimson"] }
+        "Basalt": { hp: 100000, def: "0%", group: ["crimson"] },
+        "Obsidian": { hp: 250, def: 1000, group: ["crimson"] },
+        "Sulfur": { hp: 5000000, def: 3, group: ["crimson"] },
+        "Pyrite": { hp: 250000, def: 70, group: ["crimson"] },
+        "Bloodstone": { hp: 1000000, def: 50, group: ["crimson"] },
+        "Netherite": { hp: 30000, def: "log3", group: ["crimson"] }
       };
 
       function toggleDarkMode() {
@@ -111,6 +120,11 @@
         document.body.classList.toggle("text-black");
         document.body.classList.toggle("bg-gray-900");
         document.body.classList.toggle("text-white");
+      }
+
+      function toggleSettings() {
+        const panel = document.getElementById("settingsPanel");
+        panel.classList.toggle("translate-x-full");
       }
 
       function submitFeedback() {
