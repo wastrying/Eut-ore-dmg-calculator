@@ -6,29 +6,29 @@
     <title>Ore Damage Calculator</title>
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body class="bg-white text-black transition-colors duration-300">
+  <body class="bg-white text-black dark:bg-gray-900 dark:text-white transition-colors duration-300">
     <div class="min-h-screen p-8">
       <h1 class="text-2xl font-bold mb-6">Ore Damage Calculator</h1>
 
       <!-- Input section -->
       <div class="flex flex-col items-start gap-4 mb-6">
-        <label>
+        <label class="text-black dark:text-white">
           Eren's Base dmg:
           <input id="baseDmg" type="number" class="border px-2 w-48 bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600" />
         </label>
-        <label>
+        <label class="text-black dark:text-white">
           #4mr (Piercing) Level (0-5):
           <input id="mrLevel" type="number" value="0" min="0" max="5" class="border px-2 w-48 bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600" />
         </label>
-        <label>
+        <label class="text-black dark:text-white">
           Piercing Enchant Level (0-50):
           <input id="enchantLevel" type="number" value="0" min="0" max="50" class="border px-2 w-48 bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600" />
         </label>
-        <label>
+        <label class="text-black dark:text-white">
           Aquamarine Mastery Level:
           <input id="aquaLevel" type="number" value="0" min="0" max="10" class="border px-2 w-48 bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600" />
         </label>
-        <label>
+        <label class="text-black dark:text-white">
           Ore Group:
           <select id="oreGroup" class="border px-2 w-48 bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600">
             <option value="all">All</option>
@@ -48,7 +48,7 @@
         </button>
       </div>
 
-      <!-- Results Table (Centered) -->
+      <!-- Results Table -->
       <div class="overflow-auto">
         <table class="table-auto border mx-auto w-full max-w-5xl text-sm">
           <thead>
@@ -60,11 +60,11 @@
               <th class="border px-4 py-2">One Shot?</th>
             </tr>
           </thead>
-          <tbody id="resultsBody"></tbody>
+          <tbody id="resultsBody" class="text-black dark:text-white"></tbody>
         </table>
       </div>
 
-      <!-- Settings Icon -->
+      <!-- Settings Button -->
       <button onclick="toggleSettings()" class="fixed right-0 top-1/2 -translate-y-1/2 bg-gray-700 text-white px-3 py-2 rounded-l z-50">
         ⚙️
       </button>
@@ -76,7 +76,7 @@
           Toggle Dark/Light Mode
         </button>
         <h3 class="text-lg font-semibold mb-2">Feedback</h3>
-        <textarea id="feedbackBox" placeholder="Report a bug or give feedback..." class="w-full h-32 p-2 border dark:bg-gray-800 dark:border-gray-600"></textarea>
+        <textarea id="feedbackBox" placeholder="Report a bug or give feedback..." class="w-full h-32 p-2 border dark:bg-gray-800 dark:border-gray-600 bg-white text-black dark:text-white"></textarea>
         <button onclick="submitFeedback()" class="bg-green-500 text-white px-4 py-2 mt-2 rounded">Submit</button>
       </div>
     </div>
@@ -116,10 +116,6 @@
 
       function toggleDarkMode() {
         document.body.classList.toggle("dark");
-        document.body.classList.toggle("bg-white");
-        document.body.classList.toggle("text-black");
-        document.body.classList.toggle("bg-gray-900");
-        document.body.classList.toggle("text-white");
       }
 
       function toggleSettings() {
@@ -174,7 +170,7 @@
               defense = Math.max(1, 1 / piercingMult / enchantMult);
               reduced = base / defense;
             } else {
-              const multiplier = Math.max(0.00001, (1 - (percent / 100)) / piercingMult / enchantMult);
+              const multiplier = Math.max(0.00001, (1 - percent / 100) / piercingMult / enchantMult);
               reduced = base * multiplier;
               defense = `${percent.toFixed(2)}%`;
             }
