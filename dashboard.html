@@ -33,7 +33,6 @@
       height:60px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:10;
     }
     .topbar h1{font-size:18px;font-weight:600}
-
     .user{display:flex;align-items:center;gap:10px}
     .user img{width:32px;height:32px;border-radius:50%;object-fit:cover}
     .logout-btn{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:13px;font-weight:600}
@@ -45,7 +44,7 @@
     .card h3{font-size:16px;font-weight:600}
     .card p{color:var(--muted);font-size:13px}
 
-    /* Alarm view (hidden by default) */
+    /* Alarm view */
     .alarm-container{display:none;flex-direction:column;gap:16px;padding:20px;overflow:auto}
     .alarm-header{display:flex;justify-content:space-between;align-items:center;gap:10px}
     .btn{background:var(--accent);color:#fff;border:none;padding:8px 12px;border-radius:8px;font-weight:600;cursor:pointer}
@@ -57,22 +56,21 @@
     .picker-actions{display:flex;justify-content:space-between;align-items:center;padding:6px 8px}
     .picker-title{font-weight:700;font-size:16px}
     .picker-wheels{display:flex;justify-content:center;gap:12px;padding:10px 6px;align-items:center}
-    .wheel{
-      width:120px;height:180px;overflow-y:scroll;border-radius:8px;scrollbar-width:none; -ms-overflow-style:none; -webkit-overflow-scrolling:touch;
-      background:transparent; text-align:center; position:relative;
-    }
+    .wheel{width:120px;height:180px;overflow-y:scroll;border-radius:8px;scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;background:transparent;text-align:center;position:relative}
     .wheel::-webkit-scrollbar{display:none}
     .wheel-list{padding:0;margin:0;list-style:none}
     .wheel-item{height:36px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#111}
-    /* highlight center */
-    .wheel::after{
-      content:"";position:absolute;left:0;right:0;top:72px;height:36px;border-radius:8px;background:var(--picker-highlight);pointer-events:none;
-    }
+    .wheel::after{content:"";position:absolute;left:0;right:0;top:72px;height:36px;border-radius:8px;background:var(--picker-highlight);pointer-events:none}
+    .picker-label{text-align:center;color:var(--muted);font-size:13px;margin-top:6px}
 
-    /* label under time */
-    .picker-label{ text-align:center;color:var(--muted);font-size:13px;margin-top:6px }
+    /* NEW ↓ Day selector */
+    .day-selector{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:10px}
+    .day-btn{background:#f3f4f6;border:none;padding:6px 10px;border-radius:6px;font-size:13px;cursor:pointer;transition:.2s}
+    .day-btn.active{background:var(--accent);color:#fff}
+    .repeat-selector{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:10px;color:#111}
+    select{padding:6px 10px;border-radius:6px;border:1px solid #e5e7eb;font-size:13px}
 
-    /* saved alarms list */
+    /* Saved alarms list */
     .alarms-list{display:flex;flex-direction:column;gap:10px;max-width:720px;margin:0 auto}
     .alarm-row{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:12px 14px;border-radius:10px;box-shadow:0 4px 8px rgba(0,0,0,0.04)}
     .alarm-left{display:flex;flex-direction:column}
@@ -81,19 +79,13 @@
     .alarm-actions{display:flex;align-items:center;gap:10px}
     .del-btn{background:transparent;border:1px solid #f3c0c0;color:#b82b2b;padding:6px 8px;border-radius:8px;cursor:pointer}
 
-    /* toggle switch styling */
+    /* Toggle switch */
     .switch{position:relative;display:inline-block;width:44px;height:24px}
     .switch input{opacity:0;width:0;height:0}
     .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#ddd;transition:.25s;border-radius:34px}
     .slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.25s}
     input:checked + .slider{background:var(--accent)}
     input:checked + .slider:before{transform:translateX(20px)}
-
-    /* responsive */
-    @media (max-width:900px){
-      .wheel{width:100px}
-      .picker-panel{padding:8px}
-    }
   </style>
 </head>
 <body>
@@ -118,7 +110,7 @@
       </div>
     </div>
 
-    <!-- Dashboard cards -->
+    <!-- Dashboard -->
     <div id="dashboardContent" class="content">
       <div class="card"><h3>Today's Tasks</h3><p>5 tasks due today</p></div>
       <div class="card"><h3>Team Updates</h3><p>3 new messages in #general</p></div>
@@ -126,19 +118,17 @@
       <div class="card"><h3>Next Meeting</h3><p>Today at 3:00 PM</p></div>
     </div>
 
-    <!-- Alarm container (replaces dashboard when active) -->
+    <!-- Alarms -->
     <div id="alarmContainer" class="alarm-container">
       <div class="alarm-header">
         <div style="display:flex;align-items:center;gap:12px">
           <button class="btn small" id="addModeBtn" onclick="enterAddMode()">＋ Add Alarm</button>
           <div style="color:var(--muted);font-weight:600">Manage alarms</div>
         </div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button class="btn small" onclick="showDashboard()">Back</button>
-        </div>
+        <div><button class="btn small" onclick="showDashboard()">Back</button></div>
       </div>
 
-      <!-- Picker panel (hidden until user clicks Add Alarm) -->
+      <!-- Picker panel -->
       <div id="pickerPanel" class="picker-panel" style="display:none">
         <div class="picker-actions">
           <button class="btn secondary small" onclick="cancelAdd()">Cancel</button>
@@ -146,24 +136,38 @@
           <button class="btn small" onclick="saveNewAlarm()">Save</button>
         </div>
 
-        <div class="picker-wheels" aria-hidden="false">
-          <!-- Hour wheel -->
-          <div class="wheel" id="hourWheel" tabindex="0" role="listbox" aria-label="Hours">
-            <ul class="wheel-list" id="hourList"></ul>
-          </div>
-
-          <!-- Minute wheel -->
-          <div class="wheel" id="minuteWheel" tabindex="0" role="listbox" aria-label="Minutes">
-            <ul class="wheel-list" id="minuteList"></ul>
-          </div>
-
-          <!-- AM/PM wheel -->
-          <div class="wheel" id="ampmWheel" tabindex="0" role="listbox" aria-label="AMPM">
-            <ul class="wheel-list" id="ampmList"></ul>
-          </div>
+        <div class="picker-wheels">
+          <div class="wheel" id="hourWheel"><ul id="hourList" class="wheel-list"></ul></div>
+          <div class="wheel" id="minuteWheel"><ul id="minuteList" class="wheel-list"></ul></div>
+          <div class="wheel" id="ampmWheel"><ul id="ampmList" class="wheel-list"></ul></div>
         </div>
 
-        <div class="picker-label">Swipe up or down to select time. Then press Save.</div>
+        <div class="picker-label">Swipe up/down to select time</div>
+
+        <!-- NEW ↓ Day selection -->
+        <div class="day-selector" id="daySelector">
+          <button class="day-btn" data-day="Mon">Mon</button>
+          <button class="day-btn" data-day="Tue">Tue</button>
+          <button class="day-btn" data-day="Wed">Wed</button>
+          <button class="day-btn" data-day="Thu">Thu</button>
+          <button class="day-btn" data-day="Fri">Fri</button>
+          <button class="day-btn" data-day="Sat">Sat</button>
+          <button class="day-btn" data-day="Sun">Sun</button>
+          <button class="day-btn" data-day="Everyday">Everyday</button>
+        </div>
+
+        <!-- NEW ↓ Repeat count -->
+        <div class="repeat-selector">
+          <label for="repeatCount">Repeat:</label>
+          <select id="repeatCount">
+            <option value="none">None</option>
+            <option value="1">1 time</option>
+            <option value="2">2 times</option>
+            <option value="3">3 times</option>
+            <option value="4">4 times</option>
+            <option value="5">5 times</option>
+          </select>
+        </div>
       </div>
 
       <!-- Saved alarms -->
@@ -172,267 +176,123 @@
   </div>
 
   <script>
-    // --- page switching ---
     const dashboardContent = document.getElementById('dashboardContent');
     const alarmContainer = document.getElementById('alarmContainer');
     const pageTitle = document.getElementById('pageTitle');
     const pickerPanel = document.getElementById('pickerPanel');
-    const addModeBtn = document.getElementById('addModeBtn');
 
     function showDashboard(){
-      dashboardContent.style.display = 'grid';
-      alarmContainer.style.display = 'none';
-      pageTitle.textContent = 'Dashboard Overview';
-      pickerPanel.style.display = 'none';
+      dashboardContent.style.display='grid';
+      alarmContainer.style.display='none';
+      pageTitle.textContent='Dashboard Overview';
+      pickerPanel.style.display='none';
     }
-
     function showAlarms(){
-      dashboardContent.style.display = 'none';
-      alarmContainer.style.display = 'flex';
-      pageTitle.textContent = 'Alarms';
+      dashboardContent.style.display='none';
+      alarmContainer.style.display='flex';
+      pageTitle.textContent='Alarms';
       renderAlarmsList();
     }
+    function logout(){window.location.href='index.html'}
 
-    function logout(){ window.location.href = 'index.html' }
+    // --- alarms ---
+    let alarms=[]; // {time,label,enabled,days,repeatCount}
 
-    // --- alarms data ---
-    let alarms = []; // {time:'07:30 AM', label:'Alarm', enabled:true}
+    // wheel setup (unchanged)
+    const ITEM_HEIGHT=36;
+    const hourList=document.getElementById('hourList');
+    const minuteList=document.getElementById('minuteList');
+    const ampmList=document.getElementById('ampmList');
+    const hourWheel=document.getElementById('hourWheel');
+    const minuteWheel=document.getElementById('minuteWheel');
+    const ampmWheel=document.getElementById('ampmWheel');
 
-    // --- picker data & DOM refs ---
-    const hourWheel = document.getElementById('hourWheel');
-    const minuteWheel = document.getElementById('minuteWheel');
-    const ampmWheel = document.getElementById('ampmWheel');
-    const hourList = document.getElementById('hourList');
-    const minuteList = document.getElementById('minuteList');
-    const ampmList = document.getElementById('ampmList');
-
-    // configuration
-    const ITEM_HEIGHT = 36; // must match .wheel-item height
-    const VISIBLE_ITEMS = 5; // odd number so center aligns
-
-    // populate wheel lists with buffer items for spacing (so center aligns)
+    function makeLi(text){const li=document.createElement('li');li.className='wheel-item';li.textContent=text;return li;}
     function populateWheelLists(){
-      hourList.innerHTML = '';
-      minuteList.innerHTML = '';
-      ampmList.innerHTML = '';
+      const buffer=2;
+      const appendBuffer=(ul)=>{for(let i=0;i<buffer;i++)ul.appendChild(makeLi(''))};
+      hourList.innerHTML=minuteList.innerHTML=ampmList.innerHTML='';
+      appendBuffer(hourList);for(let h=1;h<=12;h++)hourList.appendChild(makeLi(String(h).padStart(2,' ')));appendBuffer(hourList);
+      appendBuffer(minuteList);for(let m=0;m<60;m++)minuteList.appendChild(makeLi(String(m).padStart(2,'0')));appendBuffer(minuteList);
+      appendBuffer(ampmList);['AM','PM'].forEach(x=>ampmList.appendChild(makeLi(x)));appendBuffer(ampmList);
+    }
+    function snapWheel(wheel){const idx=Math.round(wheel.scrollTop/ITEM_HEIGHT);wheel.scrollTo({top:idx*ITEM_HEIGHT,behavior:'smooth'});}
+    function enableSnapping(w){let t;w.addEventListener('scroll',e=>{clearTimeout(t);t=setTimeout(()=>snapWheel(w),80)})}
+    populateWheelLists();enableSnapping(hourWheel);enableSnapping(minuteWheel);enableSnapping(ampmWheel);
+    window.addEventListener('load',()=>{setTimeout(()=>{snapWheel(hourWheel);snapWheel(minuteWheel);snapWheel(ampmWheel)},100)});
 
-      // buffer blank items to center
-      const buffer = Math.floor((VISIBLE_ITEMS - 1)/2);
-      for(let i=0;i<buffer;i++){
-        hourList.appendChild(makeLi(''));
-        minuteList.appendChild(makeLi(''));
-        ampmList.appendChild(makeLi(''));
-      }
-
-      // hours 1..12
-      for(let h=1; h<=12; h++){
-        hourList.appendChild(makeLi(String(h).padStart(2,' ')));
-      }
-      for(let i=0;i<buffer;i++) hourList.appendChild(makeLi(''));
-
-      // minutes 00..59
-      for(let m=0;m<60;m++){
-        minuteList.appendChild(makeLi(String(m).padStart(2,'0')));
-      }
-      for(let i=0;i<buffer;i++) minuteList.appendChild(makeLi(''));
-
-      // AM PM
-      ampmList.appendChild(makeLi('AM'));
-      ampmList.appendChild(makeLi('PM'));
-      for(let i=0;i<buffer;i++) ampmList.appendChild(makeLi(''));
+    function getPickerTime(){
+      const getVal=(w)=>{const i=Math.round(w.scrollTop/ITEM_HEIGHT);const el=w.querySelectorAll('.wheel-item')[i];return el?el.textContent.trim():'';}
+      let h=getVal(hourWheel),m=getVal(minuteWheel),a=getVal(ampmWheel);
+      if(!h)h='12';if(!m)m='00';if(!a)a='AM';
+      return {hour:h.padStart(2,'0'),minute:m,ampm:a};
     }
 
-    function makeLi(text){
-      const li = document.createElement('li');
-      li.className = 'wheel-item';
-      li.textContent = text;
-      return li;
-    }
-
-    // scroll-snapping logic: when user stops scrolling, snap to nearest item
-    function enableSnapping(wheel, totalItems){
-      let isScrolling;
-      wheel.addEventListener('scroll', e => {
-        window.clearTimeout(isScrolling);
-        isScrolling = window.setTimeout(()=> {
-          snapWheel(wheel);
-        }, 80); // small delay to detect scroll end
-      }, {passive:true});
-      // also handle keyboard navigation (arrow keys)
-      wheel.addEventListener('keydown', e => {
-        if(e.key === 'ArrowUp' || e.key === 'PageUp'){
-          wheel.scrollBy({top:-ITEM_HEIGHT, behavior:'smooth'});
-          e.preventDefault();
-        } else if(e.key === 'ArrowDown' || e.key === 'PageDown'){
-          wheel.scrollBy({top:ITEM_HEIGHT, behavior:'smooth'});
-          e.preventDefault();
+    // --- NEW ↓ day selector logic ---
+    const dayBtns=document.querySelectorAll('.day-btn');
+    let selectedDays=[];
+    dayBtns.forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const d=btn.dataset.day;
+        if(d==='Everyday'){
+          selectedDays=['Everyday'];
+          dayBtns.forEach(b=>b.classList.remove('active'));
+          btn.classList.add('active');
+        }else{
+          if(selectedDays.includes('Everyday'))selectedDays=[];
+          btn.classList.toggle('active');
+          if(btn.classList.contains('active'))selectedDays.push(d);
+          else selectedDays=selectedDays.filter(x=>x!==d);
         }
       });
-    }
+    });
 
-    function snapWheel(wheel){
-      const scrollTop = wheel.scrollTop;
-      const index = Math.round(scrollTop / ITEM_HEIGHT);
-      const target = index * ITEM_HEIGHT;
-      wheel.scrollTo({top: target, behavior: 'smooth'});
-    }
-
-    // helpers to get selected value from a wheel
-    function getSelectedFromWheel(wheel){
-      const scrollTop = wheel.scrollTop;
-      const idx = Math.round(scrollTop / ITEM_HEIGHT);
-      // compute element at index (consider buffers)
-      const li = wheel.querySelectorAll('.wheel-item')[idx + 0]; // index corresponds directly due to buffer at top
-      return li ? li.textContent.trim() : '';
-    }
-
-    // BUT because we added top buffer items, we need to compute properly:
-    function getSelectedValue(wheel){
-      // the visible center item index = Math.round(scrollTop / ITEM_HEIGHT) + (0)
-      const scrollTop = wheel.scrollTop;
-      const centerIndex = Math.round(scrollTop / ITEM_HEIGHT);
-      const items = wheel.querySelectorAll('.wheel-item');
-      const value = items[centerIndex] ? items[centerIndex].textContent.trim() : '';
-      return value;
-    }
-
-    // programmatic set to value by finding the matching li index (first match)
-    function setWheelToValue(wheel, val){
-      const items = wheel.querySelectorAll('.wheel-item');
-      let matchIndex = -1;
-      // prefer exact match (trimmed)
-      for(let i=0;i<items.length;i++){
-        if(items[i].textContent.trim() === val) { matchIndex = i; break; }
-      }
-      if(matchIndex < 0) return;
-      wheel.scrollTo({top: matchIndex * ITEM_HEIGHT, behavior:'auto'});
-    }
-
-    // initialize wheels & snapping
-    populateWheelLists();
-    // set sensible default to current time (12-hour)
-    (function setDefaultTime(){
-      const now = new Date();
-      let hour = now.getHours();
-      const minute = now.getMinutes();
-      const ampm = hour >= 12 ? 'PM' : 'AM';
-      hour = hour % 12;
-      if(hour === 0) hour = 12;
-      // find text format in lists
-      setTimeout(()=>{ // allow DOM to render
-        setWheelToValue(hourWheel, String(hour).padStart(2,' '));
-        setWheelToValue(minuteWheel, String(minute).padStart(2,'0'));
-        setWheelToValue(ampmWheel, ampm);
-      }, 50);
-    })();
-
-    enableSnapping(hourWheel);
-    enableSnapping(minuteWheel);
-    enableSnapping(ampmWheel);
-
-    // expose a safe way to read trimmed selected values
-    function getPickerTime(){
-      // Because we added buffer top items, we need to compute selected center visually:
-      // The center item index = Math.round(scrollTop / ITEM_HEIGHT)
-      const getVal = (wheel) => {
-        const idx = Math.round(wheel.scrollTop / ITEM_HEIGHT);
-        const items = wheel.querySelectorAll('.wheel-item');
-        return items[idx] ? items[idx].textContent.trim() : '';
-      };
-
-      let hh = getVal(hourWheel).padStart(2,' ');
-      let mm = getVal(minuteWheel);
-      let ap = getVal(ampmWheel);
-      // clean
-      hh = hh.replace(' ',''); // hours were padded with leading space for single digit
-      if(hh === '') hh = '12';
-      if(mm === '') mm = '00';
-      if(ap === '') ap = 'AM';
-      return {hour: hh.padStart(2,'0'), minute: mm, ampm: ap};
-    }
-
-    // --- Add / Save / Cancel flows ---
     function enterAddMode(){
-      pickerPanel.style.display = 'block';
-      // ensure wheels are centered correctly (snap to nearest)
-      snapWheel(hourWheel);
-      snapWheel(minuteWheel);
-      snapWheel(ampmWheel);
-      // scroll picker wheels a touch so mobile has correct scroll area (visual)
-      // show keyboard accessibility
-      hourWheel.focus();
+      pickerPanel.style.display='block';
+      selectedDays=[];dayBtns.forEach(b=>b.classList.remove('active'));
+      document.getElementById('repeatCount').value='none';
     }
-
-    function cancelAdd(){
-      pickerPanel.style.display = 'none';
-    }
+    function cancelAdd(){pickerPanel.style.display='none';}
 
     function saveNewAlarm(){
-      const t = getPickerTime();
-      // format: H:MM AM/PM (no leading zero on hour)
-      let displayHour = String(parseInt(t.hour, 10)); // convert '07' -> 7
-      const timeStr = `${displayHour}:${t.minute} ${t.ampm}`;
-      alarms.push({time: timeStr, label: 'Alarm', enabled: true});
-      pickerPanel.style.display = 'none';
+      const t=getPickerTime();
+      const timeStr=`${parseInt(t.hour,10)}:${t.minute} ${t.ampm}`;
+      const repeatCount=document.getElementById('repeatCount').value;
+      const days=selectedDays.length?selectedDays:['None'];
+      alarms.push({time:timeStr,label:'Alarm',enabled:true,days,repeatCount});
+      pickerPanel.style.display='none';
       renderAlarmsList();
     }
 
-    // --- render saved alarms list ---
-    const alarmsListEl = document.getElementById('alarmsList');
+    const alarmsListEl=document.getElementById('alarmsList');
     function renderAlarmsList(){
-      alarmsListEl.innerHTML = '';
-      if(alarms.length === 0){
-        const empty = document.createElement('div');
-        empty.style.color = 'var(--muted)';
-        empty.style.textAlign = 'center';
-        empty.style.padding = '30px 0';
-        empty.textContent = 'No alarms yet. Click "Add Alarm" to create one.';
-        alarmsListEl.appendChild(empty);
-        return;
+      alarmsListEl.innerHTML='';
+      if(alarms.length===0){
+        const e=document.createElement('div');
+        e.style.color='var(--muted)';e.style.textAlign='center';e.style.padding='30px 0';
+        e.textContent='No alarms yet. Click "Add Alarm" to create one.';alarmsListEl.appendChild(e);return;
       }
-      alarms.forEach((a, i) => {
-        const row = document.createElement('div');
-        row.className = 'alarm-row';
-        row.innerHTML = `
+      alarms.forEach((a,i)=>{
+        const row=document.createElement('div');
+        row.className='alarm-row';
+        row.innerHTML=`
           <div class="alarm-left">
             <div class="alarm-time">${a.time}</div>
-            <div class="alarm-meta">${a.label}</div>
+            <div class="alarm-meta">${a.label} • ${a.days.join(', ')} • Repeat: ${a.repeatCount}</div>
           </div>
           <div class="alarm-actions">
             <label class="switch">
-              <input type="checkbox" ${a.enabled ? 'checked' : ''} data-index="${i}">
+              <input type="checkbox" ${a.enabled?'checked':''} data-index="${i}">
               <span class="slider"></span>
             </label>
             <button class="del-btn" data-index="${i}">Delete</button>
-          </div>
-        `;
-        // wire toggle
-        const toggle = row.querySelector('input[type="checkbox"]');
-        toggle.addEventListener('change', (e) => {
-          const idx = Number(e.target.getAttribute('data-index'));
-          alarms[idx].enabled = e.target.checked;
-        });
-        // wire delete
-        const delBtn = row.querySelector('.del-btn');
-        delBtn.addEventListener('click', () => {
-          const idx = Number(delBtn.getAttribute('data-index'));
-          alarms.splice(idx, 1);
-          renderAlarmsList();
-        });
+          </div>`;
+        row.querySelector('input').addEventListener('change',e=>{alarms[i].enabled=e.target.checked});
+        row.querySelector('.del-btn').addEventListener('click',()=>{alarms.splice(i,1);renderAlarmsList()});
         alarmsListEl.appendChild(row);
       });
     }
 
-    // ensure snapping on page load for default wheels
-    window.addEventListener('load', () => {
-      // small time to allow items to size
-      setTimeout(()=>{ snapWheel(hourWheel); snapWheel(minuteWheel); snapWheel(ampmWheel); }, 120);
-    });
-
-    // small enhancement: when user scrolls near top, ensure empty items keep center aligned
-    // (already handled by buffer items)
-
-    // initialize showing dashboard
     showDashboard();
   </script>
 </body>
