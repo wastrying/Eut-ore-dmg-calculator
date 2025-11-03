@@ -3,214 +3,96 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>mediSignal Dashboard</title>
+  <title>mediSignal - Alarm Dashboard</title>
   <style>
-    :root {
+    :root{
       --sidebar-bg: #1f2937;
       --sidebar-text: #e5e7eb;
       --accent: #3b82f6;
       --card-bg: #ffffff;
       --muted: #6b7280;
       --bg: #f9fafb;
+      --picker-bg: #ffffff;
+      --picker-highlight: rgba(0,0,0,0.06);
     }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      display: flex;
-      height: 100vh;
-      font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
-      background: var(--bg);
-      color: #111827;
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      display:flex;height:100vh;font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,Arial;background:var(--bg);color:#111827;
     }
 
     /* Sidebar */
-    .sidebar {
-      width: 240px;
-      background: var(--sidebar-bg);
-      color: var(--sidebar-text);
-      display: flex;
-      flex-direction: column;
-      padding: 20px;
-      gap: 20px;
+    .sidebar{
+      width:240px;background:var(--sidebar-bg);color:var(--sidebar-text);display:flex;flex-direction:column;padding:20px;gap:20px;
     }
-
-    .sidebar h2 {
-      font-size: 20px;
-      font-weight: 700;
-    }
-
-    .nav a {
-      display: block;
-      color: var(--sidebar-text);
-      text-decoration: none;
-      padding: 10px 0;
-      font-size: 14px;
-      opacity: 0.8;
-      transition: 0.2s;
-      cursor: pointer;
-    }
-
-    .nav a:hover {
-      opacity: 1;
-      color: var(--accent);
-    }
+    .sidebar h2{font-size:20px;font-weight:700}
+    .nav a{display:block;color:var(--sidebar-text);text-decoration:none;padding:10px 0;font-size:14px;opacity:.9;transition:.18s;cursor:pointer}
+    .nav a:hover{color:var(--accent);opacity:1}
 
     /* Topbar */
-    .topbar {
-      height: 60px;
-      background: #fff;
-      border-bottom: 1px solid #e5e7eb;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 20px;
-      position: sticky;
-      top: 0;
-      z-index: 10;
+    .topbar{
+      height:60px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:10;
+    }
+    .topbar h1{font-size:18px;font-weight:600}
+
+    .user{display:flex;align-items:center;gap:10px}
+    .user img{width:32px;height:32px;border-radius:50%;object-fit:cover}
+    .logout-btn{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;font-size:13px;font-weight:600}
+
+    /* Main area */
+    .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+    .content{flex:1;padding:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+    .card{background:var(--card-bg);border-radius:12px;padding:16px;box-shadow:0 4px 10px rgba(0,0,0,0.05);display:flex;flex-direction:column;gap:8px}
+    .card h3{font-size:16px;font-weight:600}
+    .card p{color:var(--muted);font-size:13px}
+
+    /* Alarm view (hidden by default) */
+    .alarm-container{display:none;flex-direction:column;gap:16px;padding:20px;overflow:auto}
+    .alarm-header{display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .btn{background:var(--accent);color:#fff;border:none;padding:8px 12px;border-radius:8px;font-weight:600;cursor:pointer}
+    .btn.secondary{background:#fff;color:#111;border:1px solid #e5e7eb}
+    .small{padding:6px 10px;font-size:14px}
+
+    /* Picker panel */
+    .picker-panel{background:var(--picker-bg);border-radius:12px;padding:10px;max-width:720px;width:100%;box-shadow:0 6px 18px rgba(0,0,0,0.06);margin:0 auto}
+    .picker-actions{display:flex;justify-content:space-between;align-items:center;padding:6px 8px}
+    .picker-title{font-weight:700;font-size:16px}
+    .picker-wheels{display:flex;justify-content:center;gap:12px;padding:10px 6px;align-items:center}
+    .wheel{
+      width:120px;height:180px;overflow-y:scroll;border-radius:8px;scrollbar-width:none; -ms-overflow-style:none; -webkit-overflow-scrolling:touch;
+      background:transparent; text-align:center; position:relative;
+    }
+    .wheel::-webkit-scrollbar{display:none}
+    .wheel-list{padding:0;margin:0;list-style:none}
+    .wheel-item{height:36px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#111}
+    /* highlight center */
+    .wheel::after{
+      content:"";position:absolute;left:0;right:0;top:72px;height:36px;border-radius:8px;background:var(--picker-highlight);pointer-events:none;
     }
 
-    .topbar h1 {
-      font-size: 18px;
-      font-weight: 600;
-    }
+    /* label under time */
+    .picker-label{ text-align:center;color:var(--muted);font-size:13px;margin-top:6px }
 
-    .main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+    /* saved alarms list */
+    .alarms-list{display:flex;flex-direction:column;gap:10px;max-width:720px;margin:0 auto}
+    .alarm-row{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:12px 14px;border-radius:10px;box-shadow:0 4px 8px rgba(0,0,0,0.04)}
+    .alarm-left{display:flex;flex-direction:column}
+    .alarm-time{font-weight:700;font-size:20px}
+    .alarm-meta{color:var(--muted);font-size:13px}
+    .alarm-actions{display:flex;align-items:center;gap:10px}
+    .del-btn{background:transparent;border:1px solid #f3c0c0;color:#b82b2b;padding:6px 8px;border-radius:8px;cursor:pointer}
 
-    /* Dashboard content */
-    .content {
-      flex: 1;
-      padding: 20px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 16px;
-    }
+    /* toggle switch styling */
+    .switch{position:relative;display:inline-block;width:44px;height:24px}
+    .switch input{opacity:0;width:0;height:0}
+    .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#ddd;transition:.25s;border-radius:34px}
+    .slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.25s}
+    input:checked + .slider{background:var(--accent)}
+    input:checked + .slider:before{transform:translateX(20px)}
 
-    .card {
-      background: var(--card-bg);
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .card h3 { font-size: 16px; font-weight: 600; }
-    .card p { color: var(--muted); font-size: 13px; }
-
-    /* Alarm view */
-    .alarm-view {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px;
-      display: none;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .alarm-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #fff;
-      border-radius: 12px;
-      padding: 16px 20px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    }
-
-    .alarm-time {
-      font-size: 32px;
-      font-weight: 600;
-    }
-
-    .alarm-label {
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .fab {
-      position: fixed;
-      bottom: 30px;
-      right: 30px;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 52px;
-      height: 52px;
-      font-size: 28px;
-      line-height: 0;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      transition: background 0.2s ease;
-      display: none;
-    }
-
-    .fab:hover { background: #2563eb; }
-
-    /* Switch */
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 36px;
-      height: 20px;
-    }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-color: #555;
-      transition: .3s;
-      border-radius: 34px;
-    }
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 14px;
-      width: 14px;
-      left: 3px;
-      bottom: 3px;
-      background-color: white;
-      transition: .3s;
-      border-radius: 50%;
-    }
-    input:checked + .slider { background-color: var(--accent); }
-    input:checked + .slider:before { transform: translateX(16px); }
-
-    .user {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .user img {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    .logout-btn {
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 8px 12px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
-      transition: background 0.2s ease;
-    }
-
-    .logout-btn:hover {
-      background: #2563eb;
+    /* responsive */
+    @media (max-width:900px){
+      .wheel{width:100px}
+      .picker-panel{padding:8px}
     }
   </style>
 </head>
@@ -236,88 +118,322 @@
       </div>
     </div>
 
-    <!-- Dashboard Section -->
-    <div class="content" id="dashboardContent">
-      <div class="card">
-        <h3>Today's Tasks</h3>
-        <p>5 tasks due today</p>
-      </div>
-      <div class="card">
-        <h3>Team Updates</h3>
-        <p>3 new messages in #general</p>
-      </div>
-      <div class="card">
-        <h3>Performance</h3>
-        <p>Project completion rate: 82%</p>
-      </div>
-      <div class="card">
-        <h3>Next Meeting</h3>
-        <p>Today at 3:00 PM</p>
-      </div>
+    <!-- Dashboard cards -->
+    <div id="dashboardContent" class="content">
+      <div class="card"><h3>Today's Tasks</h3><p>5 tasks due today</p></div>
+      <div class="card"><h3>Team Updates</h3><p>3 new messages in #general</p></div>
+      <div class="card"><h3>Performance</h3><p>Project completion rate: 82%</p></div>
+      <div class="card"><h3>Next Meeting</h3><p>Today at 3:00 PM</p></div>
     </div>
 
-    <!-- Alarm Section -->
-    <div class="alarm-view" id="alarmContent"></div>
-    <button class="fab" id="addAlarmBtn" onclick="addAlarm()">＋</button>
+    <!-- Alarm container (replaces dashboard when active) -->
+    <div id="alarmContainer" class="alarm-container">
+      <div class="alarm-header">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="btn small" id="addModeBtn" onclick="enterAddMode()">＋ Add Alarm</button>
+          <div style="color:var(--muted);font-weight:600">Manage alarms</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn small" onclick="showDashboard()">Back</button>
+        </div>
+      </div>
+
+      <!-- Picker panel (hidden until user clicks Add Alarm) -->
+      <div id="pickerPanel" class="picker-panel" style="display:none">
+        <div class="picker-actions">
+          <button class="btn secondary small" onclick="cancelAdd()">Cancel</button>
+          <div class="picker-title">Add Alarm</div>
+          <button class="btn small" onclick="saveNewAlarm()">Save</button>
+        </div>
+
+        <div class="picker-wheels" aria-hidden="false">
+          <!-- Hour wheel -->
+          <div class="wheel" id="hourWheel" tabindex="0" role="listbox" aria-label="Hours">
+            <ul class="wheel-list" id="hourList"></ul>
+          </div>
+
+          <!-- Minute wheel -->
+          <div class="wheel" id="minuteWheel" tabindex="0" role="listbox" aria-label="Minutes">
+            <ul class="wheel-list" id="minuteList"></ul>
+          </div>
+
+          <!-- AM/PM wheel -->
+          <div class="wheel" id="ampmWheel" tabindex="0" role="listbox" aria-label="AMPM">
+            <ul class="wheel-list" id="ampmList"></ul>
+          </div>
+        </div>
+
+        <div class="picker-label">Swipe up or down to select time. Then press Save.</div>
+      </div>
+
+      <!-- Saved alarms -->
+      <div class="alarms-list" id="alarmsList"></div>
+    </div>
   </div>
 
   <script>
-    const dashboard = document.getElementById("dashboardContent");
-    const alarmsView = document.getElementById("alarmContent");
-    const addAlarmBtn = document.getElementById("addAlarmBtn");
-    const pageTitle = document.getElementById("pageTitle");
-    let alarms = [];
+    // --- page switching ---
+    const dashboardContent = document.getElementById('dashboardContent');
+    const alarmContainer = document.getElementById('alarmContainer');
+    const pageTitle = document.getElementById('pageTitle');
+    const pickerPanel = document.getElementById('pickerPanel');
+    const addModeBtn = document.getElementById('addModeBtn');
 
-    function showDashboard() {
-      dashboard.style.display = "grid";
-      alarmsView.style.display = "none";
-      addAlarmBtn.style.display = "none";
-      pageTitle.textContent = "Dashboard Overview";
+    function showDashboard(){
+      dashboardContent.style.display = 'grid';
+      alarmContainer.style.display = 'none';
+      pageTitle.textContent = 'Dashboard Overview';
+      pickerPanel.style.display = 'none';
     }
 
-    function showAlarms() {
-      dashboard.style.display = "none";
-      alarmsView.style.display = "flex";
-      addAlarmBtn.style.display = "block";
-      pageTitle.textContent = "Alarms";
-      renderAlarms();
+    function showAlarms(){
+      dashboardContent.style.display = 'none';
+      alarmContainer.style.display = 'flex';
+      pageTitle.textContent = 'Alarms';
+      renderAlarmsList();
     }
 
-    function addAlarm() {
-      const time = prompt("Enter alarm time (HH:MM):");
-      if (!time || !/^\d{2}:\d{2}$/.test(time)) return alert("Invalid time format (HH:MM).");
-      const label = prompt("Enter label (optional):") || "No label";
-      alarms.push({ time, label, enabled: true });
-      renderAlarms();
+    function logout(){ window.location.href = 'index.html' }
+
+    // --- alarms data ---
+    let alarms = []; // {time:'07:30 AM', label:'Alarm', enabled:true}
+
+    // --- picker data & DOM refs ---
+    const hourWheel = document.getElementById('hourWheel');
+    const minuteWheel = document.getElementById('minuteWheel');
+    const ampmWheel = document.getElementById('ampmWheel');
+    const hourList = document.getElementById('hourList');
+    const minuteList = document.getElementById('minuteList');
+    const ampmList = document.getElementById('ampmList');
+
+    // configuration
+    const ITEM_HEIGHT = 36; // must match .wheel-item height
+    const VISIBLE_ITEMS = 5; // odd number so center aligns
+
+    // populate wheel lists with buffer items for spacing (so center aligns)
+    function populateWheelLists(){
+      hourList.innerHTML = '';
+      minuteList.innerHTML = '';
+      ampmList.innerHTML = '';
+
+      // buffer blank items to center
+      const buffer = Math.floor((VISIBLE_ITEMS - 1)/2);
+      for(let i=0;i<buffer;i++){
+        hourList.appendChild(makeLi(''));
+        minuteList.appendChild(makeLi(''));
+        ampmList.appendChild(makeLi(''));
+      }
+
+      // hours 1..12
+      for(let h=1; h<=12; h++){
+        hourList.appendChild(makeLi(String(h).padStart(2,' ')));
+      }
+      for(let i=0;i<buffer;i++) hourList.appendChild(makeLi(''));
+
+      // minutes 00..59
+      for(let m=0;m<60;m++){
+        minuteList.appendChild(makeLi(String(m).padStart(2,'0')));
+      }
+      for(let i=0;i<buffer;i++) minuteList.appendChild(makeLi(''));
+
+      // AM PM
+      ampmList.appendChild(makeLi('AM'));
+      ampmList.appendChild(makeLi('PM'));
+      for(let i=0;i<buffer;i++) ampmList.appendChild(makeLi(''));
     }
 
-    function toggleAlarm(index) {
-      alarms[index].enabled = !alarms[index].enabled;
-      renderAlarms();
+    function makeLi(text){
+      const li = document.createElement('li');
+      li.className = 'wheel-item';
+      li.textContent = text;
+      return li;
     }
 
-    function renderAlarms() {
-      alarmsView.innerHTML = "";
-      alarms.forEach((a, i) => {
-        const div = document.createElement("div");
-        div.className = "alarm-item";
-        div.innerHTML = `
-          <div>
-            <div class="alarm-time">${a.time}</div>
-            <div class="alarm-label">${a.label}</div>
-          </div>
-          <label class="switch">
-            <input type="checkbox" ${a.enabled ? "checked" : ""} onchange="toggleAlarm(${i})">
-            <span class="slider"></span>
-          </label>
-        `;
-        alarmsView.appendChild(div);
+    // scroll-snapping logic: when user stops scrolling, snap to nearest item
+    function enableSnapping(wheel, totalItems){
+      let isScrolling;
+      wheel.addEventListener('scroll', e => {
+        window.clearTimeout(isScrolling);
+        isScrolling = window.setTimeout(()=> {
+          snapWheel(wheel);
+        }, 80); // small delay to detect scroll end
+      }, {passive:true});
+      // also handle keyboard navigation (arrow keys)
+      wheel.addEventListener('keydown', e => {
+        if(e.key === 'ArrowUp' || e.key === 'PageUp'){
+          wheel.scrollBy({top:-ITEM_HEIGHT, behavior:'smooth'});
+          e.preventDefault();
+        } else if(e.key === 'ArrowDown' || e.key === 'PageDown'){
+          wheel.scrollBy({top:ITEM_HEIGHT, behavior:'smooth'});
+          e.preventDefault();
+        }
       });
     }
 
-    function logout() {
-      window.location.href = "index.html";
+    function snapWheel(wheel){
+      const scrollTop = wheel.scrollTop;
+      const index = Math.round(scrollTop / ITEM_HEIGHT);
+      const target = index * ITEM_HEIGHT;
+      wheel.scrollTo({top: target, behavior: 'smooth'});
     }
+
+    // helpers to get selected value from a wheel
+    function getSelectedFromWheel(wheel){
+      const scrollTop = wheel.scrollTop;
+      const idx = Math.round(scrollTop / ITEM_HEIGHT);
+      // compute element at index (consider buffers)
+      const li = wheel.querySelectorAll('.wheel-item')[idx + 0]; // index corresponds directly due to buffer at top
+      return li ? li.textContent.trim() : '';
+    }
+
+    // BUT because we added top buffer items, we need to compute properly:
+    function getSelectedValue(wheel){
+      // the visible center item index = Math.round(scrollTop / ITEM_HEIGHT) + (0)
+      const scrollTop = wheel.scrollTop;
+      const centerIndex = Math.round(scrollTop / ITEM_HEIGHT);
+      const items = wheel.querySelectorAll('.wheel-item');
+      const value = items[centerIndex] ? items[centerIndex].textContent.trim() : '';
+      return value;
+    }
+
+    // programmatic set to value by finding the matching li index (first match)
+    function setWheelToValue(wheel, val){
+      const items = wheel.querySelectorAll('.wheel-item');
+      let matchIndex = -1;
+      // prefer exact match (trimmed)
+      for(let i=0;i<items.length;i++){
+        if(items[i].textContent.trim() === val) { matchIndex = i; break; }
+      }
+      if(matchIndex < 0) return;
+      wheel.scrollTo({top: matchIndex * ITEM_HEIGHT, behavior:'auto'});
+    }
+
+    // initialize wheels & snapping
+    populateWheelLists();
+    // set sensible default to current time (12-hour)
+    (function setDefaultTime(){
+      const now = new Date();
+      let hour = now.getHours();
+      const minute = now.getMinutes();
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      hour = hour % 12;
+      if(hour === 0) hour = 12;
+      // find text format in lists
+      setTimeout(()=>{ // allow DOM to render
+        setWheelToValue(hourWheel, String(hour).padStart(2,' '));
+        setWheelToValue(minuteWheel, String(minute).padStart(2,'0'));
+        setWheelToValue(ampmWheel, ampm);
+      }, 50);
+    })();
+
+    enableSnapping(hourWheel);
+    enableSnapping(minuteWheel);
+    enableSnapping(ampmWheel);
+
+    // expose a safe way to read trimmed selected values
+    function getPickerTime(){
+      // Because we added buffer top items, we need to compute selected center visually:
+      // The center item index = Math.round(scrollTop / ITEM_HEIGHT)
+      const getVal = (wheel) => {
+        const idx = Math.round(wheel.scrollTop / ITEM_HEIGHT);
+        const items = wheel.querySelectorAll('.wheel-item');
+        return items[idx] ? items[idx].textContent.trim() : '';
+      };
+
+      let hh = getVal(hourWheel).padStart(2,' ');
+      let mm = getVal(minuteWheel);
+      let ap = getVal(ampmWheel);
+      // clean
+      hh = hh.replace(' ',''); // hours were padded with leading space for single digit
+      if(hh === '') hh = '12';
+      if(mm === '') mm = '00';
+      if(ap === '') ap = 'AM';
+      return {hour: hh.padStart(2,'0'), minute: mm, ampm: ap};
+    }
+
+    // --- Add / Save / Cancel flows ---
+    function enterAddMode(){
+      pickerPanel.style.display = 'block';
+      // ensure wheels are centered correctly (snap to nearest)
+      snapWheel(hourWheel);
+      snapWheel(minuteWheel);
+      snapWheel(ampmWheel);
+      // scroll picker wheels a touch so mobile has correct scroll area (visual)
+      // show keyboard accessibility
+      hourWheel.focus();
+    }
+
+    function cancelAdd(){
+      pickerPanel.style.display = 'none';
+    }
+
+    function saveNewAlarm(){
+      const t = getPickerTime();
+      // format: H:MM AM/PM (no leading zero on hour)
+      let displayHour = String(parseInt(t.hour, 10)); // convert '07' -> 7
+      const timeStr = `${displayHour}:${t.minute} ${t.ampm}`;
+      alarms.push({time: timeStr, label: 'Alarm', enabled: true});
+      pickerPanel.style.display = 'none';
+      renderAlarmsList();
+    }
+
+    // --- render saved alarms list ---
+    const alarmsListEl = document.getElementById('alarmsList');
+    function renderAlarmsList(){
+      alarmsListEl.innerHTML = '';
+      if(alarms.length === 0){
+        const empty = document.createElement('div');
+        empty.style.color = 'var(--muted)';
+        empty.style.textAlign = 'center';
+        empty.style.padding = '30px 0';
+        empty.textContent = 'No alarms yet. Click "Add Alarm" to create one.';
+        alarmsListEl.appendChild(empty);
+        return;
+      }
+      alarms.forEach((a, i) => {
+        const row = document.createElement('div');
+        row.className = 'alarm-row';
+        row.innerHTML = `
+          <div class="alarm-left">
+            <div class="alarm-time">${a.time}</div>
+            <div class="alarm-meta">${a.label}</div>
+          </div>
+          <div class="alarm-actions">
+            <label class="switch">
+              <input type="checkbox" ${a.enabled ? 'checked' : ''} data-index="${i}">
+              <span class="slider"></span>
+            </label>
+            <button class="del-btn" data-index="${i}">Delete</button>
+          </div>
+        `;
+        // wire toggle
+        const toggle = row.querySelector('input[type="checkbox"]');
+        toggle.addEventListener('change', (e) => {
+          const idx = Number(e.target.getAttribute('data-index'));
+          alarms[idx].enabled = e.target.checked;
+        });
+        // wire delete
+        const delBtn = row.querySelector('.del-btn');
+        delBtn.addEventListener('click', () => {
+          const idx = Number(delBtn.getAttribute('data-index'));
+          alarms.splice(idx, 1);
+          renderAlarmsList();
+        });
+        alarmsListEl.appendChild(row);
+      });
+    }
+
+    // ensure snapping on page load for default wheels
+    window.addEventListener('load', () => {
+      // small time to allow items to size
+      setTimeout(()=>{ snapWheel(hourWheel); snapWheel(minuteWheel); snapWheel(ampmWheel); }, 120);
+    });
+
+    // small enhancement: when user scrolls near top, ensure empty items keep center aligned
+    // (already handled by buffer items)
+
+    // initialize showing dashboard
+    showDashboard();
   </script>
 </body>
 </html>
