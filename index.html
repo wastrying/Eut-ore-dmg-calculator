@@ -104,7 +104,6 @@
 
     .small { font-size:11px; color:var(--muted); text-align:center; }
 
-    /* Logo styling */
     .logo {
       width: 64px;
       height: 64px;
@@ -120,7 +119,6 @@
       to { transform: scale(1); opacity: 1; }
     }
 
-    /* Themes */
     .variant-dark {
       --bg:#0b1220; --card:#0f1724; --muted:#9ca3af; --accent:#60a5fa;
       color:#e6eefc; background:linear-gradient(180deg,#071022,#0b1220);
@@ -146,7 +144,6 @@
         </div>
 
         <div class="card" id="template">
-          <!-- 👇 Replace with your GitHub raw image link if necessary -->
           <img src="medisignal.jpeg" alt="App logo" class="logo" />
           
           <h1>Welcome back</h1>
@@ -200,10 +197,12 @@
       else{pwd.type='password';togglePwd.textContent='Show'}
     });
 
+    // ✅ Updated Step 1: redirect to dashboard after sign in
     function handleSubmit(e){
       e.preventDefault();
-      const email=document.getElementById('email').value;
-      alert('Signed in as: '+email);
+      const email = document.getElementById('email').value;
+      if(email.trim() === "") return alert("Please enter your email");
+      window.location.href = "dashboard.html"; // Go to next UI
     }
   </script>
 </body>
