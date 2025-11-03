@@ -5,55 +5,132 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Mobile Login Template</title>
   <style>
-    :root{
+    :root {
       --bg:#f2f4f8; --card:#fff; --muted:#6b7280; --accent:#2563eb; --danger:#ef4444;
       --radius:18px; --phone-w:360px;
     }
-    *{box-sizing:border-box}
-    body{font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:linear-gradient(180deg,#f7f9fc, #eef2f6)}
+    * { box-sizing:border-box; }
 
-    .phone{width:var(--phone-w);max-width:96vw;height:760px;border-radius:36px;padding:18px;background:linear-gradient(180deg,#ffffff 0%, #fafcff 60%);box-shadow:0 30px 60px rgba(20,30,60,0.12);position:relative;overflow:hidden;border:1px solid rgba(0,0,0,0.04)}
-    .screen{width:100%;height:100%;display:flex;flex-direction:column}
-    .topbar{height:36px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px}
+    body {
+      font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      display:flex; align-items:center; justify-content:center;
+      min-height:100vh; margin:0;
+      background:linear-gradient(180deg,#f7f9fc, #eef2f6);
+    }
 
-    .content{flex:1;padding:14px;display:flex;flex-direction:column;gap:14px;overflow:auto}
+    .phone {
+      width: min(90vw, 380px);
+      aspect-ratio: 9 / 19.5; /* iPhone-like ratio */
+      border-radius: 38px;
+      padding: 18px;
+      background: linear-gradient(180deg, #ffffff 0%, #fafcff 60%);
+      box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+      border: 1px solid rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
 
-    .tabs{display:flex;gap:6px;align-items:center}
-    .tab{flex:1;padding:6px 10px;border-radius:10px;background:transparent;text-align:center;font-weight:600;color:var(--muted);cursor:pointer;border:1px solid transparent;font-size:13px}
-    .tab.active{background:var(--card);box-shadow:0 4px 12px rgba(16,24,40,0.06);color:var(--accent)}
+    .screen { flex:1; display:flex; flex-direction:column; }
 
-    .card{background:var(--card);border-radius:16px;padding:14px;box-shadow:0 6px 16px rgba(16,24,40,0.06);display:flex;flex-direction:column;gap:10px}
-    h1{font-size:18px;margin:0}
-    p.subtitle{margin:0;color:var(--muted);font-size:12px}
+    .topbar {
+      height: 40px;
+      display:flex; align-items:center; justify-content:center;
+      font-size: clamp(12px, 2vw, 14px);
+      color: var(--muted);
+    }
 
-    label{font-size:11px;color:var(--muted);display:block;margin-bottom:4px}
-    input[type=text],input[type=password],input[type=email]{width:100%;padding:10px;border-radius:8px;border:1px solid #e6e9ef;font-size:14px}
-    .field{display:flex;flex-direction:column;gap:5px}
+    .content {
+      flex:1;
+      padding: clamp(12px, 3vw, 20px);
+      display:flex; flex-direction:column; gap:clamp(10px,2vw,16px);
+      overflow-y:auto;
+    }
 
-    .actions{display:flex;flex-direction:column;gap:8px;margin-top:4px}
-    .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px;border-radius:10px;border:0;font-weight:700;cursor:pointer;font-size:14px}
-    .btn.primary{background:var(--accent);color:#fff}
-    .btn.ghost{background:transparent;border:1px solid #e6e9ef;color:var(--muted)}
+    .tabs {
+      display:flex; gap:6px;
+    }
+    .tab {
+      flex:1;
+      padding:8px;
+      border-radius:10px;
+      background:transparent;
+      text-align:center;
+      font-weight:600;
+      color:var(--muted);
+      cursor:pointer;
+      border:1px solid transparent;
+      font-size: clamp(12px, 1.8vw, 14px);
+    }
+    .tab.active {
+      background:var(--card);
+      box-shadow:0 4px 10px rgba(0,0,0,0.05);
+      color:var(--accent);
+    }
 
-    .socials{display:flex;gap:8px}
-    .social{flex:1;padding:8px;border-radius:8px;border:1px solid #e6e9ef;text-align:center;font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px}
+    .card {
+      background:var(--card);
+      border-radius:16px;
+      padding:clamp(14px,3vw,20px);
+      box-shadow:0 6px 16px rgba(0,0,0,0.06);
+      display:flex; flex-direction:column; gap:10px;
+      align-items:center;
+    }
 
-    .social img{height:16px;width:16px}
+    h1 { font-size: clamp(18px, 3.6vw, 22px); margin: 0; }
+    p.subtitle { margin: 0; color: var(--muted); font-size: clamp(11px,2vw,13px); }
 
-    .small{font-size:11px;color:var(--muted);text-align:center}
+    label { font-size: 11px; color: var(--muted); display:block; margin-bottom:4px; }
 
-    .variant-dark{--bg:#0b1220;--card:#0f1724;--muted:#9ca3af;--accent:#60a5fa;color:#e6eefc;background:linear-gradient(180deg,#071022,#0b1220)}
-    .variant-min{--bg:#ffffff;--card:#fff;--muted:#7c8798;--accent:#0ea5a4}
+    input[type=text], input[type=password], input[type=email] {
+      width: 100%; padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #e6e9ef;
+      font-size: 14px;
+    }
 
-    .center{display:flex;flex-direction:column;align-items:center;gap:10px}
+    .field { display:flex; flex-direction:column; gap:5px; width:100%; }
 
-    @media(max-width:420px){.phone{height:720px;border-radius:30px}}
+    .actions { display:flex; flex-direction:column; gap:8px; margin-top:4px; width:100%; }
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center;
+      padding: 10px; border-radius: 10px; border: 0;
+      font-weight: 700; cursor:pointer; font-size:14px;
+      transition: 0.2s ease;
+    }
+    .btn.primary { background:var(--accent); color:#fff; }
+    .btn.ghost { background:transparent; border:1px solid #e6e9ef; color:var(--muted); }
+
+    .socials { display:flex; gap:8px; width:100%; }
+    .social {
+      flex:1; padding:8px; border-radius:8px;
+      border:1px solid #e6e9ef;
+      text-align:center; font-weight:600; font-size:13px;
+      display:flex; align-items:center; justify-content:center; gap:6px;
+    }
+    .social img { height:16px; width:16px; }
+
+    .small { font-size:11px; color:var(--muted); text-align:center; }
+
+    /* Themes */
+    .variant-dark {
+      --bg:#0b1220; --card:#0f1724; --muted:#9ca3af; --accent:#60a5fa;
+      color:#e6eefc; background:linear-gradient(180deg,#071022,#0b1220);
+    }
+    .variant-min {
+      --bg:#ffffff; --card:#fff; --muted:#7c8798; --accent:#0ea5a4;
+    }
+
+    @media (max-width:400px) {
+      .phone { border-radius: 28px; }
+    }
   </style>
 </head>
 <body>
   <div class="phone" id="phone">
     <div class="screen">
-      <div class="topbar">9:41 &nbsp; • &nbsp; Login</div>
+      <div class="topbar">9:41 • Login</div>
       <div class="content">
         <div class="tabs" role="tablist" aria-label="Login style tabs">
           <button class="tab active" data-variant="default">Light</button>
@@ -61,9 +138,9 @@
           <button class="tab" data-variant="min">Minimal</button>
         </div>
 
-        <div class="card center" id="template">
-          <h1 id="title">Welcome back</h1>
-          <p class="subtitle" id="subtitle">Sign in to continue</p>
+        <div class="card" id="template">
+          <h1>Welcome back</h1>
+          <p class="subtitle">Sign in to continue</p>
 
           <form id="loginForm" style="width:100%" onsubmit="handleSubmit(event)">
             <div class="field">
@@ -78,8 +155,10 @@
               </div>
             </div>
 
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
-              <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><input id="remember" type="checkbox"/> Remember</label>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;width:100%">
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)">
+                <input id="remember" type="checkbox"/> Remember
+              </label>
               <a href="#" style="font-size:12px;color:var(--accent);text-decoration:none">Forgot?</a>
             </div>
 
@@ -90,8 +169,12 @@
             <div style="height:6px"></div>
             <div class="small">Or continue with</div>
             <div class="socials" style="margin-top:4px">
-              <div class="social"><img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google">Google</div>
-              <div class="social"><img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" alt="Apple">Apple</div>
+              <div class="social">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google">Google
+              </div>
+              <div class="social">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" alt="Apple">Apple
+              </div>
             </div>
           </form>
         </div>
@@ -114,10 +197,15 @@
     const togglePwd = document.getElementById('togglePwd');
     const pwd = document.getElementById('password');
     togglePwd.addEventListener('click', ()=>{
-      if(pwd.type==='password'){pwd.type='text';togglePwd.textContent='Hide'}else{pwd.type='password';togglePwd.textContent='Show'}
+      if(pwd.type==='password'){pwd.type='text';togglePwd.textContent='Hide'}
+      else{pwd.type='password';togglePwd.textContent='Show'}
     });
 
-    function handleSubmit(e){e.preventDefault();const email=document.getElementById('email').value;alert('Signed in as: '+email)}
+    function handleSubmit(e){
+      e.preventDefault();
+      const email=document.getElementById('email').value;
+      alert('Signed in as: '+email);
+    }
   </script>
 </body>
 </html>
