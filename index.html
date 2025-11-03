@@ -113,6 +113,21 @@
 
     .small { font-size:11px; color:var(--muted); text-align:center; }
 
+    /* Logo styling */
+    .logo {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      margin-bottom: 8px;
+      animation: fadeIn 0.8s ease forwards;
+      opacity: 0;
+    }
+
+    @keyframes fadeIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
     /* Themes */
     .variant-dark {
       --bg:#0b1220; --card:#0f1724; --muted:#9ca3af; --accent:#60a5fa;
@@ -139,6 +154,7 @@
         </div>
 
         <div class="card" id="template">
+          <img src="406b7000-b5fa-4e15-8194-ea44aac441ba.png" alt="App logo" class="logo" />
           <h1>Welcome back</h1>
           <p class="subtitle">Sign in to continue</p>
 
