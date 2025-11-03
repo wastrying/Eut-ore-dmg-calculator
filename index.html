@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>iPhone-style Alarm UI</title>
+  <title>iPhone-style Alarm UI (Working)</title>
   <style>
     :root{
       --bg:#0b0b0f;
@@ -40,24 +40,12 @@
     .editor .row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
     .editor h2{margin:0;font-size:18px}
 
-    .wheels{display:flex;gap:12px;justify-content:center;margin:16px 0}
-    .wheel{background:var(--glass);backdrop-filter:blur(6px);border-radius:10px;padding:8px 12px;text-align:center;width:92px;height:160px;overflow:hidden;position:relative}
-    .wheel ul{list-style:none;padding:0;margin:0;position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);}
-    .wheel li{height:36px;line-height:36px;color:#fff;font-size:20px;opacity:.6}
-    .wheel .center{font-weight:700;opacity:1;font-size:24px}
+    .time-inputs{display:flex;gap:10px;justify-content:center;margin:20px 0}
+    .time-inputs select{background:var(--glass);color:white;border:none;padding:10px 14px;border-radius:10px;font-size:20px;backdrop-filter:blur(6px)}
 
     .controls{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
     .btn{background:transparent;border:0;padding:8px 12px;border-radius:8px;color:#fff;cursor:pointer}
     .btn.primary{background:var(--accent);color:#04140b}
-
-    /* small screens */
-    @media (max-width:420px){.app{padding:12px;margin:10px}}
-
-    .empty{color:var(--muted);text-align:center;padding:28px 12px}
-
-    /* subtle iOS style separators */
-    .sep{height:1px;background:linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0));margin:8px 0}
-
   </style>
 </head>
 <body>
@@ -70,11 +58,10 @@
     <div class="alarms" id="alarmsList">
       <div class="empty" id="emptyState">No alarms yet. Tap + to add one.</div>
     </div>
-
   </div>
 
   <div class="overlay" id="overlay">
-    <div class="editor" role="dialog" aria-modal="true">
+    <div class="editor">
       <div class="row">
         <h2>New Alarm</h2>
         <div class="controls">
@@ -83,35 +70,14 @@
         </div>
       </div>
 
-      <div class="wheels">
-        <div class="wheel" data-type="hour">
-          <ul id="hourList"></ul>
-        </div>
-        <div class="wheel" data-type="minute">
-          <ul id="minuteList"></ul>
-        </div>
-        <div class="wheel" data-type="ampm">
-          <ul id="ampmList"><li>AM</li><li class="center">PM</li></ul>
-        </div>
+      <div class="time-inputs">
+        <select id="hour"></select>
+        <select id="minute"></select>
+        <select id="ampm">
+          <option>AM</option>
+          <option>PM</option>
+        </select>
       </div>
-
-      <div class="sep"></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
-        <div>
-          <div style="font-weight:600">Repeat</div>
-          <small class="meta">Never</small>
-        </div>
-        <div style="color:var(--muted)">></div>
-      </div>
-      <div style="height:10px"></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-        <div>
-          <div style="font-weight:600">Label</div>
-          <small class="meta">Alarm</small>
-        </div>
-        <div style="color:var(--muted)">></div>
-      </div>
-
     </div>
   </div>
 
@@ -119,122 +85,57 @@
     <div class="alarm">
       <div class="alarm-left">
         <div class="time">07:00</div>
-        <div class="meta">
-          <small>Everyday • Alarm</small>
-        </div>
+        <div class="meta"><small>Everyday • Alarm</small></div>
       </div>
-      <label class="switch">
-        <input type="checkbox">
-        <span class="knob"></span>
-      </label>
+      <label class="switch"><input type="checkbox"><span class="knob"></span></label>
     </div>
   </template>
 
   <script>
-    // Simple iPhone-style alarm UI behaviors
-    const openEditor = document.getElementById('openEditor');
-    const overlay = document.getElementById('overlay');
-    const cancelBtn = document.getElementById('cancelBtn');
-    const saveBtn = document.getElementById('saveBtn');
-    const alarmsList = document.getElementById('alarmsList');
-    const emptyState = document.getElementById('emptyState');
+    const openEditor=document.getElementById('openEditor');
+    const overlay=document.getElementById('overlay');
+    const cancelBtn=document.getElementById('cancelBtn');
+    const saveBtn=document.getElementById('saveBtn');
+    const alarmsList=document.getElementById('alarmsList');
+    const emptyState=document.getElementById('emptyState');
+    const hourSel=document.getElementById('hour');
+    const minuteSel=document.getElementById('minute');
+    const ampmSel=document.getElementById('ampm');
 
-    const hourList = document.getElementById('hourList');
-    const minuteList = document.getElementById('minuteList');
-    const ampmList = document.getElementById('ampmList');
+    for(let i=1;i<=12;i++){hourSel.innerHTML+=`<option>${i.toString().padStart(2,'0')}</option>`;}
+    for(let i=0;i<60;i++){minuteSel.innerHTML+=`<option>${i.toString().padStart(2,'0')}</option>`;}
 
-    let selected = {hour:7, minute:0, ampm:'AM'};
+    openEditor.onclick=()=>overlay.style.display='flex';
+    cancelBtn.onclick=()=>overlay.style.display='none';
 
-    function populateWheel(list, items, centerIndex){
-      list.innerHTML = '';
-      items.forEach((it, i)=>{
-        const li = document.createElement('li');
-        li.textContent = (typeof it === 'number' ? String(it).padStart(2,'0') : it);
-        if(i===centerIndex) li.classList.add('center');
-        list.appendChild(li);
-      });
-    }
-
-    // create hour/minute arrays padded with neighbors so center item sits nicely
-    const hours = Array.from({length:12}, (_,i)=>i+1);
-    const minutes = Array.from({length:60}, (_,i)=>i);
-
-    populateWheel(hourList, hours, 6);
-    populateWheel(minuteList, minutes.filter((_,i)=>i%5===0), 6); // show 12 items (0,5,10...)
-
-    // basic selection: click to choose center
-    function attachSelection(wheel, type, values){
-      wheel.addEventListener('click', (e)=>{
-        const li = e.target.closest('li');
-        if(!li) return;
-        const lis = Array.from(wheel.querySelectorAll('li'));
-        lis.forEach(x=>x.classList.remove('center'));
-        li.classList.add('center');
-        const val = li.textContent;
-        if(type==='hour') selected.hour = parseInt(val);
-        if(type==='minute') selected.minute = parseInt(val);
-        if(type==='ampm') selected.ampm = val;
-      });
-    }
-
-    attachSelection(hourList, 'hour');
-    attachSelection(minuteList, 'minute');
-    attachSelection(ampmList, 'ampm');
-
-    openEditor.addEventListener('click', ()=>{ overlay.style.display='flex'; });
-    cancelBtn.addEventListener('click', ()=>{ overlay.style.display='none'; });
-
-    saveBtn.addEventListener('click', ()=>{
-      addAlarm(selected.hour, selected.minute, selected.ampm, true);
+    saveBtn.onclick=()=>{
+      const h=hourSel.value, m=minuteSel.value, a=ampmSel.value;
+      addAlarm(h,m,a,true);
       overlay.style.display='none';
-    });
+    };
 
-    function addAlarm(h,m,ampm,enabled=true){
-      if(emptyState) emptyState.style.display='none';
-      const tpl = document.getElementById('alarmTpl');
-      const node = tpl.content.cloneNode(true);
-      const cont = node.querySelector('.alarm');
-      const timeEl = cont.querySelector('.time');
-      const meta = cont.querySelector('.meta small');
-      const chk = cont.querySelector('input[type=checkbox]');
+    function addAlarm(h,m,ampm,enabled){
+      emptyState.style.display='none';
+      const tpl=document.getElementById('alarmTpl');
+      const node=tpl.content.cloneNode(true);
+      const cont=node.querySelector('.alarm');
+      const timeEl=cont.querySelector('.time');
+      const chk=cont.querySelector('input[type=checkbox]');
 
-      const hh = String(h).padStart(2,'0');
-      const mm = String(m).padStart(2,'0');
-      timeEl.textContent = `${hh}:${mm} ${ampm}`;
-      meta.textContent = `Everyday • Alarm`;
-      cont.style.cursor = 'pointer';
+      timeEl.textContent=`${h}:${m} ${ampm}`;
+      chk.checked=enabled;
+      if(enabled)cont.querySelector('.switch').classList.add('on');
 
-      chk.checked = enabled;
-      if(enabled) cont.querySelector('.switch').classList.add('on');
-
-      chk.addEventListener('change',(e)=>{
-        cont.querySelector('.switch').classList.toggle('on', e.target.checked);
+      chk.addEventListener('change',e=>{
+        cont.querySelector('.switch').classList.toggle('on',e.target.checked);
       });
-
-      // on long press, delete (mobile) or double-click to delete (desktop)
-      let pressTimer = null;
-      cont.addEventListener('mousedown', (ev)=>{ pressTimer = setTimeout(()=>{ removeAlarm(cont); },800); });
-      cont.addEventListener('mouseup', ()=>{ clearTimeout(pressTimer); });
-      cont.addEventListener('touchstart', ()=>{ pressTimer = setTimeout(()=>{ removeAlarm(cont); },700); });
-      cont.addEventListener('touchend', ()=>{ clearTimeout(pressTimer); });
-      cont.addEventListener('dblclick', ()=>removeAlarm(cont));
 
       alarmsList.appendChild(node);
     }
 
-    function removeAlarm(el){
-      if(!confirm('Delete this alarm?')) return;
-      el.remove();
-      if(alarmsList.querySelectorAll('.alarm').length===0) emptyState.style.display='block';
-    }
-
-    // prepopulate with a sample alarm for demo
-    addAlarm(7,0,'AM',true);
-    addAlarm(8,30,'AM',false);
-
-    // Accessibility: close on ESC
-    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ overlay.style.display='none'; } });
-
+    // Add sample alarms
+    addAlarm('07','00','AM',true);
+    addAlarm('08','30','AM',false);
   </script>
 </body>
 </html>
