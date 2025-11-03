@@ -1,205 +1,220 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ore Damage Calculator</title>
-  <script>
-    tailwind.config = {
-      darkMode: 'class'
-    }
-  </script>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
+import React, { useState } from 'react'
+import { motion } from 'framer-motion'
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+import { Progress } from "@/components/ui/progress"
+import { Toggle } from "@/components/ui/toggle"
+import { Download, UploadCloud, RefreshCw } from 'lucide-react'
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts'
 
-  <body class="bg-white text-black dark:bg-gray-900 dark:text-white transition-colors duration-300">
-    <div class="min-h-screen p-8">
-      <h1 class="text-2xl font-bold mb-6">Ore Damage Calculator</h1>
+export default function UiOptimizationDashboard() {
+  const [screenshot, setScreenshot] = useState(null)
+  const [preset, setPreset] = useState('accessibility')
+  const [suggestions, setSuggestions] = useState(sampleSuggestions)
+  const [optimizedPreview, setOptimizedPreview] = useState(null)
+  const [running, setRunning] = useState(false)
+  const [improvementScore, setImprovementScore] = useState(12)
 
-      <!-- Input section -->
-      <div class="flex flex-col items-start gap-4 mb-6">
-        <label class="text-black dark:text-white">
-          Eren's Base dmg:
-          <input id="baseDmg" type="number" class="border px-2 w-48 bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600" />
-        </label>
-        <label class="text-black dark:text-white">
-          #4mr (Piercing) Level (0-5):
-          <input id="mrLevel" type="number" value="0" min="0" max="5" class="border px-2 w-48 bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600" />
-        </label>
-        <label class="text-black dark:text-white">
-          Piercing Enchant Level (0-50):
-          <input id="enchantLevel" type="number" value="0" min="0" max="50" class="border px-2 w-48 bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600" />
-        </label>
-        <label class="text-black dark:text-white">
-          Aquamarine Mastery Level:
-          <input id="aquaLevel" type="number" value="0" min="0" max="10" class="border px-2 w-48 bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600" />
-        </label>
-        <label class="text-black dark:text-white">
-          Ore Group:
-          <select id="oreGroup" class="border px-2 w-48 bg-white text-black dark:bg-gray-800 dark:text-white dark:border-gray-600">
-            <option value="all">All</option>
-            <option value="shallow">Shallow</option>
-            <option value="intermediate">Intermediate</option>
-            <option value="crystalline">Crystalline</option>
-            <option value="deep">Deep</option>
-            <option value="midnight">Midnight</option>
-            <option value="crust">Crust</option>
-            <option value="scorching">Scorching</option>
-            <option value="cerulean">Cerulean</option>
-            <option value="crimson">Crimson</option>
-          </select>
-        </label>
-        <button onclick="calculateDamage()" class="bg-blue-500 text-white px-4 py-2 rounded w-48">
-          Calculate
-        </button>
+  function handleUpload(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const url = URL.createObjectURL(file)
+    setScreenshot(url)
+    setOptimizedPreview(null)
+    setSuggestions(sampleSuggestions)
+    setImprovementScore(12)
+  }
+
+  function runOptimization() {
+    setRunning(true)
+    setTimeout(() => {
+      // mock results
+      setOptimizedPreview(screenshot || '/placeholder-optimized.png')
+      setSuggestions(prev => prev.map((s, i) => ({ ...s, done: i < 2 })))
+      setImprovementScore(prev => Math.min(95, prev + 34))
+      setRunning(false)
+    }, 1400)
+  }
+
+  function applySuggestion(index) {
+    setSuggestions(prev => prev.map((s,i) => i===index?{...s, done: true}:s))
+    setImprovementScore(prev => Math.min(100, prev + 6))
+  }
+
+  return (
+    <div className="p-6 max-w-6xl mx-auto">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-semibold">UI Optimization Studio</h1>
+          <p className="text-sm text-slate-500">Upload a screen and get prioritized UI suggestions, quick fixes and exportable assets.</p>
+        </div>
+        <div className="flex gap-2">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="file" accept="image/*" onChange={handleUpload} className="hidden" />
+            <Button variant="ghost"><UploadCloud className="w-4 h-4 mr-2" /> Upload Screen</Button>
+          </label>
+          <Button onClick={() => { setScreenshot(null); setOptimizedPreview(null); setSuggestions(sampleSuggestions); setImprovementScore(12) }}><RefreshCw className="w-4 h-4 mr-2"/> Reset</Button>
+        </div>
       </div>
 
-      <!-- Results Table -->
-      <div class="overflow-auto">
-        <table class="table-auto border mx-auto w-full max-w-5xl text-sm">
-          <thead>
-            <tr class="bg-gray-200 dark:bg-gray-700 text-black dark:text-white">
-              <th class="border px-4 py-2">Ore</th>
-              <th class="border px-4 py-2">HP</th>
-              <th class="border px-4 py-2">Defense</th>
-              <th class="border px-4 py-2">Reduced Dmg</th>
-              <th class="border px-4 py-2">One Shot?</th>
-            </tr>
-          </thead>
-          <tbody id="resultsBody" class="text-black dark:text-white"></tbody>
-        </table>
-      </div>
+      <div className="grid grid-cols-12 gap-6">
+        <aside className="col-span-4">
+          <Card className="mb-4">
+            <CardContent>
+              <div className="mb-3 flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-medium">Run Options</h3>
+                  <p className="text-xs text-slate-500">Choose presets and priorities</p>
+                </div>
+              </div>
 
-      <!-- Settings Button -->
-      <button onclick="toggleSettings()" class="fixed right-0 top-1/2 -translate-y-1/2 bg-gray-700 text-white px-3 py-2 rounded-l z-50">
-        ⚙️
-      </button>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm text-slate-600">Preset</label>
+                  <Select onValueChange={(v)=>setPreset(v)} defaultValue={preset}>
+                    <SelectTrigger className="w-full mt-1"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="accessibility">Accessibility</SelectItem>
+                      <SelectItem value="performance">Performance</SelectItem>
+                      <SelectItem value="usability">Usability</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-      <!-- Settings Sidebar -->
-      <div id="settingsPanel" class="fixed top-0 right-0 h-full w-64 bg-white dark:bg-gray-900 text-black dark:text-white shadow-lg p-4 transform translate-x-full transition-transform duration-300 z-40">
-        <h2 class="text-xl font-bold mb-4">Settings</h2>
-        <button onclick="toggleDarkMode()" class="bg-gray-300 dark:bg-gray-700 text-black dark:text-white px-4 py-2 rounded mb-4">
-          Toggle Dark/Light Mode
-        </button>
-        <h3 class="text-lg font-semibold mb-2">Feedback</h3>
-        <textarea id="feedbackBox" placeholder="Report a bug or give feedback..." class="w-full h-32 p-2 border dark:bg-gray-800 dark:border-gray-600 bg-white text-black dark:text-white"></textarea>
-        <button onclick="submitFeedback()" class="bg-green-500 text-white px-4 py-2 mt-2 rounded">Submit</button>
+                <div>
+                  <label className="text-sm text-slate-600">Target improvement</label>
+                  <Progress value={improvementScore} className="mt-2" />
+                  <div className="text-xs text-slate-500 mt-1">Estimated improvement: {improvementScore}%</div>
+                </div>
+
+                <div className="flex items-center justify-between mt-2">
+                  <div className="text-sm">Auto-apply minor fixes</div>
+                  <Toggle defaultChecked />
+                </div>
+
+                <div className="mt-4">
+                  <Button onClick={runOptimization} disabled={running || !screenshot}>{running? 'Optimizing...' : 'Run Optimization'}</Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent>
+              <h4 className="text-sm font-medium mb-2">Quick Metrics</h4>
+              <div className="grid grid-cols-2 gap-3">
+                <small className="text-xs text-slate-500">Contrast Issues</small>
+                <div className="font-semibold">7</div>
+                <small className="text-xs text-slate-500">Tap Targets</small>
+                <div className="font-semibold">4</div>
+                <small className="text-xs text-slate-500">Load Score</small>
+                <div className="font-semibold">82</div>
+                <small className="text-xs text-slate-500">A11y Score</small>
+                <div className="font-semibold">68</div>
+              </div>
+            </CardContent>
+          </Card>
+        </aside>
+
+        <main className="col-span-8">
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <Card>
+              <CardContent>
+                <h4 className="text-sm font-medium mb-2">Original</h4>
+                <div className="h-64 bg-slate-50 border rounded overflow-hidden flex items-center justify-center">
+                  {screenshot ? <img src={screenshot} alt="original" className="max-h-full"/> : <div className="text-slate-400">No screen uploaded</div>}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent>
+                <div className="flex items-start justify-between">
+                  <h4 className="text-sm font-medium">Optimized</h4>
+                  <div className="text-xs text-slate-500">Preview</div>
+                </div>
+                <div className="h-64 bg-slate-50 border rounded overflow-hidden mt-3 flex items-center justify-center">
+                  {optimizedPreview ? <img src={optimizedPreview} alt="optimized" className="max-h-full"/> : <div className="text-slate-400">No preview yet</div>}
+                </div>
+                <div className="flex gap-2 mt-3">
+                  <Button variant="ghost"><Download className="w-4 h-4 mr-2"/> Export</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardContent>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-sm font-medium">Suggestions</h4>
+                <div className="text-xs text-slate-500">Prioritized & actionable</div>
+              </div>
+
+              <div className="space-y-3">
+                {suggestions.map((s, i) => (
+                  <motion.div key={i} initial={{opacity:0,y:6}} animate={{opacity:1,y:0}} className={`p-3 border rounded flex items-start justify-between ${s.done? 'bg-green-50 border-green-100':''}`}>
+                    <div>
+                      <div className="text-sm font-medium">{s.title}</div>
+                      <div className="text-xs text-slate-500">{s.desc}</div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <div className="text-xs text-slate-500">Impact: {s.impact}</div>
+                      {!s.done ? <Button size="sm" onClick={()=>applySuggestion(i)}>Apply</Button> : <div className="text-xs text-green-600">Applied</div>}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card>
+              <CardContent>
+                <h4 className="text-sm font-medium mb-2">Improvement Over Time</h4>
+                <div style={{width: '100%', height: 160}}>
+                  <ResponsiveContainer>
+                    <LineChart data={chartData}>
+                      <XAxis dataKey="step" />
+                      <YAxis />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="score" stroke="#4f46e5" strokeWidth={2} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent>
+                <h4 className="text-sm font-medium mb-2">Export & Integrations</h4>
+                <div className="flex flex-col gap-2">
+                  <Button variant="outline">Export annotated PNG</Button>
+                  <Button variant="outline">Export accessibility report (CSV)</Button>
+                  <Button variant="outline">Send to Figma</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
       </div>
     </div>
+  )
+}
 
-    <script>
-      const ores = {
-        "Stone": { hp: 5, def: "0%", group: ["shallow", "intermediate", "crystalline"] },
-        "Evil Rock": { hp: 1, def: 5, group: ["shallow"] },
-        "Coal": { hp: 10, def: "0%", group: ["shallow", "intermediate", "deep"] },
-        "Iron": { hp: 45, def: "0%", group: ["shallow", "intermediate", "deep"] },
-        "Aluminium": { hp: 30, def: "0%", group: ["shallow", "intermediate", "deep"] },
-        "Tin": { hp: 15, def: "0%", group: ["shallow", "intermediate", "deep"] },
-        "Copper": { hp: 30, def: "0%", group: ["shallow", "intermediate", "deep"] },
-        "Gold": { hp: 50, def: 2, group: ["intermediate", "deep", "midnight"] },
-        "Ruby": { hp: 90, def: 3, group: ["intermediate", "deep", "midnight", "crystalline"] },
-        "Sapphire": { hp: 90, def: 3, group: ["intermediate", "deep", "midnight", "crystalline"] },
-        "Emerald": { hp: 90, def: 3, group: ["intermediate", "deep", "midnight", "crystalline"] },
-        "Diamond": { hp: 125, def: 8, group: ["deep", "midnight", "crust"] },
-        "Uranium": { hp: 1500, def: 20, group: ["deep", "midnight", "crust"] },
-        "Plutonium": { hp: 1500, def: 20, group: ["deep", "midnight", "crust", "scorching"] },
-        "Amethyst": { hp: 300, def: 5, group: ["deep", "midnight", "crust"] },
-        "Aventurine": { hp: 1250, def: 2, group: ["deep", "midnight", "crust"] },
-        "Titanium": { hp: 750, def: 10, group: ["deep", "midnight", "crust"] },
-        "Heartstone": { hp: 1000, def: "log1.3", group: ["midnight", "crust", "scorching"] },
-        "Bismuth": { hp: 75000, def: "log1.2", group: ["cerulean"] },
-        "Dragonstone": { hp: 400000, def: 70, group: ["crust", "scorching", "cerulean"] },
-        "Garnet": { hp: 12500000, def: "0%", group: ["cerulean"] },
-        "Aquamarine": { hp: 1000000, def: 50, group: ["cerulean"] },
-        "Prismastone": { hp: 10000, def: "log10", group: ["cerulean"] },
-        "Basalt": { hp: 100000, def: "0%", group: ["crimson"] },
-        "Obsidian": { hp: 250, def: 1000, group: ["crimson"] },
-        "Sulfur": { hp: 5000000, def: 3, group: ["crimson"] },
-        "Pyrite": { hp: 250000, def: 70, group: ["crimson"] },
-        "Bloodstone": { hp: 1000000, def: 50, group: ["crimson"] },
-        "Netherite": { hp: 30000, def: "log3", group: ["crimson"] }
-      };
 
-      function toggleDarkMode() {
-        document.body.classList.toggle("dark");
-      }
+// ----- Mock data -----
+const sampleSuggestions = [
+  { title: 'Increase CTA contrast', desc: 'Primary button contrast below recommended ratio.', impact: 'High', done: false },
+  { title: 'Increase tap target size', desc: 'Small touch targets on key actions.', impact: 'Medium', done: false },
+  { title: 'Reduce dense text blocks', desc: 'Break long paragraphs, improve scanability.', impact: 'Low', done: false },
+  { title: 'Compress hero image', desc: 'Large images increase load times for mobile.', impact: 'Medium', done: false },
+]
 
-      function toggleSettings() {
-        const panel = document.getElementById("settingsPanel");
-        panel.classList.toggle("translate-x-full");
-      }
-
-      function submitFeedback() {
-        const feedback = document.getElementById("feedbackBox").value;
-        if (feedback.trim() === "") {
-          alert("Please enter some feedback.");
-        } else {
-          console.log("Feedback submitted:", feedback);
-          alert("Thank you for your feedback!");
-          document.getElementById("feedbackBox").value = "";
-        }
-      }
-
-      function calculateDamage() {
-        const base = parseFloat(document.getElementById("baseDmg").value);
-        const mr = parseInt(document.getElementById("mrLevel").value);
-        const enchant = parseInt(document.getElementById("enchantLevel").value);
-        const aqua = parseInt(document.getElementById("aquaLevel").value);
-        const groupFilter = document.getElementById("oreGroup").value;
-
-        const piercingMult = Math.pow(1.1, mr);
-        const enchantMult = 0.5 * enchant + 1;
-
-        let aquaBaseReduction = 1.0;
-        if (aqua >= 5) aquaBaseReduction *= 1.25;
-        if (aqua >= 10) aquaBaseReduction *= 1.25;
-
-        const tbody = document.getElementById("resultsBody");
-        tbody.innerHTML = "";
-
-        Object.entries(ores).forEach(([oreName, oreData]) => {
-          if (groupFilter !== "all" && !oreData.group.includes(groupFilter)) return;
-
-          const hp = oreData.hp;
-          const defRaw = oreData.def;
-          let defense = 1;
-          let reduced = 0;
-
-          if (typeof defRaw === "string" && defRaw.startsWith("log")) {
-            const logBase = parseFloat(defRaw.substring(3)) / aquaBaseReduction;
-            const safeBase = Math.max(1.00001, logBase);
-            reduced = Math.max(1.0, Math.log(base) / Math.log(safeBase));
-            defense = `log${safeBase.toFixed(3)}`;
-          } else if (typeof defRaw === "string" && defRaw.endsWith("%")) {
-            const percent = parseFloat(defRaw.replace("%", ""));
-            if (percent === 0) {
-              defense = Math.max(1, 1 / piercingMult / enchantMult);
-              reduced = base / defense;
-            } else {
-              const multiplier = Math.max(0.00001, (1 - percent / 100) / piercingMult / enchantMult);
-              reduced = base * multiplier;
-              defense = `${percent.toFixed(2)}%`;
-            }
-          } else {
-            const def = parseFloat(defRaw);
-            defense = Math.max(1, def / piercingMult / enchantMult);
-            reduced = base / defense;
-            defense = defense.toFixed(2);
-          }
-
-          const isOneShot = reduced >= hp ? "✅" : "❌";
-
-          tbody.innerHTML += `
-            <tr class="text-black dark:text-white">
-              <td class="border px-4 py-1">${oreName}</td>
-              <td class="border px-4 py-1">${hp}</td>
-              <td class="border px-4 py-1">${defense}</td>
-              <td class="border px-4 py-1">${Math.floor(reduced)}</td>
-              <td class="border px-4 py-1">${isOneShot}</td>
-            </tr>
-          `;
-        });
-      }
-    </script>
-  </body>
-</html>
+const chartData = [
+  { step: 'Start', score: 12 },
+  { step: 'Auto-fix', score: 38 },
+  { step: 'Apply suggestions', score: 56 },
+  { step: 'Final', score: 78 },
+]
