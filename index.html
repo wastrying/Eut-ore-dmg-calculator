@@ -20,7 +20,7 @@
 
     .phone {
       width: min(90vw, 380px);
-      aspect-ratio: 9 / 19.5; /* iPhone-like ratio */
+      aspect-ratio: 9 / 19.5;
       border-radius: 38px;
       padding: 18px;
       background: linear-gradient(180deg, #ffffff 0%, #fafcff 60%);
@@ -121,6 +121,7 @@
       margin-bottom: 8px;
       animation: fadeIn 0.8s ease forwards;
       opacity: 0;
+      object-fit: cover;
     }
 
     @keyframes fadeIn {
@@ -154,7 +155,12 @@
         </div>
 
         <div class="card" id="template">
-          <img src="406b7000-b5fa-4e15-8194-ea44aac441ba.png" alt="App logo" class="logo" />
+          <!-- 👇 Replace this path with your GitHub raw URL if needed -->
+          <img src="medisignal.jpeg" alt="App logo" class="logo" />
+          <!-- Example for GitHub raw:
+          <img src="https://raw.githubusercontent.com/your-username/your-repo/main/medisignal.jpeg" alt="App logo" class="logo" />
+          -->
+          
           <h1>Welcome back</h1>
           <p class="subtitle">Sign in to continue</p>
 
