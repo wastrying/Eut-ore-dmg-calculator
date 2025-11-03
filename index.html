@@ -1,220 +1,282 @@
-import React, { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { Progress } from "@/components/ui/progress"
-import { Toggle } from "@/components/ui/toggle"
-import { Download, UploadCloud, RefreshCw } from 'lucide-react'
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts'
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GitHub Optimization - Mock Dashboard</title>
 
-export default function UiOptimizationDashboard() {
-  const [screenshot, setScreenshot] = useState(null)
-  const [preset, setPreset] = useState('accessibility')
-  const [suggestions, setSuggestions] = useState(sampleSuggestions)
-  const [optimizedPreview, setOptimizedPreview] = useState(null)
-  const [running, setRunning] = useState(false)
-  const [improvementScore, setImprovementScore] = useState(12)
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  function handleUpload(e) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const url = URL.createObjectURL(file)
-    setScreenshot(url)
-    setOptimizedPreview(null)
-    setSuggestions(sampleSuggestions)
-    setImprovementScore(12)
-  }
-
-  function runOptimization() {
-    setRunning(true)
-    setTimeout(() => {
-      // mock results
-      setOptimizedPreview(screenshot || '/placeholder-optimized.png')
-      setSuggestions(prev => prev.map((s, i) => ({ ...s, done: i < 2 })))
-      setImprovementScore(prev => Math.min(95, prev + 34))
-      setRunning(false)
-    }, 1400)
-  }
-
-  function applySuggestion(index) {
-    setSuggestions(prev => prev.map((s,i) => i===index?{...s, done: true}:s))
-    setImprovementScore(prev => Math.min(100, prev + 6))
-  }
-
-  return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-semibold">UI Optimization Studio</h1>
-          <p className="text-sm text-slate-500">Upload a screen and get prioritized UI suggestions, quick fixes and exportable assets.</p>
-        </div>
-        <div className="flex gap-2">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input type="file" accept="image/*" onChange={handleUpload} className="hidden" />
-            <Button variant="ghost"><UploadCloud className="w-4 h-4 mr-2" /> Upload Screen</Button>
-          </label>
-          <Button onClick={() => { setScreenshot(null); setOptimizedPreview(null); setSuggestions(sampleSuggestions); setImprovementScore(12) }}><RefreshCw className="w-4 h-4 mr-2"/> Reset</Button>
-        </div>
+  <style>
+    :root{
+      --bg: #ffffff;
+      --muted: #6b7280;
+      --card: #f8fafc;
+      --accent: #0f172a;
+      --primary: #0b72f1;
+      --success: #16a34a;
+      --border: #e6eef8;
+      --radius: 10px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--accent)}
+    .container{max-width:1200px;margin:28px auto;padding:20px}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+    h1{font-size:20px;margin:0}
+    .sub{font-size:13px;color:var(--muted);margin-top:4px}
+    .searchbar{display:flex;gap:10px;align-items:center}
+    input[type="text"]{padding:10px 12px;border-radius:8px;border:1px solid var(--border);min-width:320px}
+    button{background:var(--primary);color:white;border:0;padding:9px 12px;border-radius:8px;cursor:pointer;font-weight:600}
+    button.ghost{background:transparent;color:var(--primary);border:1px solid var(--border)}
+    .grid{display:grid;grid-template-columns:260px 1fr;gap:18px}
+    .card{background:var(--card);border-radius:var(--radius);padding:14px;border:1px solid var(--border)}
+    .card h3{margin:0;font-size:14px}
+    .statrow{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed rgba(0,0,0,0.04)}
+    .statrow:last-child{border-bottom:none}
+    .big{font-size:18px;font-weight:700}
+    .muted{color:var(--muted);font-size:12px}
+    .progress{height:10px;background:linear-gradient(90deg,#dfeefe,#c6e0ff);border-radius:6px;margin-top:8px;overflow:hidden}
+    .progress > .bar{height:100%;background:linear-gradient(90deg,#0366d6,#0b72f1);width:68%}
+    .smallbtn{padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:white;cursor:pointer}
+    .topcards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px}
+    .suggestions{display:flex;flex-direction:column;gap:10px}
+    .suggest{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;border:1px solid var(--border);background:white}
+    .suggest.applied{background:linear-gradient(90deg,#ecfdf5,#f0fdf4);border-color:rgba(34,197,94,0.12)}
+    .two-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+    .preview{height:200px;border-radius:8px;border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted)}
+    footer{margin-top:18px;color:var(--muted);font-size:13px}
+    @media (max-width:900px){
+      .grid{grid-template-columns:1fr; }
+      input[type="text"]{min-width:160px}
+      .topcards{grid-template-columns:1fr}
+      .two-cols{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>GitHub Optimization</h1>
+        <div class="sub">Analyze repositories and get prioritized suggestions to improve repo health (mock UI)</div>
       </div>
 
-      <div className="grid grid-cols-12 gap-6">
-        <aside className="col-span-4">
-          <Card className="mb-4">
-            <CardContent>
-              <div className="mb-3 flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-medium">Run Options</h3>
-                  <p className="text-xs text-slate-500">Choose presets and priorities</p>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div>
-                  <label className="text-sm text-slate-600">Preset</label>
-                  <Select onValueChange={(v)=>setPreset(v)} defaultValue={preset}>
-                    <SelectTrigger className="w-full mt-1"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="accessibility">Accessibility</SelectItem>
-                      <SelectItem value="performance">Performance</SelectItem>
-                      <SelectItem value="usability">Usability</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="text-sm text-slate-600">Target improvement</label>
-                  <Progress value={improvementScore} className="mt-2" />
-                  <div className="text-xs text-slate-500 mt-1">Estimated improvement: {improvementScore}%</div>
-                </div>
-
-                <div className="flex items-center justify-between mt-2">
-                  <div className="text-sm">Auto-apply minor fixes</div>
-                  <Toggle defaultChecked />
-                </div>
-
-                <div className="mt-4">
-                  <Button onClick={runOptimization} disabled={running || !screenshot}>{running? 'Optimizing...' : 'Run Optimization'}</Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent>
-              <h4 className="text-sm font-medium mb-2">Quick Metrics</h4>
-              <div className="grid grid-cols-2 gap-3">
-                <small className="text-xs text-slate-500">Contrast Issues</small>
-                <div className="font-semibold">7</div>
-                <small className="text-xs text-slate-500">Tap Targets</small>
-                <div className="font-semibold">4</div>
-                <small className="text-xs text-slate-500">Load Score</small>
-                <div className="font-semibold">82</div>
-                <small className="text-xs text-slate-500">A11y Score</small>
-                <div className="font-semibold">68</div>
-              </div>
-            </CardContent>
-          </Card>
-        </aside>
-
-        <main className="col-span-8">
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <Card>
-              <CardContent>
-                <h4 className="text-sm font-medium mb-2">Original</h4>
-                <div className="h-64 bg-slate-50 border rounded overflow-hidden flex items-center justify-center">
-                  {screenshot ? <img src={screenshot} alt="original" className="max-h-full"/> : <div className="text-slate-400">No screen uploaded</div>}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent>
-                <div className="flex items-start justify-between">
-                  <h4 className="text-sm font-medium">Optimized</h4>
-                  <div className="text-xs text-slate-500">Preview</div>
-                </div>
-                <div className="h-64 bg-slate-50 border rounded overflow-hidden mt-3 flex items-center justify-center">
-                  {optimizedPreview ? <img src={optimizedPreview} alt="optimized" className="max-h-full"/> : <div className="text-slate-400">No preview yet</div>}
-                </div>
-                <div className="flex gap-2 mt-3">
-                  <Button variant="ghost"><Download className="w-4 h-4 mr-2"/> Export</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardContent>
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-sm font-medium">Suggestions</h4>
-                <div className="text-xs text-slate-500">Prioritized & actionable</div>
-              </div>
-
-              <div className="space-y-3">
-                {suggestions.map((s, i) => (
-                  <motion.div key={i} initial={{opacity:0,y:6}} animate={{opacity:1,y:0}} className={`p-3 border rounded flex items-start justify-between ${s.done? 'bg-green-50 border-green-100':''}`}>
-                    <div>
-                      <div className="text-sm font-medium">{s.title}</div>
-                      <div className="text-xs text-slate-500">{s.desc}</div>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <div className="text-xs text-slate-500">Impact: {s.impact}</div>
-                      {!s.done ? <Button size="sm" onClick={()=>applySuggestion(i)}>Apply</Button> : <div className="text-xs text-green-600">Applied</div>}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardContent>
-                <h4 className="text-sm font-medium mb-2">Improvement Over Time</h4>
-                <div style={{width: '100%', height: 160}}>
-                  <ResponsiveContainer>
-                    <LineChart data={chartData}>
-                      <XAxis dataKey="step" />
-                      <YAxis />
-                      <Tooltip />
-                      <Line type="monotone" dataKey="score" stroke="#4f46e5" strokeWidth={2} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent>
-                <h4 className="text-sm font-medium mb-2">Export & Integrations</h4>
-                <div className="flex flex-col gap-2">
-                  <Button variant="outline">Export annotated PNG</Button>
-                  <Button variant="outline">Export accessibility report (CSV)</Button>
-                  <Button variant="outline">Send to Figma</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </main>
+      <div class="searchbar">
+        <input id="repoInput" type="text" value="your-org/your-repo" />
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input id="uploadFile" type="file" accept="image/*" style="display:none" />
+          <button class="ghost" id="uploadBtn">Upload Screenshot</button>
+        </label>
+        <button id="analyzeBtn">Analyze</button>
       </div>
+    </header>
+
+    <div class="grid">
+      <!-- Sidebar -->
+      <aside>
+        <div class="card">
+          <h3>Repo Overview</h3>
+          <div style="margin-top:10px">
+            <div class="statrow"><div class="muted">Stars</div><div class="big">1.2k</div></div>
+            <div class="statrow"><div class="muted">Forks</div><div class="big">210</div></div>
+            <div class="statrow"><div class="muted">Open Issues</div><div class="big">34</div></div>
+            <div class="statrow"><div class="muted">Open PRs</div><div class="big">8</div></div>
+
+            <div style="margin-top:12px">
+              <div class="muted">Repo Health</div>
+              <div class="progress"><div id="scoreBar" class="bar" style="width:68%"></div></div>
+              <div class="muted" style="margin-top:6px">Score: <span id="scoreText">68%</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <h3>Quick Actions</h3>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+            <button class="smallbtn" id="addBadges">Add README badges</button>
+            <button class="smallbtn" id="createTemplate">Create ISSUE template</button>
+            <button class="smallbtn" id="archiveBranches">Archive stale branches</button>
+            <button class="smallbtn" id="resetMock">Reset Mock</button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main -->
+      <main>
+        <div class="topcards">
+          <div class="card">
+            <div class="muted">Activity (30d)</div>
+            <canvas id="activityChart" height="80"></canvas>
+            <div style="margin-top:8px;font-weight:700">120 commits</div>
+            <div class="muted">last 30 days</div>
+          </div>
+
+          <div class="card">
+            <div class="muted">Issue Resolution</div>
+            <div style="margin-top:10px;font-weight:700">3.4 days</div>
+            <div class="muted">avg time to close</div>
+          </div>
+
+          <div class="card">
+            <div class="muted">Contributor Growth</div>
+            <div style="margin-top:10px;font-weight:700">+12%</div>
+            <div class="muted">month over month</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:12px">
+          <h3 style="margin-bottom:8px">Optimization Suggestions</h3>
+          <div class="suggestions" id="suggestList">
+            <!-- JS will populate -->
+          </div>
+        </div>
+
+        <div class="two-cols">
+          <div class="card">
+            <h3>Repo Visual (mock)</h3>
+            <div id="preview" class="preview">Upload a screenshot to preview</div>
+          </div>
+
+          <div class="card">
+            <h3>Export</h3>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+              <button class="smallbtn">Export report (PDF)</button>
+              <button class="smallbtn">Export checklist (CSV)</button>
+            </div>
+          </div>
+        </div>
+
+        <footer>
+          Mock dashboard — no real GitHub data. Save as HTML and open in your browser.
+        </footer>
+      </main>
     </div>
-  )
-}
+  </div>
 
+  <script>
+    // ---------- Mock data ----------
+    const suggestions = [
+      { title: 'Add descriptive README', desc: 'Include usage, setup, and badges for CI and license.', impact: 'High', done: false },
+      { title: 'Add contribution guide', desc: 'Standardize PR/issue templates to speed up contributions.', impact: 'Medium', done: false },
+      { title: 'Reduce open issues', desc: 'Triage old issues and label them for priority.', impact: 'Medium', done: false },
+      { title: 'Compress large assets', desc: 'Large images increase clone size.', impact: 'Low', done: false },
+    ];
 
-// ----- Mock data -----
-const sampleSuggestions = [
-  { title: 'Increase CTA contrast', desc: 'Primary button contrast below recommended ratio.', impact: 'High', done: false },
-  { title: 'Increase tap target size', desc: 'Small touch targets on key actions.', impact: 'Medium', done: false },
-  { title: 'Reduce dense text blocks', desc: 'Break long paragraphs, improve scanability.', impact: 'Low', done: false },
-  { title: 'Compress hero image', desc: 'Large images increase load times for mobile.', impact: 'Medium', done: false },
-]
+    let score = 68;
 
-const chartData = [
-  { step: 'Start', score: 12 },
-  { step: 'Auto-fix', score: 38 },
-  { step: 'Apply suggestions', score: 56 },
-  { step: 'Final', score: 78 },
-]
+    // ---------- UI Helpers ----------
+    const suggestList = document.getElementById('suggestList');
+    const scoreBar = document.getElementById('scoreBar');
+    const scoreText = document.getElementById('scoreText');
+    const preview = document.getElementById('preview');
+
+    function renderSuggestions(){
+      suggestList.innerHTML = '';
+      suggestions.forEach((s, i) => {
+        const el = document.createElement('div');
+        el.className = 'suggest' + (s.done ? ' applied' : '');
+        el.innerHTML = `
+          <div>
+            <div style="font-weight:600">${s.title}</div>
+            <div class="muted" style="margin-top:6px">${s.desc}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+            <div class="muted" style="font-size:12px">Impact: ${s.impact}</div>
+            <div>
+              ${s.done ? '<div style="color:var(--success);font-weight:700;font-size:13px">Applied</div>' : '<button class="smallbtn" data-idx="'+i+'">Apply</button>'}
+            </div>
+          </div>
+        `;
+        suggestList.appendChild(el);
+      });
+      // attach handlers
+      document.querySelectorAll('.smallbtn[data-idx]').forEach(btn=>{
+        btn.addEventListener('click', ()=> {
+          const idx = Number(btn.getAttribute('data-idx'));
+          applySuggestion(idx);
+        });
+      });
+    }
+
+    function updateScore(newScore){
+      score = Math.max(0, Math.min(100, newScore));
+      scoreBar.style.width = score + '%';
+      scoreText.textContent = score + '%';
+    }
+
+    function applySuggestion(i){
+      if(!suggestions[i] || suggestions[i].done) return;
+      suggestions[i].done = true;
+      updateScore(score + 4);
+      renderSuggestions();
+    }
+
+    // ---------- Mock Analyze ----------
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    analyzeBtn.addEventListener('click', ()=> {
+      analyzeBtn.disabled = true;
+      analyzeBtn.textContent = 'Analyzing...';
+      setTimeout(()=> {
+        // simulate results
+        updateScore(score + 7);
+        suggestions.forEach((s, idx)=> s.done = idx < 2); // mark first two as done
+        renderSuggestions();
+        analyzeBtn.disabled = false;
+        analyzeBtn.textContent = 'Analyze';
+      }, 900);
+    });
+
+    // ---------- Upload Preview ----------
+    const uploadFile = document.getElementById('uploadFile');
+    const uploadBtn = document.getElementById('uploadBtn');
+    uploadBtn.addEventListener('click', ()=> uploadFile.click());
+    uploadFile.addEventListener('change', (e)=> {
+      const f = e.target.files[0];
+      if(!f) return;
+      const url = URL.createObjectURL(f);
+      preview.innerHTML = '<img src="'+url+'" alt="preview" style="max-width:100%;max-height:100%;border-radius:6px" />';
+    });
+
+    // Quick action handlers (mock)
+    document.getElementById('addBadges').addEventListener('click', ()=> { updateScore(score + 3); alert('Mock: README badges added') });
+    document.getElementById('createTemplate').addEventListener('click', ()=> { updateScore(score + 3); alert('Mock: ISSUE template created') });
+    document.getElementById('archiveBranches').addEventListener('click', ()=> { updateScore(score + 2); alert('Mock: stale branches archived') });
+    document.getElementById('resetMock').addEventListener('click', ()=> {
+      suggestions.forEach(s=> s.done = false);
+      updateScore(68);
+      renderSuggestions();
+      preview.innerHTML = 'Upload a screenshot to preview';
+    });
+
+    // ---------- Charts ----------
+    const ctx = document.getElementById('activityChart').getContext('2d');
+    const labels = Array.from({length:12}, (_,i)=> 'D'+(i+1));
+    const data = {
+      labels,
+      datasets: [{
+        label: 'Commits',
+        data: labels.map(()=> Math.floor(Math.random()*20)+2),
+        fill: false,
+        borderColor: '#0f172a',
+        tension: 0.3,
+        pointRadius: 0
+      }]
+    };
+    const activityChart = new Chart(ctx, {
+      type: 'line',
+      data,
+      options: {
+        maintainAspectRatio: false,
+        plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},
+        scales:{x:{display:false},y:{display:false}}
+      }
+    });
+
+    // Initialize UI
+    renderSuggestions();
+    updateScore(68);
+
+  </script>
+</body>
+</html>
