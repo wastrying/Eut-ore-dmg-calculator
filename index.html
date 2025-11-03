@@ -2,280 +2,238 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>GitHub Optimization - Mock Dashboard</title>
-
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>iPhone-style Alarm UI</title>
   <style>
     :root{
-      --bg: #ffffff;
-      --muted: #6b7280;
-      --card: #f8fafc;
-      --accent: #0f172a;
-      --primary: #0b72f1;
-      --success: #16a34a;
-      --border: #e6eef8;
-      --radius: 10px;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      --bg:#0b0b0f;
+      --card:#0f1720;
+      --muted:#9aa4b2;
+      --accent:#34c759; /* green like iOS */
+      --glass: rgba(255,255,255,0.06);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
     }
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--accent)}
-    .container{max-width:1200px;margin:28px auto;padding:20px}
-    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-    h1{font-size:20px;margin:0}
-    .sub{font-size:13px;color:var(--muted);margin-top:4px}
-    .searchbar{display:flex;gap:10px;align-items:center}
-    input[type="text"]{padding:10px 12px;border-radius:8px;border:1px solid var(--border);min-width:320px}
-    button{background:var(--primary);color:white;border:0;padding:9px 12px;border-radius:8px;cursor:pointer;font-weight:600}
-    button.ghost{background:transparent;color:var(--primary);border:1px solid var(--border)}
-    .grid{display:grid;grid-template-columns:260px 1fr;gap:18px}
-    .card{background:var(--card);border-radius:var(--radius);padding:14px;border:1px solid var(--border)}
-    .card h3{margin:0;font-size:14px}
-    .statrow{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed rgba(0,0,0,0.04)}
-    .statrow:last-child{border-bottom:none}
-    .big{font-size:18px;font-weight:700}
-    .muted{color:var(--muted);font-size:12px}
-    .progress{height:10px;background:linear-gradient(90deg,#dfeefe,#c6e0ff);border-radius:6px;margin-top:8px;overflow:hidden}
-    .progress > .bar{height:100%;background:linear-gradient(90deg,#0366d6,#0b72f1);width:68%}
-    .smallbtn{padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:white;cursor:pointer}
-    .topcards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px}
-    .suggestions{display:flex;flex-direction:column;gap:10px}
-    .suggest{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;border:1px solid var(--border);background:white}
-    .suggest.applied{background:linear-gradient(90deg,#ecfdf5,#f0fdf4);border-color:rgba(34,197,94,0.12)}
-    .two-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
-    .preview{height:200px;border-radius:8px;border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted)}
-    footer{margin-top:18px;color:var(--muted);font-size:13px}
-    @media (max-width:900px){
-      .grid{grid-template-columns:1fr; }
-      input[type="text"]{min-width:160px}
-      .topcards{grid-template-columns:1fr}
-      .two-cols{grid-template-columns:1fr}
-    }
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#071228 0%, #031220 100%);color:#fff}
+    .app{max-width:480px;margin:24px auto;padding:20px}
+
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    header h1{font-size:20px;margin:0;font-weight:600}
+    .add-btn{background:transparent;border:1px solid rgba(255,255,255,0.08);padding:8px 12px;border-radius:10px;color:#fff;cursor:pointer}
+
+    .alarms{display:flex;flex-direction:column;gap:12px}
+    .alarm{display:flex;align-items:center;justify-content:space-between;padding:14px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;box-shadow:0 6px 18px rgba(2,6,23,0.6);}
+    .alarm-left{display:flex;gap:12px;align-items:center}
+    .time{font-size:34px;font-weight:600;letter-spacing:1px}
+    .meta{display:flex;flex-direction:column}
+    .meta small{color:var(--muted)}
+
+    /* toggle switch */
+    .switch{position:relative;width:46px;height:28px;border-radius:20px;background:rgba(255,255,255,0.12);padding:3px;box-sizing:border-box}
+    .switch input{display:none}
+    .knob{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:all .18s cubic-bezier(.22,.9,.25,1)}
+    .switch.on{background:linear-gradient(90deg,var(--accent),#5ee4a6)}
+    .switch.on .knob{left:21px}
+
+    /* modal (alarm editor) */
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;align-items:end;justify-content:center;z-index:60}
+    .editor{width:100%;max-width:480px;background:linear-gradient(180deg,#0b0c10,#060708);border-top-left-radius:18px;border-top-right-radius:18px;padding:18px 18px 36px;box-shadow:0 -10px 30px rgba(0,0,0,0.6)}
+    .editor .row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .editor h2{margin:0;font-size:18px}
+
+    .wheels{display:flex;gap:12px;justify-content:center;margin:16px 0}
+    .wheel{background:var(--glass);backdrop-filter:blur(6px);border-radius:10px;padding:8px 12px;text-align:center;width:92px;height:160px;overflow:hidden;position:relative}
+    .wheel ul{list-style:none;padding:0;margin:0;position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);}
+    .wheel li{height:36px;line-height:36px;color:#fff;font-size:20px;opacity:.6}
+    .wheel .center{font-weight:700;opacity:1;font-size:24px}
+
+    .controls{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
+    .btn{background:transparent;border:0;padding:8px 12px;border-radius:8px;color:#fff;cursor:pointer}
+    .btn.primary{background:var(--accent);color:#04140b}
+
+    /* small screens */
+    @media (max-width:420px){.app{padding:12px;margin:10px}}
+
+    .empty{color:var(--muted);text-align:center;padding:28px 12px}
+
+    /* subtle iOS style separators */
+    .sep{height:1px;background:linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0));margin:8px 0}
+
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="app">
     <header>
-      <div>
-        <h1>GitHub Optimization</h1>
-        <div class="sub">Analyze repositories and get prioritized suggestions to improve repo health (mock UI)</div>
-      </div>
-
-      <div class="searchbar">
-        <input id="repoInput" type="text" value="your-org/your-repo" />
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-          <input id="uploadFile" type="file" accept="image/*" style="display:none" />
-          <button class="ghost" id="uploadBtn">Upload Screenshot</button>
-        </label>
-        <button id="analyzeBtn">Analyze</button>
-      </div>
+      <h1>Alarm</h1>
+      <button class="add-btn" id="openEditor">＋</button>
     </header>
 
-    <div class="grid">
-      <!-- Sidebar -->
-      <aside>
-        <div class="card">
-          <h3>Repo Overview</h3>
-          <div style="margin-top:10px">
-            <div class="statrow"><div class="muted">Stars</div><div class="big">1.2k</div></div>
-            <div class="statrow"><div class="muted">Forks</div><div class="big">210</div></div>
-            <div class="statrow"><div class="muted">Open Issues</div><div class="big">34</div></div>
-            <div class="statrow"><div class="muted">Open PRs</div><div class="big">8</div></div>
+    <div class="alarms" id="alarmsList">
+      <div class="empty" id="emptyState">No alarms yet. Tap + to add one.</div>
+    </div>
 
-            <div style="margin-top:12px">
-              <div class="muted">Repo Health</div>
-              <div class="progress"><div id="scoreBar" class="bar" style="width:68%"></div></div>
-              <div class="muted" style="margin-top:6px">Score: <span id="scoreText">68%</span></div>
-            </div>
-          </div>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="editor" role="dialog" aria-modal="true">
+      <div class="row">
+        <h2>New Alarm</h2>
+        <div class="controls">
+          <button class="btn" id="cancelBtn">Cancel</button>
+          <button class="btn primary" id="saveBtn">Save</button>
         </div>
+      </div>
 
-        <div class="card" style="margin-top:12px">
-          <h3>Quick Actions</h3>
-          <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
-            <button class="smallbtn" id="addBadges">Add README badges</button>
-            <button class="smallbtn" id="createTemplate">Create ISSUE template</button>
-            <button class="smallbtn" id="archiveBranches">Archive stale branches</button>
-            <button class="smallbtn" id="resetMock">Reset Mock</button>
-          </div>
+      <div class="wheels">
+        <div class="wheel" data-type="hour">
+          <ul id="hourList"></ul>
         </div>
-      </aside>
-
-      <!-- Main -->
-      <main>
-        <div class="topcards">
-          <div class="card">
-            <div class="muted">Activity (30d)</div>
-            <canvas id="activityChart" height="80"></canvas>
-            <div style="margin-top:8px;font-weight:700">120 commits</div>
-            <div class="muted">last 30 days</div>
-          </div>
-
-          <div class="card">
-            <div class="muted">Issue Resolution</div>
-            <div style="margin-top:10px;font-weight:700">3.4 days</div>
-            <div class="muted">avg time to close</div>
-          </div>
-
-          <div class="card">
-            <div class="muted">Contributor Growth</div>
-            <div style="margin-top:10px;font-weight:700">+12%</div>
-            <div class="muted">month over month</div>
-          </div>
+        <div class="wheel" data-type="minute">
+          <ul id="minuteList"></ul>
         </div>
-
-        <div class="card" style="margin-bottom:12px">
-          <h3 style="margin-bottom:8px">Optimization Suggestions</h3>
-          <div class="suggestions" id="suggestList">
-            <!-- JS will populate -->
-          </div>
+        <div class="wheel" data-type="ampm">
+          <ul id="ampmList"><li>AM</li><li class="center">PM</li></ul>
         </div>
+      </div>
 
-        <div class="two-cols">
-          <div class="card">
-            <h3>Repo Visual (mock)</h3>
-            <div id="preview" class="preview">Upload a screenshot to preview</div>
-          </div>
-
-          <div class="card">
-            <h3>Export</h3>
-            <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
-              <button class="smallbtn">Export report (PDF)</button>
-              <button class="smallbtn">Export checklist (CSV)</button>
-            </div>
-          </div>
+      <div class="sep"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+        <div>
+          <div style="font-weight:600">Repeat</div>
+          <small class="meta">Never</small>
         </div>
+        <div style="color:var(--muted)">></div>
+      </div>
+      <div style="height:10px"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+        <div>
+          <div style="font-weight:600">Label</div>
+          <small class="meta">Alarm</small>
+        </div>
+        <div style="color:var(--muted)">></div>
+      </div>
 
-        <footer>
-          Mock dashboard — no real GitHub data. Save as HTML and open in your browser.
-        </footer>
-      </main>
     </div>
   </div>
 
+  <template id="alarmTpl">
+    <div class="alarm">
+      <div class="alarm-left">
+        <div class="time">07:00</div>
+        <div class="meta">
+          <small>Everyday • Alarm</small>
+        </div>
+      </div>
+      <label class="switch">
+        <input type="checkbox">
+        <span class="knob"></span>
+      </label>
+    </div>
+  </template>
+
   <script>
-    // ---------- Mock data ----------
-    const suggestions = [
-      { title: 'Add descriptive README', desc: 'Include usage, setup, and badges for CI and license.', impact: 'High', done: false },
-      { title: 'Add contribution guide', desc: 'Standardize PR/issue templates to speed up contributions.', impact: 'Medium', done: false },
-      { title: 'Reduce open issues', desc: 'Triage old issues and label them for priority.', impact: 'Medium', done: false },
-      { title: 'Compress large assets', desc: 'Large images increase clone size.', impact: 'Low', done: false },
-    ];
+    // Simple iPhone-style alarm UI behaviors
+    const openEditor = document.getElementById('openEditor');
+    const overlay = document.getElementById('overlay');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const alarmsList = document.getElementById('alarmsList');
+    const emptyState = document.getElementById('emptyState');
 
-    let score = 68;
+    const hourList = document.getElementById('hourList');
+    const minuteList = document.getElementById('minuteList');
+    const ampmList = document.getElementById('ampmList');
 
-    // ---------- UI Helpers ----------
-    const suggestList = document.getElementById('suggestList');
-    const scoreBar = document.getElementById('scoreBar');
-    const scoreText = document.getElementById('scoreText');
-    const preview = document.getElementById('preview');
+    let selected = {hour:7, minute:0, ampm:'AM'};
 
-    function renderSuggestions(){
-      suggestList.innerHTML = '';
-      suggestions.forEach((s, i) => {
-        const el = document.createElement('div');
-        el.className = 'suggest' + (s.done ? ' applied' : '');
-        el.innerHTML = `
-          <div>
-            <div style="font-weight:600">${s.title}</div>
-            <div class="muted" style="margin-top:6px">${s.desc}</div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-            <div class="muted" style="font-size:12px">Impact: ${s.impact}</div>
-            <div>
-              ${s.done ? '<div style="color:var(--success);font-weight:700;font-size:13px">Applied</div>' : '<button class="smallbtn" data-idx="'+i+'">Apply</button>'}
-            </div>
-          </div>
-        `;
-        suggestList.appendChild(el);
-      });
-      // attach handlers
-      document.querySelectorAll('.smallbtn[data-idx]').forEach(btn=>{
-        btn.addEventListener('click', ()=> {
-          const idx = Number(btn.getAttribute('data-idx'));
-          applySuggestion(idx);
-        });
+    function populateWheel(list, items, centerIndex){
+      list.innerHTML = '';
+      items.forEach((it, i)=>{
+        const li = document.createElement('li');
+        li.textContent = (typeof it === 'number' ? String(it).padStart(2,'0') : it);
+        if(i===centerIndex) li.classList.add('center');
+        list.appendChild(li);
       });
     }
 
-    function updateScore(newScore){
-      score = Math.max(0, Math.min(100, newScore));
-      scoreBar.style.width = score + '%';
-      scoreText.textContent = score + '%';
+    // create hour/minute arrays padded with neighbors so center item sits nicely
+    const hours = Array.from({length:12}, (_,i)=>i+1);
+    const minutes = Array.from({length:60}, (_,i)=>i);
+
+    populateWheel(hourList, hours, 6);
+    populateWheel(minuteList, minutes.filter((_,i)=>i%5===0), 6); // show 12 items (0,5,10...)
+
+    // basic selection: click to choose center
+    function attachSelection(wheel, type, values){
+      wheel.addEventListener('click', (e)=>{
+        const li = e.target.closest('li');
+        if(!li) return;
+        const lis = Array.from(wheel.querySelectorAll('li'));
+        lis.forEach(x=>x.classList.remove('center'));
+        li.classList.add('center');
+        const val = li.textContent;
+        if(type==='hour') selected.hour = parseInt(val);
+        if(type==='minute') selected.minute = parseInt(val);
+        if(type==='ampm') selected.ampm = val;
+      });
     }
 
-    function applySuggestion(i){
-      if(!suggestions[i] || suggestions[i].done) return;
-      suggestions[i].done = true;
-      updateScore(score + 4);
-      renderSuggestions();
+    attachSelection(hourList, 'hour');
+    attachSelection(minuteList, 'minute');
+    attachSelection(ampmList, 'ampm');
+
+    openEditor.addEventListener('click', ()=>{ overlay.style.display='flex'; });
+    cancelBtn.addEventListener('click', ()=>{ overlay.style.display='none'; });
+
+    saveBtn.addEventListener('click', ()=>{
+      addAlarm(selected.hour, selected.minute, selected.ampm, true);
+      overlay.style.display='none';
+    });
+
+    function addAlarm(h,m,ampm,enabled=true){
+      if(emptyState) emptyState.style.display='none';
+      const tpl = document.getElementById('alarmTpl');
+      const node = tpl.content.cloneNode(true);
+      const cont = node.querySelector('.alarm');
+      const timeEl = cont.querySelector('.time');
+      const meta = cont.querySelector('.meta small');
+      const chk = cont.querySelector('input[type=checkbox]');
+
+      const hh = String(h).padStart(2,'0');
+      const mm = String(m).padStart(2,'0');
+      timeEl.textContent = `${hh}:${mm} ${ampm}`;
+      meta.textContent = `Everyday • Alarm`;
+      cont.style.cursor = 'pointer';
+
+      chk.checked = enabled;
+      if(enabled) cont.querySelector('.switch').classList.add('on');
+
+      chk.addEventListener('change',(e)=>{
+        cont.querySelector('.switch').classList.toggle('on', e.target.checked);
+      });
+
+      // on long press, delete (mobile) or double-click to delete (desktop)
+      let pressTimer = null;
+      cont.addEventListener('mousedown', (ev)=>{ pressTimer = setTimeout(()=>{ removeAlarm(cont); },800); });
+      cont.addEventListener('mouseup', ()=>{ clearTimeout(pressTimer); });
+      cont.addEventListener('touchstart', ()=>{ pressTimer = setTimeout(()=>{ removeAlarm(cont); },700); });
+      cont.addEventListener('touchend', ()=>{ clearTimeout(pressTimer); });
+      cont.addEventListener('dblclick', ()=>removeAlarm(cont));
+
+      alarmsList.appendChild(node);
     }
 
-    // ---------- Mock Analyze ----------
-    const analyzeBtn = document.getElementById('analyzeBtn');
-    analyzeBtn.addEventListener('click', ()=> {
-      analyzeBtn.disabled = true;
-      analyzeBtn.textContent = 'Analyzing...';
-      setTimeout(()=> {
-        // simulate results
-        updateScore(score + 7);
-        suggestions.forEach((s, idx)=> s.done = idx < 2); // mark first two as done
-        renderSuggestions();
-        analyzeBtn.disabled = false;
-        analyzeBtn.textContent = 'Analyze';
-      }, 900);
-    });
+    function removeAlarm(el){
+      if(!confirm('Delete this alarm?')) return;
+      el.remove();
+      if(alarmsList.querySelectorAll('.alarm').length===0) emptyState.style.display='block';
+    }
 
-    // ---------- Upload Preview ----------
-    const uploadFile = document.getElementById('uploadFile');
-    const uploadBtn = document.getElementById('uploadBtn');
-    uploadBtn.addEventListener('click', ()=> uploadFile.click());
-    uploadFile.addEventListener('change', (e)=> {
-      const f = e.target.files[0];
-      if(!f) return;
-      const url = URL.createObjectURL(f);
-      preview.innerHTML = '<img src="'+url+'" alt="preview" style="max-width:100%;max-height:100%;border-radius:6px" />';
-    });
+    // prepopulate with a sample alarm for demo
+    addAlarm(7,0,'AM',true);
+    addAlarm(8,30,'AM',false);
 
-    // Quick action handlers (mock)
-    document.getElementById('addBadges').addEventListener('click', ()=> { updateScore(score + 3); alert('Mock: README badges added') });
-    document.getElementById('createTemplate').addEventListener('click', ()=> { updateScore(score + 3); alert('Mock: ISSUE template created') });
-    document.getElementById('archiveBranches').addEventListener('click', ()=> { updateScore(score + 2); alert('Mock: stale branches archived') });
-    document.getElementById('resetMock').addEventListener('click', ()=> {
-      suggestions.forEach(s=> s.done = false);
-      updateScore(68);
-      renderSuggestions();
-      preview.innerHTML = 'Upload a screenshot to preview';
-    });
-
-    // ---------- Charts ----------
-    const ctx = document.getElementById('activityChart').getContext('2d');
-    const labels = Array.from({length:12}, (_,i)=> 'D'+(i+1));
-    const data = {
-      labels,
-      datasets: [{
-        label: 'Commits',
-        data: labels.map(()=> Math.floor(Math.random()*20)+2),
-        fill: false,
-        borderColor: '#0f172a',
-        tension: 0.3,
-        pointRadius: 0
-      }]
-    };
-    const activityChart = new Chart(ctx, {
-      type: 'line',
-      data,
-      options: {
-        maintainAspectRatio: false,
-        plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},
-        scales:{x:{display:false},y:{display:false}}
-      }
-    });
-
-    // Initialize UI
-    renderSuggestions();
-    updateScore(68);
+    // Accessibility: close on ESC
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ overlay.style.display='none'; } });
 
   </script>
 </body>
