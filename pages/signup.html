@@ -95,7 +95,6 @@
 
   <a href="../pages/login.html" class="sign-in-link">Already have an account? <span>Sign In</span></a>
 </div>
-
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
   import {
@@ -124,7 +123,7 @@
   const termsWrapper = document.getElementById("terms-wrapper");
   const errorText = document.getElementById("error");
   const successText = document.getElementById("success");
-  const openEmailBtn = document.getElementById("open-email-btn");
+  const openEmailBtn = document.getElementById("open-email-btn"); // may be null
 
   const showError = (msg) => {
     errorText.textContent = msg;
@@ -141,7 +140,6 @@
     successText.style.display = "block";
   };
 
-  // Decide where to send them when they click "Open my email"
   const getEmailProviderUrl = (email) => {
     const domain = (email.split("@")[1] || "").toLowerCase();
 
@@ -150,7 +148,6 @@
     if (domain === "outlook.com" || domain === "hotmail.com" || domain === "live.com") return "https://outlook.live.com/mail";
     if (domain === "icloud.com") return "https://www.icloud.com/mail";
 
-    // Default: try their mail domain
     return "https://" + domain;
   };
 
@@ -162,9 +159,8 @@
     event.preventDefault();
     clearError();
     successText.style.display = "none";
-    openEmailBtn.style.display = "none";
+    if (openEmailBtn) openEmailBtn.style.display = "none";
 
-    // Terms validation
     if (!terms.checked) {
       termsError.classList.add("show");
       termsWrapper.classList.add("terms-error");
@@ -187,7 +183,6 @@
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
       console.log("User created:", user.uid);
 
-      // Send verification email
       try {
         await sendEmailVerification(user);
         console.log("Verification email sent to", email);
@@ -197,20 +192,17 @@
         return;
       }
 
-      // Show instructions instead of redirecting immediately
       showSuccess(
         `Account created! We’ve sent a verification link to ${email}. ` +
         `Please open your email and click the verification link to activate your account.`
       );
 
-      // Configure "Open my email" button
-      const providerUrl = getEmailProviderUrl(email);
-      openEmailBtn.onclick = () => {
-        window.open(providerUrl, "_blank");
-      };
-      openEmailBtn.style.display = "inline-block";
+      if (openEmailBtn) {
+        const providerUrl = getEmailProviderUrl(email);
+        openEmailBtn.onclick = () => window.open(providerUrl, "_blank");
+        openEmailBtn.style.display = "inline-block";
+      }
 
-      // Reset form, but keep them on this page
       form.reset();
       terms.checked = false;
     } catch (error) {
@@ -238,8 +230,10 @@
     }
   });
 </script>
+
 </body>
 </html>
+
 
 
 
