@@ -1,160 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MediSignal Telehealth – More Info</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: "Segoe UI", Arial, sans-serif;
-      background: url('../images/background.png') no-repeat center center fixed;
-      background-size: cover;
-      color: #fff;
-      scroll-behavior: smooth;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediSignal Telehealth – More Info</title>
+<style>
+  /* Basic Reset */
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+  body { min-height: 100vh; background: url('../images/background.png') no-repeat center center fixed; background-size: cover; color: #fff; scroll-behavior: smooth; padding-top: 70px; }
 
-    header {
-      text-align: center;
-      padding: 80px 20px 40px;
-      background: rgba(0, 0, 0, 0.5);
-    }
+ .top-nav {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%;
+  height: 70px; /* fixed nav height */
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  z-index: 999;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
 
-    header h1 {
-      font-size: 2.2em;
-      margin-bottom: 10px;
-    }
+.top-nav .left img {
+  max-height: 125px;
+  width: auto;
+  object-fit: contain;
+}
 
-    header a {
-      color: #ffcc70;
-      text-decoration: none;
-      font-weight: bold;
-    }
+/* Combined pill container */
+.top-nav .right .pill {
+  display: flex;
+  border: 3px solid black;
+  border-radius: 50px;
+  overflow: hidden; /* keeps hover inside pill */
+  height: 40px; /* fixed height to keep alignment */
+}
 
-    section {
-      background: rgba(0, 0, 0, 0.6);
-      margin: 40px auto;
-      padding: 40px 20px;
-      max-width: 900px;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    }
+/* Links inside pill */
+.top-nav .right .pill a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: black;
+  font-weight: bold;
+  font-size: 0.95em;
+  padding: 0 20px;
+  height: 100%; /* match pill height */
+  transition: background 0.3s, color 0.3s;
+}
 
-    h2 {
-      text-align: center;
-      color: #ffcc70;
-    }
+/* Rounded corners for each half */
+.top-nav .right .pill a:first-child { 
+  border-radius: 50px 0 0 50px; 
+  border-right: 3px solid black; /* black separator line */
+}
 
-    p, ul {
-      line-height: 1.6;
-      font-size: 1.05em;
-    }
+.top-nav .right .pill a:last-child  { 
+  border-radius: 0 50px 50px 0; 
+}
 
-    ul {
-      list-style: none;
-      padding: 0;
-    }
+/* Hover effect for half-pill */
+.top-nav .right .pill a:hover {
+  background: black;
+  color: white;
+}
+  /* Section styling */
+  section {
+    background: rgba(0, 0, 0, 0.6);
+    margin: 40px auto;
+    padding: 40px 20px;
+    max-width: 900px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
 
-    ul li::before {
-      content: "• ";
-      color: #ffcc70;
-    }
+  h2 { text-align: center; color: #ffcc70; margin-bottom: 20px; }
+  p, ul { line-height: 1.6; font-size: 1.05em; }
+  ul { list-style: none; padding: 0; }
+  ul li::before { content: "• "; color: #ffcc70; }
 
-    /* Toggle Box Styles */
-    .toggle-box {
-      text-align: center;
-      margin-top: 20px;
-    }
+  /* Toggle Box for Mission/Vision */
+  .toggle-box { text-align: center; margin-top: 20px; }
+  .toggle-buttons { display: inline-block; background: rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden; }
+  .toggle-buttons label { padding: 10px 20px; cursor: pointer; display: inline-block; color: #ffcc70; background: rgba(0,0,0,0.4); font-weight: bold; transition: background 0.3s; }
+  .toggle-buttons label:hover { background: rgba(255,255,255,0.2); }
+  input[name="toggle"] { display: none; }
+  .toggle-content { margin-top: 20px; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px; text-align: left; }
+  #mission:checked ~ .content .mission, #vision:checked ~ .content .vision { display: block; }
+  .mission, .vision { display: none; animation: fadeIn 0.5s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    .toggle-buttons {
-      display: inline-block;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
-      overflow: hidden;
-    }
+  /* Table styling */
+  table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 1em; background-color: rgba(255,255,255,0.05); border-radius: 8px; overflow: hidden; }
+  th, td { padding: 15px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); }
+  th { background-color: rgba(255,204,112,0.2); color: #ffcc70; font-weight: bold; }
+  tr:hover { background-color: rgba(255,255,255,0.1); }
 
-    .toggle-buttons label {
-      padding: 10px 20px;
-      cursor: pointer;
-      display: inline-block;
-      color: #ffcc70;
-      background: rgba(0, 0, 0, 0.4);
-      font-weight: bold;
-      transition: background 0.3s;
-    }
+  /* Footer */
+  footer { text-align: center; padding: 30px 0; background: rgba(0,0,0,0.5); font-size: 0.9em; }
 
-    .toggle-buttons label:hover {
-      background: rgba(255, 255, 255, 0.2);
-    }
+  /* Back link */
+  .back-link { display: block; text-align: center; margin: 20px auto; color: #ffcc70; text-decoration: none; font-weight: bold; }
+  .back-link:hover { text-decoration: underline; }
 
-    input[name="toggle"] {
-      display: none;
-    }
+  /* Responsive adjustments */
+  @media (max-width: 900px) {
+    section { margin: 20px 10px; padding: 30px 15px; }
+    table th, table td { padding: 10px; font-size: 0.9em; }
+    .toggle-buttons label { padding: 8px 12px; font-size: 0.9em; }
+  }
 
-    .toggle-content {
-      margin-top: 20px;
-      background: rgba(255, 255, 255, 0.1);
-      padding: 20px;
-      border-radius: 8px;
-      text-align: left;
-    }
-
-    #mission:checked ~ .content .mission,
-    #vision:checked ~ .content .vision {
-      display: block;
-    }
-
-    .mission, .vision {
-      display: none;
-      animation: fadeIn 0.5s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-      font-size: 1em;
-      background-color: rgba(255, 255, 255, 0.05);
-      border-radius: 8px;
-      overflow: hidden;
-    }
-
-    th, td {
-      padding: 15px;
-      text-align: center;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    th {
-      background-color: rgba(255, 204, 112, 0.2);
-      color: #ffcc70;
-      font-weight: bold;
-    }
-
-    tr:hover {
-      background-color: rgba(255, 255, 255, 0.1);
-    }
-
-    footer {
-      text-align: center;
-      padding: 30px 0;
-      background: rgba(0, 0, 0, 0.5);
-      font-size: 0.9em;
-    }
-  </style>
+  @media (max-width: 520px) {
+    h2 { font-size: 1.5em; }
+    p, ul li { font-size: 0.9em; }
+    .toggle-content { font-size: 0.9em; padding: 15px; }
+    table { font-size: 0.8em; }
+    .top-nav { flex-direction: row; justify-content: space-between; padding: 8px 15px; }
+    .top-nav .right { margin-bottom: 0; }
+  }
+</style>
 </head>
 <body>
 
-  <header>
-    <h1>Learn More About MediSignal Telehealth</h1>
-    <a href="../index.html">← Back to Home</a>
-  </header>
+ <div class="top-nav">
+  <div class="left">
+    <a href="../index.html">
+      <img src="../images/remblyxlogo.png" alt="Logo">
+    </a>
+  </div>
+  <div class="right">
+    <div class="pill">
+      <a href="login.html">Login</a>
+      <a href="signup.html">Sign Up</a>
+    </div>
+  </div>
+</div>
 
+
+
+  <!-- Back link -->
+  <a href="../index.html" class="back-link">← Back to Home</a>
+
+  <!-- Sections -->
   <section id="what-we-do">
     <h2>What We Do</h2>
     <p>
@@ -176,7 +166,6 @@
 
   <section id="mission-vision">
     <h2>Our Mission & Vision</h2>
-
     <div class="toggle-box">
       <input type="radio" id="mission" name="toggle" checked>
       <input type="radio" id="vision" name="toggle">
@@ -193,7 +182,6 @@
             enabling patients to receive professional care anytime and anywhere without barriers.
           </p>
         </div>
-
         <div class="toggle-content vision">
           <p>
             Our vision is a world where digital healthcare is integrated seamlessly into everyday life,
@@ -206,10 +194,7 @@
 
   <section id="subscription-plans">
     <h2>Subscription Plans</h2>
-    <p style="text-align:center;">
-      Choose a plan that fits your healthcare needs. All plans include secure access and support.
-    </p>
-
+    <p style="text-align:center;">Choose a plan that fits your healthcare needs. All plans include secure access and support.</p>
     <table>
       <thead>
         <tr>
@@ -224,29 +209,12 @@
       <tbody>
         <tr>
           <td><strong>Basic</strong></td>
-          <td>Free</td>
+          <td>$9.99</td>
           <td>Pay per consultation</td>
           <td>—</td>
           <td>Limited</td>
           <td>—</td>
         </tr>
         <tr>
-          <td><strong>premium</strong></td>
-          <td>$4.99</td>
-          <td>Up to 5 per month</td>
-          <td>✔</td>
-          <td>Full</td>
-          <td>Email only</td>
-        </tr>
-        <tr>
-        </tr>
-      </tbody>
-    </table>
-  </section>
-
-  <footer>
-    © 2025 MediSignal Telehealth — All rights reserved.
-  </footer>
-
-</body>
-</html>
+          <td><strong>Standard</strong></td>
+         
