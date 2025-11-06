@@ -12,7 +12,8 @@
   padding: 0;
   overflow-x: hidden; /* prevent horizontal swipe */
 }
-
+.table-desktop { display: block; }
+.table-mobile { display: none; }
 section, .table-container, .top-nav {
   max-width: 100vw; /* prevent overflow on mobile */
   box-sizing: border-box;
@@ -97,13 +98,39 @@ img { max-width: 100%; height: auto; display: block; }
     border-radius: 8px;
     overflow: hidden;
   }
+  .table-desktop table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  font-size: 1em;
+  background-color: rgba(255,255,255,0.05);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table-desktop th, .table-desktop td {
+  padding: 15px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+.table-desktop th {
+  background-color: rgba(255,204,112,0.2);
+  color: #ffcc70;
+  font-weight: bold;
+}
+
+.table-desktop tr:hover {
+  background-color: rgba(255,255,255,0.1);
+}
   .table-container th, .table-container td { padding: 15px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); }
   .table-container th { background-color: rgba(255,204,112,0.2); color: #ffcc70; font-weight: bold; }
   .table-container tr:hover { background-color: rgba(255,255,255,0.1); }
 
   /* Footer */
   footer { text-align: center; padding: 30px 0; background: rgba(0,0,0,0.5); font-size: 0.9em; }
-
+.table-desktop { display: block; }
+.table-mobile { display: none; }
   /* Responsive */
   @media (max-width: 900px) {
     section { margin: 20px 10px; padding: 30px 15px; }
@@ -141,7 +168,30 @@ img { max-width: 100%; height: auto; display: block; }
     color: #ffcc70;
     margin-right: 5px;
   }
+    .table-desktop { display: none; }
+  .table-mobile { display: block; }
+
+  .table-mobile table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(255,255,255,0.05);
+  }
+
+  .table-mobile th,
+  .table-mobile td {
+    padding: 10px;
+    border: 1px solid rgba(255,255,255,0.2);
+    text-align: center;
+  }
+
+  .table-mobile th {
+    background: rgba(255,204,112,0.2);
+    color: #ffcc70;
+    font-weight: bold;
+  }
 }
+
+
 
 </style>
 </head>
@@ -202,39 +252,80 @@ img { max-width: 100%; height: auto; display: block; }
   <h2>Subscription Plans</h2>
   <p style="text-align:center;">Choose a plan that fits your healthcare needs. All plans include secure access and support.</p>
 
-  <div class="table-container">
+  <!-- DESKTOP TABLE -->
+  <div class="table-desktop">
     <table>
       <thead>
         <tr>
           <th>Plan</th>
-          <th>Monthly Cost</th>
+          <th>Cost</th>
           <th>Consultations</th>
-          <th>Health Monitoring</th>
           <th>AI Insights</th>
+          <th>Health Monitoring</th>
           <th>Priority Support</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td data-label="Plan"><strong>Basic</strong></td>
-          <td data-label="Monthly Cost">free</td>
-          <td data-label="Consultations">Pay per consultation</td>
-          <td data-label="Health Monitoring">—</td>
-          <td data-label="AI Insights">Limited</td>
-          <td data-label="Priority Support">—</td>
+          <td><strong>Basic</strong></td>
+          <td>Free</td>
+          <td>Pay per consultation</td>
+          <td>Limited</td>
+          <td>—</td>
+          <td>—</td>
         </tr>
         <tr>
-          <td data-label="Plan"><strong>Premium</strong></td>
-          <td data-label="Monthly Cost">$4.99</td>
-          <td data-label="Consultations">Up to 5 per month</td>
-          <td data-label="Health Monitoring">✔</td>
-          <td data-label="AI Insights">Full</td>
-          <td data-label="Priority Support">Email only</td>
+          <td><strong>Premium</strong></td>
+          <td>$4.99</td>
+          <td>Up to 5 per month</td>
+          <td>Full</td>
+          <td>✔</td>
+          <td>Email only</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- MOBILE MATRIX TABLE -->
+  <div class="table-mobile">
+    <table>
+      <tbody>
+        <tr>
+          <th>Plan</th>
+          <td><strong>Basic</strong></td>
+          <td><strong>Premium</strong></td>
+        </tr>
+        <tr>
+          <th>Cost</th>
+          <td>Free</td>
+          <td>$4.99</td>
+        </tr>
+        <tr>
+          <th>Consultations</th>
+          <td>Pay per consultation</td>
+          <td>5 / month</td>
+        </tr>
+        <tr>
+          <th>AI Insights</th>
+          <td>Limited</td>
+          <td>Full</td>
+        </tr>
+        <tr>
+          <th>Monitoring</th>
+          <td>—</td>
+          <td>✔</td>
+        </tr>
+        <tr>
+          <th>Support</th>
+          <td>—</td>
+          <td>Email only</td>
         </tr>
       </tbody>
     </table>
   </div>
 </section>
+
+
 
 <footer>
   © 2025 MediSignal Telehealth — All rights reserved.
