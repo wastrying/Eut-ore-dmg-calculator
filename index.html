@@ -95,7 +95,7 @@
     margin-top: 0.2rem;
   }
 
-  /* Buttons (desktop) */
+  /* Buttons */
   .button-absolute-container {
     position: absolute;
     top: 575px;
@@ -137,74 +137,80 @@
     background-color: #e2e4e7;
   }
 
-  /* MOBILE LAYOUT */
-  @media (max-width: 900px) {
-    .header-row {
-      position: relative;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-      margin-top: 20px;
+  /* Responsive adjustments */
+  @media (max-width: 1200px) {
+    .logo { width: 200px;
+      top: 20px;
     }
-
-    .login-btn {
-      margin-top: 10px;
-    }
-
-    .item-image {
-      position: relative;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 70%;
-      max-width: 400px;
-      margin: 20px auto;
-    }
-
-    .text-container {
-      position: relative;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      text-align: center;
-      margin-top: 20px;
-      max-width: 90%;
-    }
-
-    .button-absolute-container {
-      display: none; /* replaced by fixed footer buttons */
-    }
-
-    /* ✅ Floating bottom buttons */
-    .mobile-footer {
-      position: fixed;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      padding-bottom: calc(env(safe-area-inset-bottom) + 16px); /* safe zone + spacing */
-      z-index: 99;
-      background: none;
-      box-shadow: none;
-      backdrop-filter: none;
-    }
-
-    .mobile-footer button {
-      width: 80%;
-      max-width: 300px;
-    }
+    .login-btn { font-size: 1rem; padding: 0.8rem 1.8rem;top: 10px; }
+    .item-image { width: 400px; top: 100px; }
+    .text-container { top: 360px; }
+    .button-absolute-container { top: 500px; }
   }
+
+  @media (max-width: 900px) {
+  .header-row {
+    position: relative;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin-top: 20px;
+  }
+
+  .login-btn {
+    margin-top: 10px;
+  }
+
+  .item-image {
+    position: relative;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70%;
+    max-width: 400px;
+    margin: 20px auto;
+  }
+
+  .text-container {
+    position: relative;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    margin-top: 20px;
+    max-width: 90%;
+  }
+
+  /* Center button container perfectly */
+  .button-absolute-container {
+    position: relative;
+    top: 0;
+    left: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* ✅ centers the buttons */
+    justify-content: center;
+    width: 100%;
+    gap: 1rem;
+    margin: 20px auto 0 auto;
+  }
+
+  .signup-btn, .info-btn {
+    width: 80%;
+    max-width: 300px; /* ✅ consistent width */
+    font-size: 1rem;
+    padding: 0.8rem 0;
+    text-align: center; 
+  }
+}
+
 
   @media (max-width: 520px) {
     .future-font { font-size: 28px; }
     .telehealth-font { font-size: 36px; }
     .item-image { width: 80%; max-width: 300px; }
-    .login-btn { font-size: 0.9rem; padding: 0.5rem 1.5rem; }
+    .login-btn { font-size: 0.9rem; padding: 0.5rem 1.5rem;top: 10px; }
   }
 </style>
 </head>
@@ -229,18 +235,11 @@
       </h1>
     </div>
 
-    <!-- Desktop buttons -->
+    <!-- Buttons -->
     <div class="button-absolute-container">
       <button class="signup-btn" onclick="window.location.href='pages/signup.html'">Sign up</button>
       <button class="info-btn" onclick="window.location.href='pages/info.html'">More info</button>
     </div>
-
-    <!-- ✅ Mobile buttons (fixed bottom, floating) -->
-    <div class="mobile-footer">
-      <button class="signup-btn" onclick="window.location.href='pages/signup.html'">Sign up</button>
-      <button class="info-btn" onclick="window.location.href='pages/info.html'">More info</button>
-    </div>
-
   </div>
 </body>
 </html>
