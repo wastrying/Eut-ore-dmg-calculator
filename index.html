@@ -139,64 +139,72 @@
 
   /* Responsive adjustments */
   @media (max-width: 1200px) {
-    .logo { width: 200px; }
-    .login-btn { font-size: 1rem; padding: 0.8rem 1.8rem; }
+    .logo { width: 200px;
+      top: 20px;
+    }
+    .login-btn { font-size: 1rem; padding: 0.8rem 1.8rem;top: 10px; }
     .item-image { width: 400px; top: 100px; }
     .text-container { top: 360px; }
     .button-absolute-container { top: 500px; }
   }
 
   @media (max-width: 900px) {
-    .header-row {
-      position: relative;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-      margin-top: 20px;
-    }
-
-    .login-btn {
-      margin-top: 10px;
-    }
-
-    .item-image {
-      position: relative;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 70%;
-      max-width: 400px;
-      margin: 20px auto;
-    }
-
-    .text-container {
-      position: relative;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      text-align: center;
-      margin-top: 20px;
-      max-width: 90%;
-    }
-
-    .button-absolute-container {
-      position: relative;
-      top: 0;
-      left: 55%;
-      transform: translateX(-50%);
-      flex-direction: column;
-      width: 90%;
-      gap: 1rem;
-      margin: 20px auto 0 auto;
-    }
-
-    .signup-btn, .info-btn {
-      width: 80%;
-      font-size: 1rem;
-      padding: 0.8rem 0;
-    }
+  .header-row {
+    position: relative;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin-top: 20px;
   }
+
+  .login-btn {
+    margin-top: 10px;
+  }
+
+  .item-image {
+    position: relative;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70%;
+    max-width: 400px;
+    margin: 20px auto;
+  }
+
+  .text-container {
+    position: relative;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    margin-top: 20px;
+    max-width: 90%;
+  }
+
+  /* Center button container perfectly */
+  .button-absolute-container {
+    position: relative;
+    top: 0;
+    left: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* ✅ centers the buttons */
+    justify-content: center;
+    width: 100%;
+    gap: 1rem;
+    margin: 20px auto 0 auto;
+  }
+
+  .signup-btn, .info-btn {
+    width: 80%;
+    max-width: 300px; /* ✅ consistent width */
+    font-size: 1rem;
+    padding: 0.8rem 0;
+    text-align: center; 
+  }
+}
+
 
   @media (max-width: 520px) {
     .future-font { font-size: 28px; }
@@ -213,7 +221,7 @@
     <!-- Header: logo + login button -->
     <div class="header-row">
       <img src="images/remblyxlogo.png" alt="Logo" class="logo">
-      <button class="login-btn" onclick="window.location.href='login.html'">Log in</button>
+      <button class="login-btn" onclick="window.location.href='pages/login.html'">Log in</button>
     </div>
 
     <!-- Item image -->
@@ -229,8 +237,8 @@
 
     <!-- Buttons -->
     <div class="button-absolute-container">
-      <button class="signup-btn" onclick="window.location.href='signup.html'">Sign up</button>
-      <button class="info-btn" onclick="window.location.href='info.html'">More info</button>
+      <button class="signup-btn" onclick="window.location.href='pages/signup.html'">Sign up</button>
+      <button class="info-btn" onclick="window.location.href='pages/info.html'">More info</button>
     </div>
   </div>
 </body>
