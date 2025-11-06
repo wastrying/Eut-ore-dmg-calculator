@@ -96,7 +96,25 @@
   <a href="../pages/login.html" class="sign-in-link">Already have an account? <span>Sign In</span></a>
 </div>
 
-<script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+  // Your Firebase config (public on the client is normal)
+  const firebaseConfig = {
+    apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
+    authDomain: "remblyx-medisignal.firebaseapp.com",
+    projectId: "remblyx-medisignal",
+    storageBucket: "remblyx-medisignal.firebasestorage.app",
+    messagingSenderId: "50711670199",
+    appId: "1:50711670199:web:0c9c2ff72cd77234ce0c32",
+    measurementId: "G-JQ3843RM4V"
+  };
+
+  // Init Firebase + Auth
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
   const form = document.getElementById("signup-form");
   const terms = document.getElementById("terms");
   const termsError = document.getElementById("terms-error");
@@ -104,11 +122,13 @@
   const errorText = document.getElementById("error");
   const successText = document.getElementById("success");
 
-  form.addEventListener("submit", function(event) {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
+    errorText.textContent = "";
     errorText.classList.remove("show");
     successText.style.display = "none";
 
+    // 1. Terms check
     if (!terms.checked) {
       termsError.classList.add("show");
       termsWrapper.classList.add("terms-error");
@@ -118,33 +138,53 @@
       termsWrapper.classList.remove("terms-error");
     }
 
+    // 2. Get values
     const username = form.username.value.trim();
     const email = form.email.value.trim();
     const password = form.password.value.trim();
 
-    // localStorage users
-    let users = JSON.parse(localStorage.getItem("users")) || [];
-
-    if (users.some(u => u.email === email)) {
-      errorText.textContent = "⚠ Email already registered!";
+    if (!username || !email || !password) {
+      errorText.textContent = "⚠ Please fill in all fields.";
       errorText.classList.add("show");
       return;
     }
 
-    users.push({ username, email, password });
-    localStorage.setItem("users", JSON.stringify(users));
+    try {
+      // 3. Create user with Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-    // Show success message and redirect
-    successText.style.display = "block";
+      // OPTIONAL: store username in displayName or Firestore later
+      // For now we just show success and redirect.
 
-    setTimeout(() => {
-      window.location.href = "../pages/login.html";
-    }, 2500);
+      successText.style.display = "block";
 
-    form.reset();
+      setTimeout(() => {
+        window.location.href = "../pages/login.html";
+      }, 2500);
+
+      form.reset();
+      terms.checked = false;
+    } catch (error) {
+      console.error(error);
+
+      let message = "⚠ Something went wrong. Please try again.";
+
+      // Common Firebase Auth error codes
+      if (error.code === "auth/email-already-in-use") {
+        message = "⚠ Email already registered!";
+      } else if (error.code === "auth/invalid-email") {
+        message = "⚠ Invalid email address.";
+      } else if (error.code === "auth/weak-password") {
+        message = "⚠ Password should be at least 6 characters.";
+      }
+
+      errorText.textContent = message;
+      errorText.classList.add("show");
+    }
   });
 
-  terms.addEventListener("change", function() {
+  terms.addEventListener("change", function () {
     if (terms.checked) {
       termsError.classList.remove("show");
       termsWrapper.classList.remove("terms-error");
@@ -154,3 +194,4 @@
 
 </body>
 </html>
+
