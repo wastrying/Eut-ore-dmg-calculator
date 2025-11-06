@@ -98,7 +98,11 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    sendEmailVerification
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
@@ -120,6 +124,7 @@
   const termsWrapper = document.getElementById("terms-wrapper");
   const errorText = document.getElementById("error");
   const successText = document.getElementById("success");
+  const openEmailBtn = document.getElementById("open-email-btn");
 
   const showError = (msg) => {
     errorText.textContent = msg;
@@ -131,6 +136,24 @@
     errorText.classList.remove("show");
   };
 
+  const showSuccess = (msg) => {
+    successText.textContent = msg;
+    successText.style.display = "block";
+  };
+
+  // Decide where to send them when they click "Open my email"
+  const getEmailProviderUrl = (email) => {
+    const domain = (email.split("@")[1] || "").toLowerCase();
+
+    if (domain === "gmail.com") return "https://mail.google.com";
+    if (domain === "yahoo.com" || domain === "ymail.com") return "https://mail.yahoo.com";
+    if (domain === "outlook.com" || domain === "hotmail.com" || domain === "live.com") return "https://outlook.live.com/mail";
+    if (domain === "icloud.com") return "https://www.icloud.com/mail";
+
+    // Default: try their mail domain
+    return "https://" + domain;
+  };
+
   if (!form) {
     console.error("Signup form not found in DOM");
   }
@@ -139,6 +162,7 @@
     event.preventDefault();
     clearError();
     successText.style.display = "none";
+    openEmailBtn.style.display = "none";
 
     // Terms validation
     if (!terms.checked) {
@@ -159,17 +183,34 @@
     }
 
     try {
-      console.log("Calling Firebase createUserWithEmailAndPassword...");
+      console.log("Creating user in Firebase...");
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
       console.log("User created:", user.uid);
 
-      // Show your green success message + redirect
-      successText.style.display = "block";
+      // Send verification email
+      try {
+        await sendEmailVerification(user);
+        console.log("Verification email sent to", email);
+      } catch (err) {
+        console.error("Error sending verification email:", err);
+        showError("⚠ Account created, but failed to send verification email. Please try again later.");
+        return;
+      }
 
-      setTimeout(() => {
-        window.location.href = "../pages/login.html";
-      }, 2500);
+      // Show instructions instead of redirecting immediately
+      showSuccess(
+        `Account created! We’ve sent a verification link to ${email}. ` +
+        `Please open your email and click the verification link to activate your account.`
+      );
 
+      // Configure "Open my email" button
+      const providerUrl = getEmailProviderUrl(email);
+      openEmailBtn.onclick = () => {
+        window.open(providerUrl, "_blank");
+      };
+      openEmailBtn.style.display = "inline-block";
+
+      // Reset form, but keep them on this page
       form.reset();
       terms.checked = false;
     } catch (error) {
@@ -199,6 +240,7 @@
 </script>
 </body>
 </html>
+
 
 
 
