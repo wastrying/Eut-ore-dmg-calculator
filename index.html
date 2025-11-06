@@ -9,11 +9,20 @@
   html, body {
   height: 100%;
   width: 100%;
-  overflow: hidden; /* disables all scrolling */
+  overflow: hidden;
+  position: fixed;      /* prevents iOS rubber-band scrolling */
+  inset: 0;             /* keeps it pinned */
 }
   body { display: flex; justify-content: center; align-items: center; overflow-x: hidden; }
 
-  .overlay { position: relative; width: 100%; height: 100vh; overflow: hidden; }
+  .overlay {
+  position: relative;
+  width: 100%;
+  height: 100dvh; /* dynamic viewport fixes iOS URL bar issue */
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
 
   /* Background */
   .bg-image {
