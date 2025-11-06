@@ -76,6 +76,12 @@
 
   <p id="error" class="error-message"></p>
   <p id="success" class="success-message">Sign Up Successful! Redirecting to Log In...</p>
+<button id="open-email-btn"
+        class="submit-btn"
+        style="display:none; margin-top:8px;">
+  Open my email
+</button>
+
 
   <form id="signup-form">
     <input type="text" name="username" placeholder="Username" required>
@@ -123,7 +129,7 @@
   const termsWrapper = document.getElementById("terms-wrapper");
   const errorText = document.getElementById("error");
   const successText = document.getElementById("success");
-  const openEmailBtn = document.getElementById("open-email-btn"); // may be null
+  const openEmailBtn = document.getElementById("open-email-btn");
 
   const showError = (msg) => {
     errorText.textContent = msg;
@@ -142,12 +148,10 @@
 
   const getEmailProviderUrl = (email) => {
     const domain = (email.split("@")[1] || "").toLowerCase();
-
     if (domain === "gmail.com") return "https://mail.google.com";
     if (domain === "yahoo.com" || domain === "ymail.com") return "https://mail.yahoo.com";
     if (domain === "outlook.com" || domain === "hotmail.com" || domain === "live.com") return "https://outlook.live.com/mail";
     if (domain === "icloud.com") return "https://www.icloud.com/mail";
-
     return "https://" + domain;
   };
 
@@ -161,6 +165,7 @@
     successText.style.display = "none";
     if (openEmailBtn) openEmailBtn.style.display = "none";
 
+    // Terms
     if (!terms.checked) {
       termsError.classList.add("show");
       termsWrapper.classList.add("terms-error");
@@ -179,22 +184,22 @@
     }
 
     try {
-      console.log("Creating user in Firebase...");
+      console.log("Creating user in Firebase...", email);
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
-      console.log("User created:", user.uid);
+      console.log("✅ User created:", user.uid);
 
       try {
         await sendEmailVerification(user);
-        console.log("Verification email sent to", email);
+        console.log("📨 Verification email sent to", email);
       } catch (err) {
-        console.error("Error sending verification email:", err);
-        showError("⚠ Account created, but failed to send verification email. Please try again later.");
+        console.error("❌ Error sending verification email:", err);
+        showError("⚠ Account created, but failed to send verification email. Please contact support or try again.");
         return;
       }
 
       showSuccess(
-        `Account created! We’ve sent a verification link to ${email}. ` +
-        `Please open your email and click the verification link to activate your account.`
+        `Account created! We've sent a verification link to ${email}. ` +
+        `Open your email and click the link to activate your account.`
       );
 
       if (openEmailBtn) {
@@ -206,9 +211,9 @@
       form.reset();
       terms.checked = false;
     } catch (error) {
-      console.error("Signup error:", error);
-
+      console.error("❌ Signup error:", error);
       let message = "⚠ Something went wrong. Please try again.";
+
       if (error.code === "auth/email-already-in-use") {
         message = "⚠ Email already registered!";
       } else if (error.code === "auth/invalid-email") {
@@ -230,9 +235,9 @@
     }
   });
 </script>
-
 </body>
 </html>
+
 
 
 
