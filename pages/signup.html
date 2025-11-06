@@ -112,31 +112,94 @@
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  console.log("🔥 Firebase initialized on signup page:", app.name);
+  console.log("Firebase initialized on signup page:", app.name);
 
   const form = document.getElementById("signup-form");
-  console.log("Form found?", !!form);
+  const terms = document.getElementById("terms");
+  const termsError = document.getElementById("terms-error");
+  const termsWrapper = document.getElementById("terms-wrapper");
+  const errorText = document.getElementById("error");
+  const successText = document.getElementById("success");
+
+  const showError = (msg) => {
+    errorText.textContent = msg;
+    errorText.classList.add("show");
+  };
+
+  const clearError = () => {
+    errorText.textContent = "";
+    errorText.classList.remove("show");
+  };
+
+  if (!form) {
+    console.error("Signup form not found in DOM");
+  }
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    console.log("✅ Submit handler fired");
+    clearError();
+    successText.style.display = "none";
 
+    // Terms validation
+    if (!terms.checked) {
+      termsError.classList.add("show");
+      termsWrapper.classList.add("terms-error");
+      return;
+    } else {
+      termsError.classList.remove("show");
+      termsWrapper.classList.remove("terms-error");
+    }
+
+    const username = form.username.value.trim();
     const email = form.email.value.trim();
     const password = form.password.value.trim();
 
+    if (!username || !email || !password) {
+      return showError("⚠ Please fill in all fields.");
+    }
+
     try {
-      console.log("➡ Calling Firebase Auth...");
+      console.log("Calling Firebase createUserWithEmailAndPassword...");
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
-      console.log("🎉 User created:", user.uid);
-      alert("User created: " + user.email);
+      console.log("User created:", user.uid);
+
+      // Show your green success message + redirect
+      successText.style.display = "block";
+
+      setTimeout(() => {
+        window.location.href = "../pages/login.html";
+      }, 2500);
+
+      form.reset();
+      terms.checked = false;
     } catch (error) {
-      console.error("❌ Signup error:", error.code, error.message);
-      alert("Error: " + error.code);
+      console.error("Signup error:", error);
+
+      let message = "⚠ Something went wrong. Please try again.";
+      if (error.code === "auth/email-already-in-use") {
+        message = "⚠ Email already registered!";
+      } else if (error.code === "auth/invalid-email") {
+        message = "⚠ Invalid email address.";
+      } else if (error.code === "auth/weak-password") {
+        message = "⚠ Password should be at least 6 characters.";
+      } else if (error.code === "auth/unauthorized-domain") {
+        message = "⚠ Unauthorized domain. Add this domain in your Firebase console.";
+      }
+
+      showError(message);
+    }
+  });
+
+  terms.addEventListener("change", () => {
+    if (terms.checked) {
+      termsError.classList.remove("show");
+      termsWrapper.classList.remove("terms-error");
     }
   });
 </script>
 </body>
 </html>
+
 
 
 
