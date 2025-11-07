@@ -172,6 +172,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      user-select: none;
     }
 
     .toggle-password:hover {
@@ -371,18 +372,13 @@
     /* Mobile */
     @media (max-width: 480px) {
       body { padding: 10px; }
-
       .logo { height: 115px; }
-
       .header-row { top: -10px; }
-
       .container {
         padding: 18px 14px 16px;
         border-radius: 14px;
       }
-
       h2 { font-size: 20px; }
-
       .terms-modal {
         max-width: 100%;
         max-height: 90vh;
@@ -428,22 +424,22 @@
     <input type="text" name="username" placeholder="Username" required>
     <input type="email" name="email" placeholder="Email" required>
 
-    <!-- Password with eye icon -->
+    <!-- Password with hold-to-show eye -->
     <div class="password-wrapper">
-  <input
-    type="password"
-    id="password"
-    name="password"
-    placeholder="Password"
-    required
-  >
-  <button
-    type="button"
-    id="toggle-password"
-    class="toggle-password"
-    aria-label="Show password while pressed"
-  >👁</button>
-</div>
+      <input
+        type="password"
+        id="password"
+        name="password"
+        placeholder="Password"
+        required
+      >
+      <button
+        type="button"
+        id="toggle-password"
+        class="toggle-password"
+        aria-label="Hold to show password"
+      >🙈</button>
+    </div>
 
     <div class="terms-inline" id="terms-wrapper">
       <label>
@@ -475,7 +471,6 @@
       Please review these terms before creating your Remblyx account.
     </div>
     <div class="terms-modal-content">
-      <!-- your terms content unchanged -->
       <p>By creating a Remblyx account, you agree to our usage policies, data handling practices, and security standards.</p>
       <h3>1. Data usage</h3>
       <p>We securely store account information to provide core functionality. We do not sell your personal data.</p>
@@ -591,30 +586,35 @@
       }
     });
   }
-// Press & hold to show password (icon stays 👁)
-if (togglePasswordBtn && passwordInput) {
-  const showPassword = () => {
-    passwordInput.type = "text";
-  };
 
-  const hidePassword = () => {
-    passwordInput.type = "password";
-  };
+  // Hold-to-show password with eye closed/open
+  if (togglePasswordBtn && passwordInput) {
+    const showPassword = () => {
+      passwordInput.type = "text";
+      togglePasswordBtn.textContent = "👁";   // eye open while visible
+    };
 
-  ["mousedown", "touchstart"].forEach(evt => {
-    togglePasswordBtn.addEventListener(evt, (e) => {
+    const hidePassword = () => {
+      passwordInput.type = "password";
+      togglePasswordBtn.textContent = "🙈";   // eye closed when hidden
+    };
+
+    // Mouse & touch start: show
+    togglePasswordBtn.addEventListener("mousedown", (e) => {
       e.preventDefault();
       showPassword();
     });
-  });
 
-  ["mouseup", "mouseleave", "touchend", "touchcancel"].forEach(evt => {
-    togglePasswordBtn.addEventListener(evt, (e) => {
+    togglePasswordBtn.addEventListener("touchstart", (e) => {
       e.preventDefault();
-      hidePassword();
-    });
-  });
-}
+      showPassword();
+    }, { passive: false });
+
+    // Mouse & touch end anywhere: hide
+    window.addEventListener("mouseup", hidePassword);
+    window.addEventListener("touchend", hidePassword);
+    window.addEventListener("touchcancel", hidePassword);
+  }
 
   // Email/password signup
   form.addEventListener("submit", async (event) => {
@@ -727,7 +727,7 @@ if (togglePasswordBtn && passwordInput) {
     }
   });
 
-  // Hide "Open my email" initially
+  // Ensure "Open my email" hidden initially
   if (openEmailBtn) {
     openEmailBtn.style.display = "none";
   }
@@ -735,4 +735,3 @@ if (togglePasswordBtn && passwordInput) {
 
 </body>
 </html>
-
