@@ -8,10 +8,44 @@
   <link rel="apple-touch-icon" href="../images/medisignal.png" />
   <style>
     /* When plan is Developers, make the plan chip look locked */
+    .sidebar-plan-label.locked{
+      opacity: 0.7;
+      cursor: not-allowed;
+      border-color: #6b7280;
+    }
+    /* Locked look for Developers plan (already added earlier; keep if present) */
 .sidebar-plan-label.locked{
   opacity: 0.7;
   cursor: not-allowed;
   border-color: #6b7280;
+}
+
+/* Simple 2-column grid for the Developers user list */
+.dev-grid-header,
+.dev-grid-row{
+  display: grid;
+  grid-template-columns: 2fr 1fr; /* Email | Plan */
+  gap: 6px;
+  align-items: center;
+  font-size: 11px;
+  padding: 6px;
+  border-radius: 8px;
+}
+.dev-grid-header{
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  background: #f3f4f6;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.dev-grid-row{
+  background: #ffffff;
+  margin-top: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
 }
 
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
@@ -89,30 +123,26 @@
         <div id="delete-account" class="logout-link" style="color:#f87171;">Delete account &amp; data</div>
       </aside>
 
-      <main class="main-area">
-        <div class="top-bar">
-          <div>
-            <div id="board-title" class="board-title">Remblyx Workspace</div>
-            <div id="board-subtitle" class="board-subtitle">Overview of your monitoring items, owners, and status.</div>
-          </div>
-          <div class="top-actions">
-            <input class="search-box" placeholder="Search items..." />
-            <div class="pill">Filter</div>
-            <div class="pill">Views</div>
-            <div class="pill primary">+ New Item</div>
-          </div>
-        </div>
+      <!-- Developers Command Center (shown only for Developers plan) -->
+<div id="dev-tools" class="board-wrapper" style="display:none;">
+  <div class="dev-grid-header">
+    <div>Email</div>
+    <div>Plan</div>
+  </div>
+  <div id="dev-users"></div>
+</div>
 
-        <div class="board-wrapper">
-          <div class="board-header-row">
-            <div>Item</div><div>Owner</div><div>Status</div><div>Due Date</div><div>Priority</div>
-          </div>
-          <div class="board-row"><div>Onboarding checks</div><div>You</div><div><span class="status-pill status-green">Done</span></div><div>Today</div><div>Low</div></div>
-          <div class="board-row"><div>Vital alerts configuration</div><div>Team Lead</div><div><span class="status-pill status-yellow">In progress</span></div><div>Tomorrow</div><div>Medium</div></div>
-          <div class="board-row"><div>Critical event pipeline</div><div>Engineering</div><div><span class="status-pill status-red">Stuck</span></div><div>Overdue</div><div>High</div></div>
-          <div class="board-row"><div>Integration testing</div><div>DevOps</div><div><span class="status-pill status-blue">Planned</span></div><div>Next week</div><div>Medium</div></div>
-        </div>
-      </main>
+<!-- Standard board (hidden for Developers plan) -->
+<div id="standard-board" class="board-wrapper">
+  <div class="board-header-row">
+    <div>Item</div><div>Owner</div><div>Status</div><div>Due Date</div><div>Priority</div>
+  </div>
+  <div class="board-row"><div>Onboarding checks</div><div>You</div><div><span class="status-pill status-green">Done</span></div><div>Today</div><div>Low</div></div>
+  <div class="board-row"><div>Vital alerts configuration</div><div>Team Lead</div><div><span class="status-pill status-yellow">In progress</span></div><div>Tomorrow</div><div>Medium</div></div>
+  <div class="board-row"><div>Critical event pipeline</div><div>Engineering</div><div><span class="status-pill status-red">Stuck</span></div><div>Overdue</div><div>High</div></div>
+  <div class="board-row"><div>Integration testing</div><div>DevOps</div><div><span class="status-pill status-blue">Planned</span></div><div>Next week</div><div>Medium</div></div>
+</div>
+
     </div>
   </div>
 
@@ -129,7 +159,9 @@
     doc,
     getDoc,
     setDoc,
-    deleteDoc
+    deleteDoc,
+    collection,
+    getDocs
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
   // ---------- Firebase ----------
@@ -152,17 +184,23 @@
   const LOGIN_URL = "./login.html";
   const SELECTION_URL = "./selection.html";
 
-  // ---------- DOM (match your HTML ids) ----------
+  // ---------- DOM ----------
   const mainDashboard     = document.getElementById("main-dashboard");
-  const sidebarPlanEl     = document.getElementById("sidebar-plan"); // <div id="sidebar-plan" class="sidebar-plan-label">
-  const planNameEl        = document.getElementById("plan-name");    // <strong id="plan-name">
+  const sidebarPlanEl     = document.getElementById("sidebar-plan");   // <div id="sidebar-plan" class="sidebar-plan-label">
+  const planNameEl        = document.getElementById("plan-name");      // <strong id="plan-name">
   const logoutLink        = document.getElementById("logout");
   const deleteAccountLink = document.getElementById("delete-account");
   const boardTitle        = document.getElementById("board-title");
   const boardSubtitle     = document.getElementById("board-subtitle");
 
+  // Developers UI pieces
+  const devTools          = document.getElementById("dev-tools");
+  const devUsersContainer = document.getElementById("dev-users");
+  const standardBoard     = document.getElementById("standard-board");
+  const firstNavLabelEl   = document.querySelector(".nav-item .label"); // first tab in sidebar (Main Board)
+
   let currentUser = null;
-  let currentPlan = null; // <— track plan so we can block changes for "Developers"
+  let currentPlan = null;
 
   // ---------- UI helpers ----------
   function setDashboardVisibility(show) {
@@ -170,50 +208,92 @@
     mainDashboard.style.display = show ? "grid" : "none";
   }
 
+  function setNavLabelForPlan(plan){
+    if (!firstNavLabelEl) return;
+    firstNavLabelEl.textContent = (plan === "Developers") ? "Command Center" : "Main Board";
+  }
+
+  function showDevelopersView(){
+    setNavLabelForPlan("Developers");
+    if (devTools) devTools.style.display = "block";
+    if (standardBoard) standardBoard.style.display = "none";
+    renderAllUsers(); // populate list
+  }
+
+  function showRegularView(){
+    setNavLabelForPlan(currentPlan);
+    if (devTools) devTools.style.display = "none";
+    if (standardBoard) standardBoard.style.display = "block";
+  }
+
   function applyPlanUi(plan) {
-    currentPlan = plan || null;                           // <— keep it updated
+    currentPlan = plan || null;
     if (planNameEl) planNameEl.textContent = currentPlan || "-";
 
     switch (plan) {
       case "Basic":
-        if (boardTitle)    boardTitle.textContent = "Basic Monitoring Board";
-        if (boardSubtitle) boardSubtitle.textContent = "Lightweight overview for individual usage.";
+        boardTitle.textContent = "Basic Monitoring Board";
+        boardSubtitle.textContent = "Lightweight overview for individual usage.";
         break;
       case "Premium":
-        if (boardTitle)    boardTitle.textContent = "Premium Team Workspace";
-        if (boardSubtitle) boardSubtitle.textContent = "Collaborative overview for teams and advanced alerts.";
+        boardTitle.textContent = "Premium Team Workspace";
+        boardSubtitle.textContent = "Collaborative overview for teams and advanced alerts.";
         break;
       case "Enterprise":
-        if (boardTitle)    boardTitle.textContent = "Enterprise Control Center";
-        if (boardSubtitle) boardSubtitle.textContent = "Full-scale visibility, integrations, and governance.";
+        boardTitle.textContent = "Enterprise Control Center";
+        boardSubtitle.textContent = "Full-scale visibility, integrations, and governance.";
         break;
       case "Developers":
-        if (boardTitle)    boardTitle.textContent = "Developers Command Center";
-        if (boardSubtitle) boardSubtitle.textContent = "Internal tools, diagnostics, and elevated limits.";
+        boardTitle.textContent = "Developers Command Center";
+        boardSubtitle.textContent = "Internal tools, diagnostics, and elevated limits.";
         break;
       default:
-        if (boardTitle)    boardTitle.textContent = "Remblyx Workspace";
-        if (boardSubtitle) boardSubtitle.textContent = "Overview of your monitoring items, owners, and status.";
+        boardTitle.textContent = "Remblyx Workspace";
+        boardSubtitle.textContent = "Overview of your monitoring items, owners, and status.";
     }
 
-    // Update interactivity of the "Current Plan" chip based on plan
     updateChangePlanInteractivity();
+
+    // Toggle content based on plan
+    if (plan === "Developers") {
+      showDevelopersView();
+    } else {
+      showRegularView();
+    }
   }
 
   function updateChangePlanInteractivity(){
     if (!sidebarPlanEl) return;
     if (currentPlan === "Developers") {
-      // lock the chip: no navigation, adjust title, add locked styling
       sidebarPlanEl.classList.add("locked");
       sidebarPlanEl.title = "Plan is managed (Developers). Changes are disabled.";
     } else {
-      // normal (clickable) state
       sidebarPlanEl.classList.remove("locked");
       sidebarPlanEl.title = "Click to change plan";
     }
   }
 
-  // Force "Developers" plan for dev emails; also migrate old "Dev" to "Developers"
+  // Developers: fetch and render all users (email + plan)
+  async function renderAllUsers(){
+    if (!devUsersContainer) return;
+    devUsersContainer.innerHTML = `<div class="dev-grid-row"><div>Loading users…</div><div>—</div></div>`;
+    try {
+      const snap = await getDocs(collection(db, "users"));
+      let rows = "";
+      snap.forEach(d => {
+        const data  = d.data() || {};
+        const email = data.email || "(no email)";
+        const plan  = data.plan  || "-";
+        rows += `<div class="dev-grid-row"><div>${email}</div><div>${plan}</div></div>`;
+      });
+      devUsersContainer.innerHTML = rows || `<div class="dev-grid-row"><div>No users found</div><div>—</div></div>`;
+    } catch (e) {
+      console.error("renderAllUsers error:", e);
+      devUsersContainer.innerHTML = `<div class="dev-grid-row"><div>Permission denied or error</div><div>—</div></div>`;
+    }
+  }
+
+  // Force "Developers" plan for dev emails; also migrate old "Dev" -> "Developers"
   async function ensureDevelopersPlanIfAllowed(user) {
     const isDev = DEV_EMAILS.includes((user.email || "").toLowerCase());
     if (!isDev) return null;
@@ -223,17 +303,14 @@
     const existingPlan = snap.exists() ? (snap.data().plan || null) : null;
 
     if (existingPlan === "Developers") return "Developers";
-
     await setDoc(ref, { email: user.email || null, plan: "Developers" }, { merge: true });
     return "Developers";
   }
 
-  // Load plan; migrate "Dev" -> "Developers" if encountered
   async function loadUserPlan(user) {
     const ref = doc(db, "users", user.uid);
     const snap = await getDoc(ref);
     let plan = snap.exists() ? (snap.data().plan || null) : null;
-
     if (plan === "Dev") {
       await setDoc(ref, { plan: "Developers" }, { merge: true });
       plan = "Developers";
@@ -241,11 +318,10 @@
     return plan;
   }
 
-  // ---------- Event wiring ----------
+  // ---------- Events ----------
   if (sidebarPlanEl) {
     sidebarPlanEl.addEventListener("click", () => {
-      // BLOCK clicking when plan is Developers
-      if (currentPlan === "Developers") return; // silently ignore; or show alert if you prefer
+      if (currentPlan === "Developers") return; // locked
       window.location.href = `${SELECTION_URL}?mode=change`;
     });
   }
@@ -263,11 +339,10 @@
         alert("No user is logged in.");
         return;
       }
-      const confirmDelete = confirm("Are you sure you want to permanently delete your account and all associated data?");
-      if (!confirmDelete) return;
+      const ok = confirm("Are you sure you want to permanently delete your account and all associated data?");
+      if (!ok) return;
 
-      const uid = currentUser.uid;
-      try { await deleteDoc(doc(db, "users", uid)); } catch {}
+      try { await deleteDoc(doc(db, "users", currentUser.uid)); } catch {}
       try {
         await deleteUser(currentUser);
         alert("Your account and data have been deleted.");
@@ -283,7 +358,7 @@
     });
   }
 
-  // ---------- Auth guard + plan resolution ----------
+  // ---------- Auth guard ----------
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
       window.location.href = LOGIN_URL;
@@ -292,24 +367,23 @@
     currentUser = user;
 
     try {
-      // 1) If dev email, force Developers plan and show dashboard
-      const forcedPlan = await ensureDevelopersPlanIfAllowed(user);
-      if (forcedPlan) {
-        applyPlanUi(forcedPlan);
+      // If dev email, force Developers
+      const forced = await ensureDevelopersPlanIfAllowed(user);
+      if (forced) {
+        applyPlanUi(forced);
         setDashboardVisibility(true);
         return;
       }
 
-      // 2) Otherwise, load stored plan (with migration if needed)
+      // Otherwise load stored plan
       const plan = await loadUserPlan(user);
 
-      // 3) If no plan yet, send to selection (first-time setup)
+      // If no plan, go select
       if (!plan) {
         window.location.href = "./selection.html";
         return;
       }
 
-      // 4) Show dashboard with the user’s plan
       applyPlanUi(plan);
       setDashboardVisibility(true);
     } catch (e) {
@@ -318,6 +392,5 @@
     }
   });
 </script>
-
 </body>
 </html>
