@@ -14,254 +14,55 @@
   <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/uicons-regular-rounded/css/uicons-regular-rounded.css">
 
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Arial', sans-serif;
-    }
-
-    body {
-      background: #ffffff;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: relative;
-      overflow: hidden;
-      padding: 16px;
-    }
-
-    /* Background */
-    .overlay {
-      position: fixed;
-      inset: 0;
-      z-index: -1;
-    }
-
-    .bg-image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      filter: blur(4px);
-      opacity: 0.8;
-    }
-
-    /* Header + logo */
-    .header-row {
-      position: fixed;
-      top: -27px;
-      left: 8px;
-      z-index: 20;
-    }
-
-    .logo {
-      height: 200px;
-      cursor: pointer;
-      transition: 0.3s ease;
-    }
-
-    .logo:hover {
-      filter: brightness(1.1);
-      transform: scale(1.03);
-    }
-
-    /* Card */
-    .container {
-      background: rgba(245, 245, 245, 0.97);
-      border-radius: 16px;
-      padding: 20px 18px 18px;
-      max-width: 420px;
-      width: 100%;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-      color: #333;
-      z-index: 10;
-      text-align: center;
-      margin: 0;
-      max-height: calc(100vh - 80px);
-      overflow-y: auto;
-    }
-
-    h2 {
-      margin-bottom: 12px;
-      color: #333;
-      font-size: 22px;
-      font-weight: 600;
-    }
-
-    /* Social buttons */
-    .social-buttons {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-
-    .social-btn {
-      flex: 1;
-      padding: 8px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 13px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: 0.25s;
-      color: #fff;
-      touch-action: manipulation;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Arial', sans-serif; }
+    body { background: #ffffff; min-height: 100vh; display: flex; justify-content: center; align-items: center; position: relative; overflow: hidden; padding: 16px; }
+    .overlay { position: fixed; inset: 0; z-index: -1; }
+    .bg-image { width: 100%; height: 100%; object-fit: cover; filter: blur(4px); opacity: 0.8; }
+    .header-row { position: fixed; top: -27px; left: 8px; z-index: 20; }
+    .logo { height: 200px; cursor: pointer; transition: 0.3s ease; }
+    .logo:hover { filter: brightness(1.1); transform: scale(1.03); }
+    .container { background: rgba(245, 245, 245, 0.97); border-radius: 16px; padding: 20px 18px 18px; max-width: 420px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.2); color: #333; z-index: 10; text-align: center; margin: 0; max-height: calc(100vh - 80px); overflow-y: auto; }
+    h2 { margin-bottom: 12px; color: #333; font-size: 22px; font-weight: 600; }
+    .social-buttons { display: flex; gap: 10px; margin-bottom: 14px; }
+    .social-btn { flex: 1; padding: 8px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; transition: 0.25s; color: #fff; touch-action: manipulation; }
     .gmail-btn { background: #e57373; }
     .facebook-btn { background: #4267B2; }
-
-    .social-btn img {
-      height: 18px;
-      width: 18px;
-      margin-right: 6px;
-    }
-
-    .social-btn:hover {
-      opacity: 0.92;
-      transform: translateY(-1px);
-    }
-
-    hr {
-      margin: 10px 0 12px;
-      border: 0;
-      border-top: 1px solid #ccc;
-    }
-
-    /* Inputs */
-    input[type="text"],
-    input[type="password"] {
-      width: 100%;
-      padding: 10px;
-      margin: 6px 0;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-      background: #fff;
-      color: #333;
-    }
-
+    .social-btn img { height: 18px; width: 18px; margin-right: 6px; }
+    .social-btn:hover { opacity: 0.92; transform: translateY(-1px); }
+    hr { margin: 10px 0 12px; border: 0; border-top: 1px solid #ccc; }
+    input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin: 6px 0; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; background: #fff; color: #333; }
     input::placeholder { color: #999; }
-
-    /* Password wrapper + eye */
-    .password-wrapper {
-      position: relative;
-      width: 100%;
-      margin: 6px 0;
-    }
-
-    .password-wrapper input {
-      margin: 0;
-      padding-right: 38px; /* space for the icon */
-    }
-
-    .toggle-password {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      font-size: 18px;
-      color: #777;
-      padding: 0;
-      line-height: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      user-select: none;
-    }
-
-    .toggle-password:hover {
-      color: #333;
-    }
-
-    /* Button */
-    button.submit-btn {
-      width: 100%;
-      padding: 11px;
-      margin-top: 10px;
-      border: none;
-      border-radius: 10px;
-      font-size: 15px;
-      cursor: pointer;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: #fff;
-      transition: 0.25s;
-      touch-action: manipulation;
-    }
-
-    button.submit-btn:hover {
-      opacity: 0.94;
-      transform: translateY(-1px);
-    }
-
-    .error {
-      color: red;
-      font-size: 12px;
-      margin-top: 5px;
-      min-height: 16px;
-    }
-
-    .create-text {
-      margin-top: 10px;
-      font-size: 13px;
-      color: #555;
-    }
-
-    .create-text a {
-      color: #555;
-      font-weight: bold;
-      text-decoration: underline;
-    }
-
-    #home-box {
-      display: none;
-    }
-
+    .password-wrapper { position: relative; width: 100%; margin: 6px 0; }
+    .password-wrapper input { margin: 0; padding-right: 38px; }
+    .toggle-password { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); border: none; background: transparent; cursor: pointer; font-size: 18px; color: #777; padding: 0; line-height: 1; display: flex; align-items: center; justify-content: center; user-select: none; }
+    .toggle-password:hover { color: #333; }
+    button.submit-btn { width: 100%; padding: 11px; margin-top: 10px; border: none; border-radius: 10px; font-size: 15px; cursor: pointer; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; transition: 0.25s; touch-action: manipulation; }
+    button.submit-btn:hover { opacity: 0.94; transform: translateY(-1px); }
+    .error { color: red; font-size: 12px; margin-top: 5px; min-height: 16px; }
+    .create-text { margin-top: 10px; font-size: 13px; color: #555; }
+    .create-text a { color: #555; font-weight: bold; text-decoration: underline; }
+    #home-box { display: none; }
     @media (max-width: 480px) {
       body { padding: 10px; }
-
       .logo { height: 115px; }
-
       .header-row { top: -10px; }
-
-      .container {
-        padding: 18px 14px 14px;
-        border-radius: 14px;
-      }
-
+      .container { padding: 18px 14px 14px; border-radius: 14px; }
       h2 { font-size: 20px; }
-
-      .social-btn {
-        font-size: 12px;
-        padding: 7px;
-      }
-
-      button.submit-btn {
-        font-size: 14px;
-        padding: 10px;
-      }
+      .social-btn { font-size: 12px; padding: 7px; }
+      button.submit-btn { font-size: 14px; padding: 10px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Background -->
   <div class="overlay">
     <img src="../images/background.png" alt="Background" class="bg-image">
   </div>
 
-  <!-- Logo -->
   <div class="header-row">
     <img src="../images/remblyxlogo.png" alt="Logo" class="logo" onclick="window.location.href='../index.html'">
   </div>
 
-  <!-- Login Card -->
   <div id="login-box" class="container">
     <h2>Log In</h2>
 
@@ -281,20 +82,9 @@
     <form id="loginForm">
       <input type="text" id="email" placeholder="Email" required>
 
-      <!-- Password with hold-to-show eye -->
       <div class="password-wrapper">
-        <input
-          type="password"
-          id="password"
-          placeholder="Password"
-          required
-        >
-        <button
-          type="button"
-          id="toggle-password"
-          class="toggle-password"
-          aria-label="Hold to show password"
-        >
+        <input type="password" id="password" placeholder="Password" required>
+        <button type="button" id="toggle-password" class="toggle-password" aria-label="Hold to show password">
           <i id="password-eye-icon" class="fi fi-rr-eye-crossed"></i>
         </button>
       </div>
@@ -307,7 +97,6 @@
     </p>
   </div>
 
-  <!-- Old home-box (unused) -->
   <div id="home-box" class="container">
     <h2>Welcome!</h2>
     <p id="welcome-text"></p>
@@ -355,14 +144,13 @@
     const facebookProvider = new FacebookAuthProvider();
     let popupInProgress = false;
 
-    const DASHBOARD_URL = "./dashboard.html";
+    /* ▼▼ CHANGE: redirect target is selection.html ▼▼ */
+    const SELECTION_URL = "./selection.html";
+    const goToSelection = () => { window.location.href = SELECTION_URL; };
+    /* ▲▲ CHANGE ▲▲ */
 
     const showError = (msg) => { errorText.textContent = msg; };
     const clearError = () => { errorText.textContent = ""; };
-
-    const goToDashboard = () => {
-      window.location.href = DASHBOARD_URL;
-    };
 
     const showLogin = () => {
       loginBox.style.display = "block";
@@ -376,17 +164,16 @@
         showLogin();
         return;
       }
-
       const isPasswordUser = user.providerData.some(p => p.providerId === "password");
-
       if (isPasswordUser && !user.emailVerified) {
         showError("Please verify your email before logging in.");
         await signOut(auth);
         showLogin();
         return;
       }
-
-      goToDashboard();
+      /* ▼▼ CHANGE ▼▼ */
+      goToSelection();
+      /* ▲▲ CHANGE ▲▲ */
     };
 
     onAuthStateChanged(auth, (user) => {
@@ -396,30 +183,19 @@
     // Hold-to-show password with caret preserved
     if (togglePasswordBtn && passwordInput && passwordEyeIcon) {
       let lastSelection = { start: null, end: null };
-
       const rememberSelection = () => {
         try {
           lastSelection.start = passwordInput.selectionStart;
           lastSelection.end = passwordInput.selectionEnd;
-        } catch {
-          lastSelection.start = lastSelection.end = null;
-        }
+        } catch { lastSelection.start = lastSelection.end = null; }
       };
-
       const restoreSelection = () => {
-        if (
-          lastSelection.start !== null &&
-          lastSelection.end !== null &&
-          document.activeElement === passwordInput
-        ) {
+        if (lastSelection.start !== null && lastSelection.end !== null && document.activeElement === passwordInput) {
           requestAnimationFrame(() => {
-            try {
-              passwordInput.setSelectionRange(lastSelection.start, lastSelection.end);
-            } catch {}
+            try { passwordInput.setSelectionRange(lastSelection.start, lastSelection.end); } catch {}
           });
         }
       };
-
       const showPassword = () => {
         rememberSelection();
         passwordInput.type = "text";
@@ -428,7 +204,6 @@
         passwordEyeIcon.classList.remove("fi-rr-eye-crossed");
         passwordEyeIcon.classList.add("fi-rr-eye");
       };
-
       const hidePassword = () => {
         rememberSelection();
         passwordInput.type = "password";
@@ -437,18 +212,11 @@
         passwordEyeIcon.classList.remove("fi-rr-eye");
         passwordEyeIcon.classList.add("fi-rr-eye-crossed");
       };
-
       ["mousedown", "touchstart"].forEach(evt => {
-        togglePasswordBtn.addEventListener(evt, (e) => {
-          e.preventDefault();
-          showPassword();
-        }, { passive: false });
+        togglePasswordBtn.addEventListener(evt, (e) => { e.preventDefault(); showPassword(); }, { passive: false });
       });
-
       ["mouseup", "mouseleave", "touchend", "touchcancel"].forEach(evt => {
-        window.addEventListener(evt, () => {
-          if (passwordInput.type === "text") hidePassword();
-        });
+        window.addEventListener(evt, () => { if (passwordInput.type === "text") hidePassword(); });
       });
     }
 
@@ -456,26 +224,23 @@
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       clearError();
-
       const email = document.getElementById("email").value.trim();
       const password = passwordInput.value.trim();
-
       if (!email || !password) {
         showError("⚠ Please fill in all fields.");
         return;
       }
-
       try {
         const { user } = await signInWithEmailAndPassword(auth, email, password);
-
         const isPasswordUser = user.providerData.some(p => p.providerId === "password");
         if (isPasswordUser && !user.emailVerified) {
           showError("Please verify your email before logging in.");
           await signOut(auth);
           return;
         }
-
-        goToDashboard();
+        /* ▼▼ CHANGE ▼▼ */
+        goToSelection();
+        /* ▲▲ CHANGE ▲▲ */
       } catch (error) {
         console.error("Login error:", error);
         let message = "⚠ Invalid email or password.";
@@ -496,36 +261,25 @@
     }
 
     // Google login
-    // Google login
-gmailBtn.addEventListener("click", async (e) => {
-  e.preventDefault();
-  if (popupInProgress) return;
-  popupInProgress = true;
-  clearError();
-
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    const user = result.user;
-
-    // Check if the user is the correct Gmail account
-    if (user.email === "medisignal.remblyx@gmail.com") {
-      // Proceed to the dashboard
-      goToDashboard();
-    } else {
-      // If the email doesn't match, show an error
-      showError("⚠ You are not authorized to log in with this account.");
-      await signOut(auth);
-    }
-  } catch (error) {
-    if (error.code !== "auth/cancelled-popup-request") {
-      console.error("Google login error:", error);
-      showError("⚠ Google sign-in failed.");
-    }
-  } finally {
-    popupInProgress = false;
-  }
-});
-
+    gmailBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      if (popupInProgress) return;
+      popupInProgress = true;
+      clearError();
+      try {
+        await signInWithPopup(auth, googleProvider);
+        /* ▼▼ CHANGE ▼▼ */
+        goToSelection();
+        /* ▲▲ CHANGE ▲▲ */
+      } catch (error) {
+        if (error.code !== "auth/cancelled-popup-request") {
+          console.error("Google login error:", error);
+          showError("⚠ Google sign-in failed.");
+        }
+      } finally {
+        popupInProgress = false;
+      }
+    });
 
     // Facebook login
     facebookBtn.addEventListener("click", async (e) => {
@@ -533,10 +287,11 @@ gmailBtn.addEventListener("click", async (e) => {
       if (popupInProgress) return;
       popupInProgress = true;
       clearError();
-
       try {
         await signInWithPopup(auth, facebookProvider);
-        goToDashboard();
+        /* ▼▼ CHANGE ▼▼ */
+        goToSelection();
+        /* ▲▲ CHANGE ▲▲ */
       } catch (error) {
         if (error.code !== "auth/cancelled-popup-request") {
           console.error("Facebook login error:", error);
@@ -549,4 +304,3 @@ gmailBtn.addEventListener("click", async (e) => {
   </script>
 </body>
 </html>
-
