@@ -580,32 +580,81 @@
   }
 
   // Press & hold to show password (icons: crossed when hidden, eye when visible)
+    // Press & hold to show password (icons: crossed when hidden, eye when visible)
   if (togglePasswordBtn && passwordInput && passwordEyeIcon) {
+    let lastSelection = { start: null, end: null };
+
+    const rememberSelection = () => {
+      try {
+        lastSelection.start = passwordInput.selectionStart;
+        lastSelection.end = passwordInput.selectionEnd;
+      } catch (e) {
+        lastSelection.start = lastSelection.end = null;
+      }
+    };
+
+    const restoreSelection = () => {
+      if (
+        lastSelection.start !== null &&
+        lastSelection.end !== null &&
+        document.activeElement === passwordInput
+      ) {
+        // Wait one frame so the browser applies the new type first
+        requestAnimationFrame(() => {
+          try {
+            passwordInput.setSelectionRange(
+              lastSelection.start,
+              lastSelection.end
+            );
+          } catch (e) {
+            // some mobile browsers might complain; safe to ignore
+          }
+        });
+      }
+    };
+
     const showPassword = () => {
+      rememberSelection();
       passwordInput.type = "text";
+      passwordInput.focus();
+      restoreSelection();
+
       passwordEyeIcon.classList.remove("fi-rr-eye-crossed");
       passwordEyeIcon.classList.add("fi-rr-eye");
     };
 
     const hidePassword = () => {
+      rememberSelection();
       passwordInput.type = "password";
+      passwordInput.focus();
+      restoreSelection();
+
       passwordEyeIcon.classList.remove("fi-rr-eye");
       passwordEyeIcon.classList.add("fi-rr-eye-crossed");
     };
 
+    // Mouse & touch start: show while held
     ["mousedown", "touchstart"].forEach(evt => {
-      togglePasswordBtn.addEventListener(evt, (e) => {
-        e.preventDefault();
-        showPassword();
-      }, { passive: false });
+      togglePasswordBtn.addEventListener(
+        evt,
+        (e) => {
+          e.preventDefault();
+          showPassword();
+        },
+        { passive: false }
+      );
     });
 
+    // Mouse & touch end anywhere: hide again
     ["mouseup", "mouseleave", "touchend", "touchcancel"].forEach(evt => {
       window.addEventListener(evt, () => {
-        hidePassword();
+        if (passwordInput.type === "text") {
+          hidePassword();
+        }
       });
     });
   }
+
 
   // Email/password signup
   form.addEventListener("submit", async (event) => {
@@ -726,3 +775,4 @@
 
 </body>
 </html>
+
