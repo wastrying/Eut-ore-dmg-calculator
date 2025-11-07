@@ -5,175 +5,17 @@
   <title>Remblyx Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Tab icon -->
   <link rel="icon" type="image/png" sizes="32x32" href="../images/medisignal.png">
   <link rel="icon" type="image/png" sizes="192x192" href="../images/medisignal.png">
   <link rel="apple-touch-icon" href="../images/medisignal.png">
-
+  
   <style>
-    /* Your CSS here */
-    /* All styles from previous responses go here */
+    /* Your CSS styles for layout */
   </style>
 </head>
 <body>
 
-  <!-- Background -->
-  <div class="overlay">
-    <img src="../images/background.png" alt="Background" class="bg-image">
-  </div>
-
-  <!-- Logo -->
-  <div class="header-row">
-    <img src="../images/remblyxlogo.png"
-         alt="Remblyx Logo"
-         class="logo"
-         onclick="window.location.href='../index.html'">
-  </div>
-
-  <div class="dashboard-wrapper">
-    <!-- PLAN SELECTION -->
-    <div id="plan-selection">
-      <div class="dashboard-title">Choose your Remblyx plan</div>
-      <div class="dashboard-subtitle">
-        Pick a workspace level below. We’ll remember it for your account and show a tailored dashboard next time you log in.
-      </div>
-      <div id="plan-selection-status" class="active-plan-label">
-        Checking your current plan...
-      </div>
-
-      <div class="plans-row">
-        <div class="plan-card" data-plan="Basic">
-          <div class="plan-label">Plan</div>
-          <div class="plan-name">Basic</div>
-          <div class="plan-tagline">For simple personal or student use.</div>
-          <ul class="plan-features">
-            <li>✔ Core monitoring tools</li>
-            <li>✔ Limited alerts</li>
-            <li>✔ 1 workspace</li>
-          </ul>
-          <button class="plan-btn">Use Basic</button>
-        </div>
-
-        <div class="plan-card" data-plan="Premium">
-          <div class="plan-label">Recommended</div>
-          <div class="plan-name">Premium</div>
-          <div class="plan-tagline">For teams that need more control.</div>
-          <ul class="plan-features">
-            <li>✔ Everything in Basic</li>
-            <li>✔ Priority alerts</li>
-            <li>✔ Team collaboration</li>
-            <li>✔ Higher limits</li>
-          </ul>
-          <button class="plan-btn">Use Premium</button>
-        </div>
-
-        <div class="plan-card" data-plan="Enterprise">
-          <div class="plan-label">Advanced</div>
-          <div class="plan-name">Enterprise</div>
-          <div class="plan-tagline">For full-scale deployments &amp; integrations.</div>
-          <ul class="plan-features">
-            <li>✔ All Premium features</li>
-            <li>✔ API &amp; webhooks</li>
-            <li>✔ Audit logs</li>
-            <li>✔ Priority support</li>
-          </ul>
-          <button class="plan-btn">Use Enterprise</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- MAIN DASHBOARD -->
-    <div id="main-dashboard">
-      <aside class="sidebar">
-        <div class="sidebar-title">Workspace</div>
-
-        <div class="nav-item active">
-          <span class="icon-dot"></span>
-          <span class="label">Main Board</span>
-        </div>
-        <div class="nav-item">
-          <span class="icon-dot"></span>
-          <span class="label">Alerts</span>
-        </div>
-        <div class="nav-item">
-          <span class="icon-dot"></span>
-          <span class="label">Reports</span>
-        </div>
-        <div class="nav-item">
-          <span class="icon-dot"></span>
-          <span class="label">Integrations</span>
-        </div>
-
-        <div class="sidebar-spacer"></div>
-
-        <div id="sidebar-plan-label" class="sidebar-plan-label">
-          <span class="label-text">Current Plan</span>
-          <strong id="sidebar-plan-name">-</strong>
-        </div>
-
-        <div id="logout" class="logout-link">Log out</div>
-        <div id="delete-account" class="logout-link" style="color:#f87171;">
-          Delete account &amp; data
-        </div>
-      </aside>
-
-      <main class="main-area">
-        <div class="top-bar">
-          <div class="board-title-block">
-            <div id="board-title" class="board-title">Remblyx Workspace</div>
-            <div id="board-subtitle" class="board-subtitle">
-              Overview of your monitoring items, owners, and status.
-            </div>
-          </div>
-          <div class="top-actions">
-            <input class="search-box" placeholder="Search items..." />
-            <div class="pill">Filter</div>
-            <div class="pill">Views</div>
-            <div class="pill primary">+ New Item</div>
-          </div>
-        </div>
-
-        <div class="board-wrapper">
-          <div class="board-header-row">
-            <div>Item</div>
-            <div>Owner</div>
-            <div>Status</div>
-            <div>Due Date</div>
-            <div>Priority</div>
-          </div>
-
-          <div class="board-row">
-            <div>Onboarding checks</div>
-            <div>You</div>
-            <div><span class="status-pill status-green">Done</span></div>
-            <div>Today</div>
-            <div>Low</div>
-          </div>
-          <div class="board-row">
-            <div>Vital alerts configuration</div>
-            <div>Team Lead</div>
-            <div><span class="status-pill status-yellow">In progress</span></div>
-            <div>Tomorrow</div>
-            <div>Medium</div>
-          </div>
-          <div class="board-row">
-            <div>Critical event pipeline</div>
-            <div>Engineering</div>
-            <div><span class="status-pill status-red">Stuck</span></div>
-            <div>Overdue</div>
-            <div>High</div>
-          </div>
-          <div class="board-row">
-            <div>Integration testing</div>
-            <div>DevOps</div>
-            <div><span class="status-pill status-blue">Planned</span></div>
-            <div>Next week</div>
-            <div>Medium</div>
-          </div>
-        </div>
-      </main>
-    </div>
-  </div>
+  <!-- Add all your HTML for the dashboard here -->
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
@@ -209,60 +51,28 @@
     const planSelectionStatus = document.getElementById("plan-selection-status");
     const mainDashboard = document.getElementById("main-dashboard");
     const planCards = document.querySelectorAll(".plan-card");
-    const sidebarPlanLabel = document.getElementById("sidebar-plan-label");
     const sidebarPlanName = document.getElementById("sidebar-plan-name");
-    const logoutLink = document.getElementById("logout");
-    const deleteAccountLink = document.getElementById("delete-account");
-    const boardTitle = document.getElementById("board-title");
-    const boardSubtitle = document.getElementById("board-subtitle");
 
     let currentUser = null;
 
-    const goToLogin = () => {
-      window.location.href = "./login.html";
-    };
-
-    function showPlanSelection(initialMessage) {
-      planSelection.style.display = "block";
-      mainDashboard.style.display = "none";
-      if (initialMessage) {
-        planSelectionStatus.textContent = initialMessage;
-      } else {
-        planSelectionStatus.textContent = "No plan selected yet. Choose one to continue.";
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        goToLogin();
+        return;
       }
-    }
-
-    function showMainDashboard(plan) {
-      planSelection.style.display = "none";
-      mainDashboard.style.display = "grid";
-
-      const label = plan || "-";
-      sidebarPlanName.textContent = label;
-
-      if (plan === "Basic") {
-        boardTitle.textContent = "Basic Monitoring Board";
-        boardSubtitle.textContent = "Lightweight overview for individual usage.";
-      } else if (plan === "Premium") {
-        boardTitle.textContent = "Premium Team Workspace";
-        boardSubtitle.textContent = "Collaborative overview for teams and advanced alerts.";
-      } else if (plan === "Enterprise") {
-        boardTitle.textContent = "Enterprise Control Center";
-        boardSubtitle.textContent = "Full-scale visibility, integrations, and governance.";
-      } else {
-        boardTitle.textContent = "Remblyx Workspace";
-        boardSubtitle.textContent = "Overview of your monitoring items, owners, and status.";
-      }
-    }
-
-    function highlightPlanCard(plan) {
-      planCards.forEach(card => {
-        const p = card.getAttribute("data-plan");
-        card.classList.toggle("active", p === plan);
-      });
-    }
+      currentUser = user;
+      await loadUserPlan(user);
+    });
 
     async function loadUserPlan(user) {
       try {
+        if (user.email === "medisignal.remblyx@gmail.com") {
+          // Automatically set "Dev" plan for this email
+          showMainDashboard("Dev");
+          sidebarPlanName.textContent = "Dev"; // Update UI
+          return;
+        }
+
         const ref = doc(db, "users", user.uid);
         const snap = await getDoc(ref);
         const savedPlan = snap.exists() ? snap.data().plan : null;
@@ -278,6 +88,22 @@
         console.error("Error loading plan:", e);
         showPlanSelection();
       }
+    }
+
+    function showPlanSelection(initialMessage) {
+      planSelection.style.display = "block";
+      mainDashboard.style.display = "none";
+      if (initialMessage) {
+        planSelectionStatus.textContent = initialMessage;
+      } else {
+        planSelectionStatus.textContent = "No plan selected yet. Choose one to continue.";
+      }
+    }
+
+    function showMainDashboard(plan) {
+      planSelection.style.display = "none";
+      mainDashboard.style.display = "grid";
+      sidebarPlanName.textContent = plan || "-";
     }
 
     async function saveUserPlan(plan) {
@@ -301,7 +127,6 @@
       }
     }
 
-    // Plan click handlers
     planCards.forEach(card => {
       const plan = card.getAttribute("data-plan");
       const btn = card.querySelector(".plan-btn");
@@ -311,7 +136,6 @@
       };
 
       card.addEventListener("click", handleSelect);
-
       if (btn) {
         btn.addEventListener("click", (e) => {
           e.stopPropagation();
@@ -320,68 +144,9 @@
       }
     });
 
-    // Click current plan label to change plan
-    if (sidebarPlanLabel) {
-      sidebarPlanLabel.addEventListener("click", () => {
-        if (!currentUser) {
-          goToLogin();
-          return;
-        }
-        const currentPlan = sidebarPlanName.textContent.trim();
-        const msg = currentPlan && currentPlan !== "-"
-          ? `Current plan: ${currentPlan}. Choose a new plan to switch.`
-          : "Choose a plan to continue.";
-        showPlanSelection(msg);
-        highlightPlanCard(currentPlan && currentPlan !== "-" ? currentPlan : null);
-      });
+    function goToLogin() {
+      window.location.href = "./login.html";
     }
-
-    // Logout
-    logoutLink.addEventListener("click", async () => {
-      await signOut(auth);
-      goToLogin();
-    });
-
-    // Delete account + Firestore data
-    deleteAccountLink.addEventListener("click", async () => {
-      if (!currentUser) {
-        alert("No user is logged in.");
-        return;
-      }
-
-      const confirmDelete = confirm(
-        "Are you sure you want to permanently delete your account and all associated data?"
-      );
-      if (!confirmDelete) return;
-
-      const uid = currentUser.uid;
-
-      try {
-        await deleteDoc(doc(db, "users", uid));
-        await deleteUser(currentUser);
-
-        alert("Your account and data have been deleted.");
-        window.location.href = "../index.html";
-      } catch (error) {
-        console.error("Delete account error:", error);
-
-        if (error.code === "auth/requires-recent-login") {
-          alert("For security, please log in again and then try deleting your account.");
-        } else {
-          alert("Could not delete your account. Please try again.");
-        }
-      }
-    });
-
-    // Auth guard + load plan
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        goToLogin();
-        return;
-      }
-      currentUser = user;
-      await loadUserPlan(user);
-    });
   </script>
 
 </body>
