@@ -1,561 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Remblyx Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- Tab icon -->
-  <link rel="icon" type="image/png" sizes="32x32" href="../images/medisignal.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="../images/medisignal.png">
-  <link rel="apple-touch-icon" href="../images/medisignal.png">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" sizes="32x32" href="../images/medisignal.png" />
+  <link rel="apple-touch-icon" href="../images/medisignal.png" />
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Arial', sans-serif;
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+    body{background:#f5f5f5;min-height:100vh;display:flex;justify-content:center;align-items:center;position:relative;overflow:hidden;padding:16px;color:#222}
+    .overlay{position:fixed;inset:0;z-index:-1}
+    .bg-image{width:100%;height:100%;object-fit:cover;filter:blur(4px);opacity:.8}
+    .header-row{position:fixed;top:-27px;left:8px;z-index:40}
+    .logo{height:200px;cursor:pointer;transition:.3s ease}
+    .logo:hover{filter:brightness(1.1);transform:scale(1.03)}
+    .wrapper{width:100%;max-width:1200px;margin-top:40px;display:flex;flex-direction:column;gap:16px;z-index:10}
+
+    /* layout */
+    #main-dashboard{
+      display:none; height:calc(100vh - 90px); max-height:calc(100vh - 90px);
+      background:rgba(255,255,255,.96); border-radius:18px; box-shadow:0 10px 26px rgba(0,0,0,.2);
+      grid-template-columns:230px 1fr; overflow:hidden;
     }
+    .sidebar{background:#111827;color:#e5e7eb;display:flex;flex-direction:column;padding:14px 10px 10px;gap:10px}
+    .sidebar-title{font-size:14px;font-weight:600;margin-bottom:4px;padding:0 4px;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em}
+    .nav-item{display:flex;align-items:center;gap:6px;padding:7px 8px;border-radius:8px;font-size:13px;cursor:pointer;color:#d1d5db;transition:.2s}
+    .nav-item:hover{background:rgba(249,250,251,.06)}
+    .nav-item.active{background:#111827;border-left:3px solid #667eea;padding-left:10px;color:#fff}
+    .icon-dot{width:7px;height:7px;border-radius:999px;background:#4ade80}
+    .sidebar-spacer{flex:1}
+    .sidebar-plan-label{font-size:11px;color:#9ca3af;padding:6px 6px 4px;border-radius:8px;border:1px solid rgba(156,163,175,.4);background:rgba(17,24,39,.96);display:flex;flex-direction:column;gap:1px;cursor:pointer;transition:.2s}
+    .sidebar-plan-label:hover{background:rgba(31,41,55,1);border-color:#60a5fa}
+    .sidebar-plan-label strong{color:#60a5fa;font-weight:600}
+    .logout-link{font-size:11px;color:#9ca3af;text-align:left;padding:2px 6px;cursor:pointer;text-decoration:underline}
+    .logout-link:hover{color:#fff}
 
-    body {
-      background: #f5f5f5;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: relative;
-      overflow: hidden;
-      padding: 16px;
-      color: #222;
-    }
+    .main-area{display:flex;flex-direction:column;padding:10px 12px 10px;gap:8px}
+    .top-bar{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .board-title{font-size:18px;font-weight:600;color:#111827}
+    .board-subtitle{font-size:11px;color:#6b7280}
+    .top-actions{display:flex;align-items:center;gap:6px;font-size:11px}
+    .pill{padding:5px 9px;border-radius:999px;border:1px solid #e5e7eb;background:#f9fafb;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+    .pill.primary{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none}
+    .search-box{padding:4px 8px;border-radius:999px;border:1px solid #e5e7eb;font-size:11px;min-width:120px}
+    .board-wrapper{flex:1;border-radius:12px;background:#f9fafb;padding:8px;overflow:auto;border:1px solid #e5e7eb}
+    .board-header-row,.board-row{display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1.2fr;gap:6px;align-items:center;font-size:11px;padding:6px;border-radius:8px}
+    .board-header-row{font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;background:#f3f4f6;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:5}
+    .board-row{background:#fff;margin-top:4px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+    .status-pill{padding:3px 7px;border-radius:999px;font-size:10px;display:inline-block;text-align:center}
+    .status-green{background:#bbf7d0;color:#166534}.status-yellow{background:#fef9c3;color:#854d0e}.status-red{background:#fee2e2;color:#991b1b}.status-blue{background:#dbeafe;color:#1d4ed8}
 
-    .overlay {
-      position: fixed;
-      inset: 0;
-      z-index: -1;
-    }
-
-    .bg-image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      filter: blur(4px);
-      opacity: 0.8;
-    }
-
-    .header-row {
-      position: fixed;
-      top: -27px;
-      left: 8px;
-      z-index: 40;
-    }
-
-    .logo {
-      height: 200px;
-      cursor: pointer;
-      transition: 0.3s ease;
-    }
-
-    .logo:hover {
-      filter: brightness(1.1);
-      transform: scale(1.03);
-    }
-
-    .dashboard-wrapper {
-      width: 100%;
-      max-width: 1200px;
-      margin-top: 40px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      z-index: 10;
-    }
-
-    /* PLAN SELECTION */
-
-    #plan-selection {
-      background: rgba(255,255,255,0.97);
-      border-radius: 16px;
-      padding: 18px 18px 16px;
-      box-shadow: 0 10px 26px rgba(0,0,0,0.18);
-      text-align: center;
-      max-height: calc(100vh - 90px);
-      overflow-y: auto;
-    }
-
-    .dashboard-title {
-      font-size: 24px;
-      font-weight: 600;
-      color: #222;
-      margin-bottom: 4px;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.12);
-    }
-
-    .dashboard-subtitle {
-      font-size: 14px;
-      color: #444;
-      max-width: 640px;
-      margin: 0 auto 10px;
-    }
-
-    .plans-row {
-      display: flex;
-      gap: 16px;
-      justify-content: center;
-      align-items: stretch;
-      flex-wrap: wrap;
-      margin-top: 6px;
-    }
-
-    .plan-card {
-      flex: 1 1 260px;
-      max-width: 320px;
-      background: rgba(250,250,250,0.98);
-      border-radius: 16px;
-      padding: 16px 14px 14px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.16);
-      border: 1px solid rgba(255,255,255,0.9);
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      cursor: pointer;
-      transition: 0.25s;
-      backdrop-filter: blur(2px);
-    }
-
-    .plan-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 10px 26px rgba(0,0,0,0.22);
-    }
-
-    .plan-card.active {
-      border: 2px solid #667eea;
-      box-shadow: 0 12px 30px rgba(102,126,234,0.35);
-    }
-
-    .plan-label {
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: #888;
-      margin-bottom: 3px;
-    }
-
-    .plan-name {
-      font-size: 19px;
-      font-weight: 600;
-      color: #222;
-      margin-bottom: 4px;
-    }
-
-    .plan-tagline {
-      font-size: 12px;
-      color: #666;
-      margin-bottom: 8px;
-    }
-
-    .plan-features {
-      list-style: none;
-      padding-left: 0;
-      margin: 0 0 10px;
-      font-size: 12px;
-      color: #444;
-    }
-
-    .plan-features li {
-      margin-bottom: 4px;
-    }
-
-    .plan-btn {
-      margin-top: auto;
-      align-self: stretch;
-      padding: 9px 10px;
-      border-radius: 10px;
-      border: none;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 500;
-      color: #fff;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      transition: 0.25s;
-      text-align: center;
-    }
-
-    .plan-btn:hover {
-      opacity: 0.96;
-      transform: translateY(-1px);
-    }
-
-    .active-plan-label {
-      font-size: 13px;
-      color: #555;
-      margin-top: 6px;
-    }
-
-    .plan-highlight {
-      font-weight: 600;
-      color: #667eea;
-    }
-
-    /* DASHBOARD */
-
-    #main-dashboard {
-      display: none;
-      height: calc(100vh - 90px);
-      max-height: calc(100vh - 90px);
-      background: rgba(255,255,255,0.96);
-      border-radius: 18px;
-      box-shadow: 0 10px 26px rgba(0,0,0,0.2);
-      grid-template-columns: 230px 1fr;
-      overflow: hidden;
-    }
-
-    .sidebar {
-      background: #111827;
-      color: #e5e7eb;
-      display: flex;
-      flex-direction: column;
-      padding: 14px 10px 10px;
-      gap: 10px;
-    }
-
-    .sidebar-title {
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 4px;
-      padding: 0 4px;
-      color: #9ca3af;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 7px 8px;
-      border-radius: 8px;
-      font-size: 13px;
-      cursor: pointer;
-      color: #d1d5db;
-      transition: 0.2s;
-    }
-
-    .nav-item span.icon-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 999px;
-      background: #4ade80;
-    }
-
-    .nav-item:hover {
-      background: rgba(249,250,251,0.06);
-    }
-
-    .nav-item.active {
-      background: #111827;
-      border-left: 3px solid #667eea;
-      padding-left: 10px;
-      color: #ffffff;
-    }
-
-    .sidebar-spacer {
-      flex: 1;
-    }
-
-    .sidebar-plan-label {
-      font-size: 11px;
-      color: #9ca3af;
-      padding: 6px 6px 4px;
-      border-radius: 8px;
-      border: 1px solid rgba(156,163,175,0.4);
-      margin-bottom: 4px;
-      background: rgba(17,24,39,0.96);
-      display: flex;
-      flex-direction: column;
-      gap: 1px;
-      cursor: pointer;            /* clickable */
-      transition: 0.2s;
-    }
-
-    .sidebar-plan-label strong {
-      color: #60a5fa;
-      font-weight: 600;
-    }
-
-    .sidebar-plan-label:hover {
-      background: rgba(31,41,55,1);
-      border-color: #60a5fa;
-    }
-
-    .logout-link {
-      font-size: 11px;
-      color: #9ca3af;
-      text-align: left;
-      padding: 2px 6px;
-      cursor: pointer;
-      text-decoration: underline;
-    }
-
-    .logout-link:hover {
-      color: #ffffff;
-    }
-
-    .main-area {
-      display: flex;
-      flex-direction: column;
-      padding: 10px 12px 10px;
-      gap: 8px;
-    }
-
-    .top-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .board-title-block {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .board-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: #111827;
-    }
-
-    .board-subtitle {
-      font-size: 11px;
-      color: #6b7280;
-    }
-
-    .top-actions {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-    }
-
-    .pill {
-      padding: 5px 9px;
-      border-radius: 999px;
-      border: 1px solid #e5e7eb;
-      background: #f9fafb;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .pill.primary {
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: #fff;
-      border: none;
-    }
-
-    .pill:hover {
-      opacity: 0.95;
-    }
-
-    .search-box {
-      padding: 4px 8px;
-      border-radius: 999px;
-      border: 1px solid #e5e7eb;
-      font-size: 11px;
-      min-width: 120px;
-    }
-
-    .board-wrapper {
-      flex: 1;
-      border-radius: 12px;
-      background: #f9fafb;
-      padding: 8px;
-      overflow: auto;
-      border: 1px solid #e5e7eb;
-    }
-
-    .board-header-row,
-    .board-row {
-      display: grid;
-      grid-template-columns: 2fr 1.2fr 1fr 1fr 1.2fr;
-      gap: 6px;
-      align-items: center;
-      font-size: 11px;
-      padding: 6px 6px;
-      border-radius: 8px;
-    }
-
-    .board-header-row {
-      font-weight: 600;
-      color: #6b7280;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      background: #f3f4f6;
-      border-bottom: 1px solid #e5e7eb;
-      position: sticky;
-      top: 0;
-      z-index: 5;
-    }
-
-    .board-row {
-      background: #ffffff;
-      margin-top: 4px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    }
-
-    .status-pill {
-      padding: 3px 7px;
-      border-radius: 999px;
-      font-size: 10px;
-      display: inline-block;
-      text-align: center;
-    }
-
-    .status-green { background: #bbf7d0; color: #166534; }
-    .status-yellow { background: #fef9c3; color: #854d0e; }
-    .status-red { background: #fee2e2; color: #991b1b; }
-    .status-blue { background: #dbeafe; color: #1d4ed8; }
-
-    @media (max-width: 900px) {
-      #main-dashboard {
-        grid-template-columns: 70px 1fr;
-      }
-      .sidebar-title,
-      .nav-item span.label,
-      .sidebar-plan-label span.label-text {
-        display: none;
-      }
-      .nav-item {
-        justify-content: center;
-        padding: 7px 4px;
-      }
-      .sidebar-plan-label {
-        font-size: 9px;
-        padding: 4px;
-      }
-    }
-
-    @media (max-width: 600px) {
-      body { padding: 8px; }
-      .logo { height: 115px; }
-      .header-row { top: -10px; }
-    }
+    @media (max-width:900px){ #main-dashboard{grid-template-columns:70px 1fr} .sidebar-title,.nav-item .label,.sidebar-plan-label .label-text{display:none} }
   </style>
 </head>
 <body>
+  <div class="overlay"><img src="../images/background.png" class="bg-image" alt=""></div>
 
-  <!-- Background -->
-  <div class="overlay">
-    <img src="../images/background.png" alt="Background" class="bg-image">
-  </div>
-
-  <!-- Logo -->
   <div class="header-row">
-    <img src="../images/remblyxlogo.png"
-         alt="Remblyx Logo"
-         class="logo"
-         onclick="window.location.href='../index.html'">
+    <img src="../images/remblyxlogo.png" alt="Remblyx" class="logo" onclick="window.location.href='../index.html'">
   </div>
 
-  <div class="dashboard-wrapper">
-    <!-- PLAN SELECTION -->
-    <div id="plan-selection">
-      <div class="dashboard-title">Choose your Remblyx plan</div>
-      <div class="dashboard-subtitle">
-        Pick a workspace level below. We’ll remember it for your account and show a tailored dashboard next time you log in.
-      </div>
-      <div id="plan-selection-status" class="active-plan-label">
-        Checking your current plan...
-      </div>
-
-      <div class="plans-row">
-        <div class="plan-card" data-plan="Basic">
-          <div class="plan-label">Plan</div>
-          <div class="plan-name">Basic</div>
-          <div class="plan-tagline">For simple personal or student use.</div>
-          <ul class="plan-features">
-            <li>✔ Core monitoring tools</li>
-            <li>✔ Limited alerts</li>
-            <li>✔ 1 workspace</li>
-          </ul>
-          <button class="plan-btn">Use Basic</button>
-        </div>
-
-        <div class="plan-card" data-plan="Premium">
-          <div class="plan-label">Recommended</div>
-          <div class="plan-name">Premium</div>
-          <div class="plan-tagline">For teams that need more control.</div>
-          <ul class="plan-features">
-            <li>✔ Everything in Basic</li>
-            <li>✔ Priority alerts</li>
-            <li>✔ Team collaboration</li>
-            <li>✔ Higher limits</li>
-          </ul>
-          <button class="plan-btn">Use Premium</button>
-        </div>
-
-        <div class="plan-card" data-plan="Enterprise">
-          <div class="plan-label">Advanced</div>
-          <div class="plan-name">Enterprise</div>
-          <div class="plan-tagline">For full-scale deployments &amp; integrations.</div>
-          <ul class="plan-features">
-            <li>✔ All Premium features</li>
-            <li>✔ API &amp; webhooks</li>
-            <li>✔ Audit logs</li>
-            <li>✔ Priority support</li>
-          </ul>
-          <button class="plan-btn">Use Enterprise</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- MAIN DASHBOARD -->
+  <div class="wrapper">
     <div id="main-dashboard">
       <aside class="sidebar">
         <div class="sidebar-title">Workspace</div>
 
-        <div class="nav-item active">
-          <span class="icon-dot"></span>
-          <span class="label">Main Board</span>
-        </div>
-        <div class="nav-item">
-          <span class="icon-dot"></span>
-          <span class="label">Alerts</span>
-        </div>
-        <div class="nav-item">
-          <span class="icon-dot"></span>
-          <span class="label">Reports</span>
-        </div>
-        <div class="nav-item">
-          <span class="icon-dot"></span>
-          <span class="label">Integrations</span>
-        </div>
+        <div class="nav-item active"><span class="icon-dot"></span><span class="label">Main Board</span></div>
+        <div class="nav-item"><span class="icon-dot"></span><span class="label">Alerts</span></div>
+        <div class="nav-item"><span class="icon-dot"></span><span class="label">Reports</span></div>
+        <div class="nav-item"><span class="icon-dot"></span><span class="label">Integrations</span></div>
 
         <div class="sidebar-spacer"></div>
 
-        <div id="sidebar-plan-label" class="sidebar-plan-label">
+        <div id="sidebar-plan" class="sidebar-plan-label" title="Click to change plan">
           <span class="label-text">Current Plan</span>
-          <strong id="sidebar-plan-name">-</strong>
+          <strong id="plan-name">-</strong>
         </div>
 
         <div id="logout" class="logout-link">Log out</div>
-        <div id="delete-account" class="logout-link" style="color:#f87171;">
-          Delete account &amp; data
-        </div>
+        <div id="delete-account" class="logout-link" style="color:#f87171;">Delete account &amp; data</div>
       </aside>
 
       <main class="main-area">
         <div class="top-bar">
-          <div class="board-title-block">
+          <div>
             <div id="board-title" class="board-title">Remblyx Workspace</div>
-            <div id="board-subtitle" class="board-subtitle">
-              Overview of your monitoring items, owners, and status.
-            </div>
+            <div id="board-subtitle" class="board-subtitle">Overview of your monitoring items, owners, and status.</div>
           </div>
           <div class="top-actions">
             <input class="search-box" placeholder="Search items..." />
@@ -567,41 +97,12 @@
 
         <div class="board-wrapper">
           <div class="board-header-row">
-            <div>Item</div>
-            <div>Owner</div>
-            <div>Status</div>
-            <div>Due Date</div>
-            <div>Priority</div>
+            <div>Item</div><div>Owner</div><div>Status</div><div>Due Date</div><div>Priority</div>
           </div>
-
-          <div class="board-row">
-            <div>Onboarding checks</div>
-            <div>You</div>
-            <div><span class="status-pill status-green">Done</span></div>
-            <div>Today</div>
-            <div>Low</div>
-          </div>
-          <div class="board-row">
-            <div>Vital alerts configuration</div>
-            <div>Team Lead</div>
-            <div><span class="status-pill status-yellow">In progress</span></div>
-            <div>Tomorrow</div>
-            <div>Medium</div>
-          </div>
-          <div class="board-row">
-            <div>Critical event pipeline</div>
-            <div>Engineering</div>
-            <div><span class="status-pill status-red">Stuck</span></div>
-            <div>Overdue</div>
-            <div>High</div>
-          </div>
-          <div class="board-row">
-            <div>Integration testing</div>
-            <div>DevOps</div>
-            <div><span class="status-pill status-blue">Planned</span></div>
-            <div>Next week</div>
-            <div>Medium</div>
-          </div>
+          <div class="board-row"><div>Onboarding checks</div><div>You</div><div><span class="status-pill status-green">Done</span></div><div>Today</div><div>Low</div></div>
+          <div class="board-row"><div>Vital alerts configuration</div><div>Team Lead</div><div><span class="status-pill status-yellow">In progress</span></div><div>Tomorrow</div><div>Medium</div></div>
+          <div class="board-row"><div>Critical event pipeline</div><div>Engineering</div><div><span class="status-pill status-red">Stuck</span></div><div>Overdue</div><div>High</div></div>
+          <div class="board-row"><div>Integration testing</div><div>DevOps</div><div><span class="status-pill status-blue">Planned</span></div><div>Next week</div><div>Medium</div></div>
         </div>
       </main>
     </div>
@@ -609,19 +110,8 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import {
-      getAuth,
-      onAuthStateChanged,
-      signOut,
-      deleteUser
-    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-    import {
-      getFirestore,
-      doc,
-      getDoc,
-      setDoc,
-      deleteDoc
-    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
@@ -633,44 +123,22 @@
       measurementId: "G-JQ3843RM4V"
     };
 
+    const DEV_EMAIL = "medisignal.remblyx@gmail.com";
+
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    const planSelection = document.getElementById("plan-selection");
-    const planSelectionStatus = document.getElementById("plan-selection-status");
-    const mainDashboard = document.getElementById("main-dashboard");
-    const planCards = document.querySelectorAll(".plan-card");
-    const sidebarPlanLabel = document.getElementById("sidebar-plan-label");
-    const sidebarPlanName = document.getElementById("sidebar-plan-name");
-    const logoutLink = document.getElementById("logout");
-    const deleteAccountLink = document.getElementById("delete-account");
+    const mainDash = document.getElementById("main-dashboard");
+    const planNameEl = document.getElementById("plan-name");
     const boardTitle = document.getElementById("board-title");
     const boardSubtitle = document.getElementById("board-subtitle");
+    const sidebarPlan = document.getElementById("sidebar-plan");
+    const logoutLink = document.getElementById("logout");
+    const deleteLink = document.getElementById("delete-account");
 
-    let currentUser = null;
-
-    const goToLogin = () => {
-      window.location.href = "./login.html";
-    };
-
-    function showPlanSelection(initialMessage) {
-      planSelection.style.display = "block";
-      mainDashboard.style.display = "none";
-      if (initialMessage) {
-        planSelectionStatus.textContent = initialMessage;
-      } else {
-        planSelectionStatus.textContent = "No plan selected yet. Choose one to continue.";
-      }
-    }
-
-    function showMainDashboard(plan) {
-      planSelection.style.display = "none";
-      mainDashboard.style.display = "grid";
-
-      const label = plan || "-";
-      sidebarPlanName.textContent = label;
-
+    function applyPlanUI(plan) {
+      planNameEl.textContent = plan || "-";
       if (plan === "Basic") {
         boardTitle.textContent = "Basic Monitoring Board";
         boardSubtitle.textContent = "Lightweight overview for individual usage.";
@@ -680,139 +148,80 @@
       } else if (plan === "Enterprise") {
         boardTitle.textContent = "Enterprise Control Center";
         boardSubtitle.textContent = "Full-scale visibility, integrations, and governance.";
+      } else if (plan === "Dev") {
+        boardTitle.textContent = "Developer Control Panel";
+        boardSubtitle.textContent = "Internal tools, diagnostics, and elevated access.";
       } else {
         boardTitle.textContent = "Remblyx Workspace";
         boardSubtitle.textContent = "Overview of your monitoring items, owners, and status.";
       }
     }
 
-    function highlightPlanCard(plan) {
-      planCards.forEach(card => {
-        const p = card.getAttribute("data-plan");
-        card.classList.toggle("active", p === plan);
-      });
+    async function ensureDevPlan(user) {
+      // Dev email always uses "Dev" and we persist it so the label is consistent
+      await setDoc(doc(db, "users", user.uid), { email: user.email || null, plan: "Dev" }, { merge: true });
+      return "Dev";
     }
 
-    async function loadUserPlan(user) {
-      try {
-        const ref = doc(db, "users", user.uid);
-        const snap = await getDoc(ref);
-        const savedPlan = snap.exists() ? snap.data().plan : null;
-
-        if (savedPlan) {
-          highlightPlanCard(savedPlan);
-          showMainDashboard(savedPlan);
-          planSelectionStatus.textContent = `You are currently on the ${savedPlan} plan.`;
-        } else {
-          showPlanSelection();
-        }
-      } catch (e) {
-        console.error("Error loading plan:", e);
-        showPlanSelection();
+    async function getUserPlan(user) {
+      if (user.email === DEV_EMAIL) {
+        return await ensureDevPlan(user);
       }
+      const snap = await getDoc(doc(db, "users", user.uid));
+      return snap.exists() ? (snap.data().plan || null) : null;
     }
 
-    async function saveUserPlan(plan) {
-      if (!currentUser) {
-        alert("Please log in again.");
-        goToLogin();
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "./login.html";
         return;
       }
       try {
-        const ref = doc(db, "users", currentUser.uid);
-        await setDoc(ref, {
-          email: currentUser.email || null,
-          plan: plan
-        }, { merge: true });
-
-        highlightPlanCard(plan);
-        showMainDashboard(plan);
+        const plan = await getUserPlan(user);
+        if (!plan) {
+          // No plan yet → go choose
+          window.location.href = "./selection.html";
+          return;
+        }
+        applyPlanUI(plan);
+        mainDash.style.display = "grid";
       } catch (e) {
-        console.error("Error saving plan:", e);
-        alert("Could not save plan. Check Firestore rules / console.");
-      }
-    }
-
-    // Plan click handlers
-    planCards.forEach(card => {
-      const plan = card.getAttribute("data-plan");
-      const btn = card.querySelector(".plan-btn");
-
-      const handleSelect = () => {
-        saveUserPlan(plan);
-      };
-
-      card.addEventListener("click", handleSelect);
-
-      if (btn) {
-        btn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          handleSelect();
-        });
+        console.error("Failed to load plan", e);
+        // Fallback: send to selection to recover
+        window.location.href = "./selection.html";
       }
     });
 
-    // Click current plan label to change plan
-    if (sidebarPlanLabel) {
-      sidebarPlanLabel.addEventListener("click", () => {
-        if (!currentUser) {
-          goToLogin();
-          return;
-        }
-        const currentPlan = sidebarPlanName.textContent.trim();
-        const msg = currentPlan && currentPlan !== "-"
-          ? `Current plan: ${currentPlan}. Choose a new plan to switch.`
-          : "Choose a plan to continue.";
-        showPlanSelection(msg);
-        highlightPlanCard(currentPlan && currentPlan !== "-" ? currentPlan : null);
-      });
-    }
+    // Change plan by clicking the label → go to selection
+    sidebarPlan.addEventListener("click", () => {
+      window.location.href = "./selection.html";
+    });
 
     // Logout
     logoutLink.addEventListener("click", async () => {
       await signOut(auth);
-      goToLogin();
+      window.location.href = "./login.html";
     });
 
-    // Delete account + Firestore data
-    deleteAccountLink.addEventListener("click", async () => {
-      if (!currentUser) {
-        alert("No user is logged in.");
-        return;
-      }
-
-      const confirmDelete = confirm(
-        "Are you sure you want to permanently delete your account and all associated data?"
-      );
-      if (!confirmDelete) return;
-
-      const uid = currentUser.uid;
-
+    // Delete account and data
+    deleteLink.addEventListener("click", async () => {
+      const user = auth.currentUser;
+      if (!user) return (window.location.href = "./login.html");
+      const ok = confirm("Delete your account and all associated data?");
+      if (!ok) return;
       try {
-        await deleteDoc(doc(db, "users", uid));
-        await deleteUser(currentUser);
-
+        await deleteDoc(doc(db, "users", user.uid));
+        await deleteUser(user);
         alert("Your account and data have been deleted.");
         window.location.href = "../index.html";
-      } catch (error) {
-        console.error("Delete account error:", error);
-
-        if (error.code === "auth/requires-recent-login") {
-          alert("For security, please log in again and then try deleting your account.");
+      } catch (err) {
+        console.error(err);
+        if (err.code === "auth/requires-recent-login") {
+          alert("Please log in again, then try deleting your account.");
         } else {
           alert("Could not delete your account. Please try again.");
         }
       }
-    });
-
-    // Auth guard + load plan
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        goToLogin();
-        return;
-      }
-      currentUser = user;
-      await loadUserPlan(user);
     });
   </script>
 </body>
