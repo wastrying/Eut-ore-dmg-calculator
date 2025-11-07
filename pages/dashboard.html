@@ -151,204 +151,239 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-    import {
-      getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs
-    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
-      authDomain: "remblyx-medisignal.firebaseapp.com",
-      projectId: "remblyx-medisignal",
-      storageBucket: "remblyx-medisignal.appspot.com",
-      messagingSenderId: "50711670199",
-      appId: "1:50711670199:web:0c9c2ff72cd77234ce0c32",
-      measurementId: "G-JQ3843RM4V"
-    };
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db   = getFirestore(app);
+  const firebaseConfig = {
+    apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
+    authDomain: "remblyx-medisignal.firebaseapp.com",
+    projectId: "remblyx-medisignal",
+    storageBucket: "remblyx-medisignal.appspot.com",
+    messagingSenderId: "50711670199",
+    appId: "1:50711670199:web:0c9c2ff72cd77234ce0c32",
+    measurementId: "G-JQ3843RM4V"
+  };
 
-    // Config / DOM
-    const DEV_EMAILS = ["medisignal.remblyx@gmail.com"]; // List of dev emails for restricted access to "Developer" plan
-    const LOGIN_URL = "./login.html";
-    const SELECTION_URL = "./selection.html";
-    
-    const mainDashboard     = document.getElementById("main-dashboard");
-    const sidebarPlanEl     = document.getElementById("sidebar-plan");
-    const planNameEl        = document.getElementById("plan-name");
-    const logoutLink        = document.getElementById("logout");
-    const deleteAccountLink = document.getElementById("delete-account");
-    const boardTitle        = document.getElementById("board-title");
-    const boardSubtitle     = document.getElementById("board-subtitle");
-    const firstNavLabelEl   = document.querySelector(".nav-item .label");
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-    const devTools          = document.getElementById("dev-tools");
-    const devUsersContainer = document.getElementById("dev-users");
-    const standardBoard     = document.getElementById("standard-board");
+  // Config / DOM
+  const DEV_EMAILS = ["medisignal.remblyx@gmail.com"]; // List of dev emails for restricted access to "Developer" plan
+  const LOGIN_URL = "./login.html";
+  const SELECTION_URL = "./selection.html";
 
-    let currentUser = null;
-    let currentPlan = null;
+  const mainDashboard = document.getElementById("main-dashboard");
+  const sidebarPlanEl = document.getElementById("sidebar-plan");
+  const planNameEl = document.getElementById("plan-name");
+  const logoutLink = document.getElementById("logout");
+  const deleteAccountLink = document.getElementById("delete-account");
+  const boardTitle = document.getElementById("board-title");
+  const boardSubtitle = document.getElementById("board-subtitle");
+  const firstNavLabelEl = document.querySelector(".nav-item .label");
 
-    // UI helpers (robust to missing DOM)
-    function setDashboardVisibility(show){
-      if (mainDashboard) mainDashboard.style.display = show ? "grid" : "none";
-    }
+  const devTools = document.getElementById("dev-tools");
+  const devUsersContainer = document.getElementById("dev-users");
+  const standardBoard = document.getElementById("standard-board");
 
-    function safeTxt(el, txt){ if (el) el.textContent = txt; }
+  let currentUser = null;
+  let currentPlan = null;
 
-    function setNavLabelForPlan(plan){
-      if (!firstNavLabelEl) return;
-      firstNavLabelEl.textContent = (plan === "Developers") ? "Command Center" : "Main Board";
-    }
+  // UI helpers (robust to missing DOM)
+  function setDashboardVisibility(show) {
+    if (mainDashboard) mainDashboard.style.display = show ? "grid" : "none";
+  }
 
-    function showDevelopersView(){
-      setNavLabelForPlan("Developers");
-      if (devTools)      devTools.style.display = "block";
-      if (standardBoard) standardBoard.style.display = "none";
-      renderAllUsers();
-    }
+  function safeTxt(el, txt) {
+    if (el) el.textContent = txt;
+  }
 
-    function showRegularView(){
-      setNavLabelForPlan(currentPlan);
-      if (devTools)      devTools.style.display = "none";
-      if (standardBoard) standardBoard.style.display = "block";
-    }
+  function setNavLabelForPlan(plan) {
+    if (!firstNavLabelEl) return;
+    firstNavLabelEl.textContent = (plan === "Developers") ? "Command Center" : "Main Board";
+  }
 
-    function applyPlanUi(plan){
-      currentPlan = plan || null;
-      safeTxt(planNameEl, currentPlan || "-");
+  function showDevelopersView() {
+    setNavLabelForPlan("Developers");
+    if (devTools) devTools.style.display = "block";
+    if (standardBoard) standardBoard.style.display = "none";
+    renderAllUsers();
+  }
 
-      if (boardTitle && boardSubtitle){
-        switch (plan) {
-          case "Basic":
-            boardTitle.textContent = "Basic Monitoring Board";
-            boardSubtitle.textContent = "Lightweight overview for individual usage.";
-            break;
-          case "Premium":
-            boardTitle.textContent = "Premium Team Workspace";
-            boardSubtitle.textContent = "Collaborative overview for teams and advanced alerts.";
-            break;
-          case "Enterprise":
-            boardTitle.textContent = "Enterprise Control Center";
-            boardSubtitle.textContent = "Full-scale visibility, integrations, and governance.";
-            break;
-          case "Developers":
-            boardTitle.textContent = "Developer Command Center";
-            boardSubtitle.textContent = "Internal tools, diagnostics, and elevated limits.";
-            break;
-          default:
-            boardTitle.textContent = "Remblyx Workspace";
-            boardSubtitle.textContent = "Overview of your monitoring items, owners, and status.";
-        }
-      }
+  function showRegularView() {
+    setNavLabelForPlan(currentPlan);
+    if (devTools) devTools.style.display = "none";
+    if (standardBoard) standardBoard.style.display = "block";
+  }
 
-      // Lock "change plan" for Developers
-      if (sidebarPlanEl){
-        if (currentPlan === "Developers"){
-          sidebarPlanEl.classList.add("locked");
-          sidebarPlanEl.title = "Plan is managed (Developers). Changes are disabled.";
-        } else {
-          sidebarPlanEl.classList.remove("locked");
-          sidebarPlanEl.title = "Click to change plan";
-        }
-      }
+  function applyPlanUi(plan) {
+    currentPlan = plan || null;
+    safeTxt(planNameEl, currentPlan || "-");
 
-      if (plan === "Developers") showDevelopersView();
-      else                      showRegularView();
-    }
-
-    async function renderAllUsers(){
-      if (!devUsersContainer) return;
-      devUsersContainer.innerHTML = `<div class="dev-grid-row"><div>Loading users…</div><div>—</div></div>`;
-      try {
-        const snap = await getDocs(collection(db, "users"));
-        let rows = "";
-        snap.forEach(d => {
-          const data  = d.data() || {};
-          const email = data.email || "(no email)";
-          const plan  = data.plan  || "-";
-          rows += `<div class="dev-grid-row"><div>${email}</div><div>${plan}</div></div>`;
-        });
-        devUsersContainer.innerHTML = rows || `<div class="dev-grid-row"><div>No users found</div><div>—</div></div>`;
-      } catch (e) {
-        console.error("renderAllUsers error:", e);
-        devUsersContainer.innerHTML = `<div class="dev-grid-row"><div>Permission denied or error</div><div>—</div></div>`;
+    if (boardTitle && boardSubtitle) {
+      switch (plan) {
+        case "Basic":
+          boardTitle.textContent = "Basic Monitoring Board";
+          boardSubtitle.textContent = "Lightweight overview for individual usage.";
+          break;
+        case "Premium":
+          boardTitle.textContent = "Premium Team Workspace";
+          boardSubtitle.textContent = "Collaborative overview for teams and advanced alerts.";
+          break;
+        case "Enterprise":
+          boardTitle.textContent = "Enterprise Control Center";
+          boardSubtitle.textContent = "Full-scale visibility, integrations, and governance.";
+          break;
+        case "Developers":
+          boardTitle.textContent = "Developer Command Center";
+          boardSubtitle.textContent = "Internal tools, diagnostics, and elevated limits.";
+          break;
+        default:
+          boardTitle.textContent = "Remblyx Workspace";
+          boardSubtitle.textContent = "Overview of your monitoring items, owners, and status.";
       }
     }
 
-    async function ensureDevelopersPlanIfAllowed(user){
-      const isDev = DEV_EMAILS.includes((user.email || "").toLowerCase());
-      if (!isDev) return null;
-      try {
-        const ref = doc(db, "users", user.uid);
-        const snap = await getDoc(ref);
-        const existing = snap.exists() ? (snap.data().plan || null) : null;
-        if (existing === "Developers") return "Developers";
-        await setDoc(ref, { email: user.email || null, plan: "Developers" }, { merge: true });
-        return "Developers";
-      } catch (e) {
-        console.warn("ensureDevelopersPlanIfAllowed:", e);
-        return null;
+    // Lock "change plan" for Developers
+    if (sidebarPlanEl) {
+      if (currentPlan === "Developers") {
+        sidebarPlanEl.classList.add("locked");
+        sidebarPlanEl.title = "Plan is managed (Developers). Changes are disabled.";
+      } else {
+        sidebarPlanEl.classList.remove("locked");
+        sidebarPlanEl.title = "Click to change plan";
       }
     }
 
-    async function loadUserPlan(user){
-      try {
-        const ref = doc(db, "users", user.uid);
-        const snap = await getDoc(ref);
-        let plan = snap.exists() ? (snap.data().plan || null) : null;
-        if (plan === "Dev"){
-          await setDoc(ref, { plan: "Developers" }, { merge: true });
-          plan = "Developers";
-        }
-        return plan;
-      } catch (e) {
-        console.warn("loadUserPlan failed:", e);
-        return null;
+    // Handle visibility of "Delete account & data" and "Change Plan"
+    if (deleteAccountLink) {
+      if (currentPlan === "Developers") {
+        deleteAccountLink.style.display = "block"; // Show delete account option for Developers
+      } else {
+        deleteAccountLink.style.display = "none"; // Hide it for non-developers
       }
     }
 
-    // Fetch user details
-    onAuthStateChanged(auth, async (user) => {
-      if (!user){
-        window.location.href = LOGIN_URL;
+    if (plan === "Developers") showDevelopersView();
+    else showRegularView();
+  }
+
+  async function renderAllUsers() {
+    if (!devUsersContainer) return;
+    devUsersContainer.innerHTML = `<div class="dev-grid-row"><div>Loading users…</div><div>—</div></div>`;
+    try {
+      const snap = await getDocs(collection(db, "users"));
+      let rows = "";
+      snap.forEach(d => {
+        const data = d.data() || {};
+        const email = data.email || "(no email)";
+        const plan = data.plan || "-";
+        rows += `<div class="dev-grid-row"><div>${email}</div><div>${plan}</div></div>`;
+      });
+      devUsersContainer.innerHTML = rows || `<div class="dev-grid-row"><div>No users found</div><div>—</div></div>`;
+    } catch (e) {
+      console.error("renderAllUsers error:", e);
+      devUsersContainer.innerHTML = `<div class="dev-grid-row"><div>Permission denied or error</div><div>—</div></div>`;
+    }
+  }
+
+  async function ensureDevelopersPlanIfAllowed(user) {
+    const isDev = DEV_EMAILS.includes((user.email || "").toLowerCase());
+    if (!isDev) return null;
+    try {
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+      const existing = snap.exists() ? (snap.data().plan || null) : null;
+      if (existing === "Developers") return "Developers";
+      await setDoc(ref, { email: user.email || null, plan: "Developers" }, { merge: true });
+      return "Developers";
+    } catch (e) {
+      console.warn("ensureDevelopersPlanIfAllowed:", e);
+      return null;
+    }
+  }
+
+  async function loadUserPlan(user) {
+    try {
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+      let plan = snap.exists() ? (snap.data().plan || null) : null;
+      if (plan === "Dev") {
+        await setDoc(ref, { plan: "Developers" }, { merge: true });
+        plan = "Developers";
+      }
+      return plan;
+    } catch (e) {
+      console.warn("loadUserPlan failed:", e);
+      return null;
+    }
+  }
+
+  // Fetch user details
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = LOGIN_URL;
+      return;
+    }
+    currentUser = user;
+
+    // Show the shell immediately so you never see a blank page
+    setDashboardVisibility(true);
+
+    try {
+      // Force Developers for dev email
+      const forced = await ensureDevelopersPlanIfAllowed(user);
+      if (forced) {
+        applyPlanUi(forced);
+        sessionStorage.removeItem("rbx_last_nav");
         return;
       }
-      currentUser = user;
 
-      // Show the shell immediately so you never see a blank page
-      setDashboardVisibility(true);
+      const plan = await loadUserPlan(user);
 
-      try {
-        // Force Developers for dev email
-        const forced = await ensureDevelopersPlanIfAllowed(user);
-        if (forced){
-          applyPlanUi(forced);
-          sessionStorage.removeItem("rbx_last_nav");
+      if (!plan) {
+        if (!(FROM === "selection" || LAST_NAV === "from_selection")) {
+          window.location.href = SELECTION_URL;
           return;
         }
-
-        const plan = await loadUserPlan(user);
-
-        if (!plan){
-          if (!(FROM === "selection" || LAST_NAV === "from_selection")){
-            window.location.href = SELECTION_URL;
-            return;
-          }
-          applyPlanUi(null);
-          sessionStorage.removeItem("rbx_last_nav");
-          return;
-        }
-
-        applyPlanUi(plan);
-        sessionStorage.removeItem("rbx_last_nav");
-      } catch (e) {
-        console.error("Dashboard init error:", e);
         applyPlanUi(null);
+        sessionStorage.removeItem("rbx_last_nav");
+        return;
       }
-    });
-  </script>
-</body>
-</html>
+
+      applyPlanUi(plan);
+      sessionStorage.removeItem("rbx_last_nav");
+    } catch (e) {
+      console.error("Dashboard init error:", e);
+      applyPlanUi(null);
+    }
+  });
+
+  // LOGOUT
+  logoutLink.addEventListener("click", async () => {
+    try {
+      await signOut(auth);
+      window.location.href = LOGIN_URL;
+    } catch (error) {
+      console.error("Error during logout: ", error);
+    }
+  });
+
+  // DELETE ACCOUNT & DATA (only for Developers)
+  deleteAccountLink.addEventListener("click", async () => {
+    if (currentPlan !== "Developers") {
+      alert("You cannot delete your account or data unless you're on the Developer plan.");
+      return;
+    }
+
+    try {
+      await deleteUser(auth.currentUser);
+      alert("Your account has been deleted.");
+      window.location.href = LOGIN_URL; // Redirect to login page
+    } catch (error) {
+      console.error("Error deleting account:", error);
+    }
+  });
+</script>
+
