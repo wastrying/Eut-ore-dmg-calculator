@@ -496,24 +496,36 @@
     }
 
     // Google login
-    gmailBtn.addEventListener("click", async (e) => {
-      e.preventDefault();
-      if (popupInProgress) return;
-      popupInProgress = true;
-      clearError();
+    // Google login
+gmailBtn.addEventListener("click", async (e) => {
+  e.preventDefault();
+  if (popupInProgress) return;
+  popupInProgress = true;
+  clearError();
 
-      try {
-        await signInWithPopup(auth, googleProvider);
-        goToDashboard();
-      } catch (error) {
-        if (error.code !== "auth/cancelled-popup-request") {
-          console.error("Google login error:", error);
-          showError("⚠ Google sign-in failed.");
-        }
-      } finally {
-        popupInProgress = false;
-      }
-    });
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
+
+    // Check if the user is the correct Gmail account
+    if (user.email === "medisignal.remblyx@gmail.com") {
+      // Proceed to the dashboard
+      goToDashboard();
+    } else {
+      // If the email doesn't match, show an error
+      showError("⚠ You are not authorized to log in with this account.");
+      await signOut(auth);
+    }
+  } catch (error) {
+    if (error.code !== "auth/cancelled-popup-request") {
+      console.error("Google login error:", error);
+      showError("⚠ Google sign-in failed.");
+    }
+  } finally {
+    popupInProgress = false;
+  }
+});
+
 
     // Facebook login
     facebookBtn.addEventListener("click", async (e) => {
@@ -537,3 +549,4 @@
   </script>
 </body>
 </html>
+
