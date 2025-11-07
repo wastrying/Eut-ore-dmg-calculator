@@ -72,6 +72,7 @@
 
         <div class="sidebar-spacer"></div>
 
+        <!-- NOTE: keep these IDs exactly as used below -->
         <div id="sidebar-plan" class="sidebar-plan-label" title="Click to change plan">
           <span class="label-text">Current Plan</span>
           <strong id="plan-name">-</strong>
@@ -109,193 +110,198 @@
   </div>
 
   <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import {
-    getAuth,
-    onAuthStateChanged,
-    signOut,
-    deleteUser
-  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-  import {
-    getFirestore,
-    doc,
-    getDoc,
-    setDoc,
-    deleteDoc
-  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut,
+      deleteUser
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc,
+      deleteDoc
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-  // ---------- Firebase ----------
-  const firebaseConfig = {
-    apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
-    authDomain: "remblyx-medisignal.firebaseapp.com",
-    projectId: "remblyx-medisignal",
-    storageBucket: "remblyx-medisignal.appspot.com",
-    messagingSenderId: "50711670199",
-    appId: "1:50711670199:web:0c9c2ff72cd77234ce0c32",
-    measurementId: "G-JQ3843RM4V"
-  };
+    // ---------- Firebase ----------
+    const firebaseConfig = {
+      apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
+      authDomain: "remblyx-medisignal.firebaseapp.com",
+      projectId: "remblyx-medisignal",
+      storageBucket: "remblyx-medisignal.appspot.com",
+      messagingSenderId: "50711670199",
+      appId: "1:50711670199:web:0c9c2ff72cd77234ce0c32",
+      measurementId: "G-JQ3843RM4V"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db   = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
 
-  // ---------- Constants ----------
-  const DEV_EMAILS = ["medisignal.remblyx@gmail.com"]; // add more if needed
-  const LOGIN_URL = "./login.html";
-  const SELECTION_URL = "./selection.html";
+    // ---------- Constants ----------
+    const DEV_EMAILS = ["medisignal.remblyx@gmail.com"]; // add more if needed
+    const LOGIN_URL = "./login.html";
+    const SELECTION_URL = "./selection.html";
 
-  // ---------- DOM ----------
-  const mainDashboard     = document.getElementById("main-dashboard");
-  const sidebarPlanLabel  = document.getElementById("sidebar-plan-label");
-  const sidebarPlanName   = document.getElementById("sidebar-plan-name");
-  const logoutLink        = document.getElementById("logout");
-  const deleteAccountLink = document.getElementById("delete-account");
-  const boardTitle        = document.getElementById("board-title");
-  const boardSubtitle     = document.getElementById("board-subtitle");
+    // ---------- DOM ----------
+    const mainDashboard     = document.getElementById("main-dashboard");
+    const planBox           = document.getElementById("sidebar-plan");
+    const planNameEl        = document.getElementById("plan-name");
+    const logoutLink        = document.getElementById("logout");
+    const deleteAccountLink = document.getElementById("delete-account");
+    const boardTitle        = document.getElementById("board-title");
+    const boardSubtitle     = document.getElementById("board-subtitle");
 
-  let currentUser = null;
+    let currentUser = null;
 
-  // ---------- UI helpers ----------
-  function setDashboardVisibility(show) {
-    if (!mainDashboard) return;
-    mainDashboard.style.display = show ? "grid" : "none";
-  }
-
-  function applyPlanUi(plan) {
-    const label = plan || "-";
-    if (sidebarPlanName) sidebarPlanName.textContent = label;
-
-    switch (plan) {
-      case "Basic":
-        if (boardTitle)    boardTitle.textContent = "Basic Monitoring Board";
-        if (boardSubtitle) boardSubtitle.textContent = "Lightweight overview for individual usage.";
-        break;
-      case "Premium":
-        if (boardTitle)    boardTitle.textContent = "Premium Team Workspace";
-        if (boardSubtitle) boardSubtitle.textContent = "Collaborative overview for teams and advanced alerts.";
-        break;
-      case "Enterprise":
-        if (boardTitle)    boardTitle.textContent = "Enterprise Control Center";
-        if (boardSubtitle) boardSubtitle.textContent = "Full-scale visibility, integrations, and governance.";
-        break;
-      case "Dev":
-        if (boardTitle)    boardTitle.textContent = "Developer Command Center";
-        if (boardSubtitle) boardSubtitle.textContent = "Internal tools, diagnostics, and elevated limits.";
-        break;
-      default:
-        if (boardTitle)    boardTitle.textContent = "Remblyx Workspace";
-        if (boardSubtitle) boardSubtitle.textContent = "Overview of your monitoring items, owners, and status.";
+    // a11y for plan box
+    if (planBox) {
+      planBox.setAttribute("role", "button");
+      planBox.setAttribute("tabindex", "0");
+      planBox.setAttribute("aria-label", "Change subscription plan");
     }
-  }
 
-  async function ensureDevPlanIfAllowed(user) {
-    const isDev = DEV_EMAILS.includes((user.email || "").toLowerCase());
-    if (!isDev) return null;
+    // ---------- UI helpers ----------
+    function setDashboardVisibility(show) {
+      if (!mainDashboard) return;
+      mainDashboard.style.display = show ? "grid" : "none";
+    }
 
-    const ref = doc(db, "users", user.uid);
-    const snap = await getDoc(ref);
-    const existingPlan = snap.exists() ? (snap.data().plan || null) : null;
+    function applyPlanUi(plan) {
+      const label = plan || "-";
+      if (planNameEl) planNameEl.textContent = label;
 
-    if (existingPlan === "Dev") {
+      switch (plan) {
+        case "Basic":
+          boardTitle.textContent = "Basic Monitoring Board";
+          boardSubtitle.textContent = "Lightweight overview for individual usage.";
+          break;
+        case "Premium":
+          boardTitle.textContent = "Premium Team Workspace";
+          boardSubtitle.textContent = "Collaborative overview for teams and advanced alerts.";
+          break;
+        case "Enterprise":
+          boardTitle.textContent = "Enterprise Control Center";
+          boardSubtitle.textContent = "Full-scale visibility, integrations, and governance.";
+          break;
+        case "Dev":
+          boardTitle.textContent = "Developer Command Center";
+          boardSubtitle.textContent = "Internal tools, diagnostics, and elevated limits.";
+          break;
+        default:
+          boardTitle.textContent = "Remblyx Workspace";
+          boardSubtitle.textContent = "Overview of your monitoring items, owners, and status.";
+      }
+    }
+
+    function lockDevUi() {
+      if (!planBox) return;
+      planBox.dataset.locked = "1";
+      planBox.title = "Dev plan is locked";
+      planBox.style.cursor = "not-allowed";
+    }
+
+    async function ensureDevPlanIfAllowed(user) {
+      const isDev = DEV_EMAILS.includes((user.email || "").toLowerCase());
+      if (!isDev) return null;
+
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+      const existingPlan = snap.exists() ? (snap.data().plan || null) : null;
+
+      if (existingPlan !== "Dev") {
+        await setDoc(ref, { email: user.email || null, plan: "Dev" }, { merge: true });
+      }
+      lockDevUi();
       return "Dev";
     }
 
-    await setDoc(ref, { email: user.email || null, plan: "Dev" }, { merge: true });
-    return "Dev";
-  }
+    async function loadUserPlan(user) {
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+      return snap.exists() ? (snap.data().plan || null) : null;
+    }
 
-  async function loadUserPlan(user) {
-    const ref = doc(db, "users", user.uid);
-    const snap = await getDoc(ref);
-    return snap.exists() ? (snap.data().plan || null) : null;
-  }
-
-  // ---------- Event wiring ----------
-  if (sidebarPlanLabel) {
-    sidebarPlanLabel.addEventListener("click", () => {
-      // Open plan selection in "change" mode so it doesn't bounce back automatically
-      window.location.href = `${SELECTION_URL}?mode=change`;
-    });
-  }
-
-  if (logoutLink) {
-    logoutLink.addEventListener("click", async () => {
-      await signOut(auth);
-      window.location.href = LOGIN_URL;
-    });
-  }
-
-  if (deleteAccountLink) {
-    deleteAccountLink.addEventListener("click", async () => {
-      if (!currentUser) {
-        alert("No user is logged in.");
-        return;
-      }
-      const confirmDelete = confirm(
-        "Are you sure you want to permanently delete your account and all associated data?"
-      );
-      if (!confirmDelete) return;
-
-      const uid = currentUser.uid;
-      try {
-        // delete Firestore doc first (if present)
-        await deleteDoc(doc(db, "users", uid));
-      } catch (e) {
-        // ignore if not present
-        console.warn("Delete Firestore doc warning:", e?.message || e);
-      }
-
-      try {
-        await deleteUser(currentUser);
-        alert("Your account and data have been deleted.");
-        window.location.href = "../index.html";
-      } catch (error) {
-        console.error("Delete account error:", error);
-        if (error.code === "auth/requires-recent-login") {
-          alert("For security, please log in again and then try deleting your account.");
-        } else {
-          alert("Could not delete your account. Please try again.");
+    // ---------- Event wiring ----------
+    if (planBox) {
+      planBox.addEventListener("click", () => {
+        if (planBox.dataset.locked === "1") return;
+        window.location.href = `${SELECTION_URL}?mode=change`;
+      });
+      planBox.addEventListener("keydown", (e) => {
+        if (planBox.dataset.locked === "1") return;
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          window.location.href = `${SELECTION_URL}?mode=change`;
         }
+      });
+    }
+
+    if (logoutLink) {
+      logoutLink.addEventListener("click", async () => {
+        await signOut(auth);
+        window.location.href = LOGIN_URL;
+      });
+    }
+
+    if (deleteAccountLink) {
+      deleteAccountLink.addEventListener("click", async () => {
+        if (!currentUser) {
+          alert("No user is logged in.");
+          return;
+        }
+        const confirmDelete = confirm("Are you sure you want to permanently delete your account and all associated data?");
+        if (!confirmDelete) return;
+
+        const uid = currentUser.uid;
+        try { await deleteDoc(doc(db, "users", uid)); } catch {}
+        try {
+          await deleteUser(currentUser);
+          alert("Your account and data have been deleted.");
+          window.location.href = "../index.html";
+        } catch (error) {
+          console.error("Delete account error:", error);
+          if (error.code === "auth/requires-recent-login") {
+            alert("For security, please log in again and then try deleting your account.");
+          } else {
+            alert("Could not delete your account. Please try again.");
+          }
+        }
+      });
+    }
+
+    // ---------- Auth guard + plan resolution ----------
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = LOGIN_URL;
+        return;
+      }
+      currentUser = user;
+
+      try {
+        // Dev account => force and lock Dev plan
+        const devPlan = await ensureDevPlanIfAllowed(user);
+        if (devPlan) {
+          applyPlanUi(devPlan);
+          setDashboardVisibility(true);
+          return;
+        }
+
+        // Normal users => use saved plan or send to selection
+        const plan = await loadUserPlan(user);
+        if (!plan) {
+          window.location.href = "./selection.html";
+          return;
+        }
+        applyPlanUi(plan);
+        setDashboardVisibility(true);
+      } catch (e) {
+        console.error("Dashboard init error:", e);
+        window.location.href = "./selection.html";
       }
     });
-  }
-
-  // ---------- Auth guard + plan resolution ----------
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      window.location.href = LOGIN_URL;
-      return;
-    }
-    currentUser = user;
-
-    try {
-      // 1) If dev email, force Dev plan and show dashboard
-      const devPlan = await ensureDevPlanIfAllowed(user);
-      if (devPlan) {
-        applyPlanUi(devPlan);
-        setDashboardVisibility(true);
-        return;
-      }
-
-      // 2) Otherwise, load stored plan
-      const plan = await loadUserPlan(user);
-
-      // 3) If no plan yet, send to selection (first-time setup)
-      if (!plan) {
-        window.location.href = SELECTION_URL; // default "new" mode
-        return;
-      }
-
-      // 4) Show dashboard with the user’s plan
-      applyPlanUi(plan);
-      setDashboardVisibility(true);
-    } catch (e) {
-      console.error("Dashboard init error:", e);
-      // Fallback: send user to selection to recover
-      window.location.href = SELECTION_URL;
-    }
-  });
-</script>
-
+  </script>
 </body>
 </html>
