@@ -10,6 +10,9 @@
   <link rel="icon" type="image/png" sizes="192x192" href="../images/medisignal.png">
   <link rel="apple-touch-icon" href="../images/medisignal.png">
 
+  <!-- Flaticon icons -->
+  <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/uicons-regular-rounded/css/uicons-regular-rounded.css">
+
   <style>
     * {
       box-sizing: border-box;
@@ -25,7 +28,7 @@
       justify-content: center;
       align-items: center;
       position: relative;
-      overflow: hidden; /* no full page scroll */
+      overflow: hidden;
       padding: 16px;
     }
 
@@ -74,8 +77,8 @@
       z-index: 10;
       text-align: center;
       margin: 0;
-      max-height: calc(100vh - 80px); /* fits between logo and bottom */
-      overflow-y: auto;               /* only card scrolls if needed */
+      max-height: calc(100vh - 80px);
+      overflow-y: auto;
     }
 
     h2 {
@@ -165,7 +168,7 @@
       border: none;
       background: transparent;
       cursor: pointer;
-      font-size: 16px;
+      font-size: 18px;
       color: #777;
       padding: 0;
       line-height: 1;
@@ -416,15 +419,13 @@
   <p id="error" class="error-message"></p>
   <p id="success" class="success-message"></p>
 
-  <button id="open-email-btn" class="submit-btn">
-    Open my email
-  </button>
+  <button id="open-email-btn" class="submit-btn">Open my email</button>
 
   <form id="signup-form">
     <input type="text" name="username" placeholder="Username" required>
     <input type="email" name="email" placeholder="Email" required>
 
-    <!-- Password with hold-to-show eye -->
+    <!-- Password with press & hold eye -->
     <div class="password-wrapper">
       <input
         type="password"
@@ -438,7 +439,9 @@
         id="toggle-password"
         class="toggle-password"
         aria-label="Hold to show password"
-      >🙈</button>
+      >
+        <i id="password-eye-icon" class="fi fi-rr-eye-crossed"></i>
+      </button>
     </div>
 
     <div class="terms-inline" id="terms-wrapper">
@@ -528,6 +531,7 @@
 
   const passwordInput = document.getElementById("password");
   const togglePasswordBtn = document.getElementById("toggle-password");
+  const passwordEyeIcon = document.getElementById("password-eye-icon");
 
   const googleProvider = new GoogleAuthProvider();
   const facebookProvider = new FacebookAuthProvider();
@@ -587,33 +591,34 @@
     });
   }
 
-  // Hold-to-show password with eye closed/open
-  if (togglePasswordBtn && passwordInput) {
+  // Press & hold to show password using Flaticon icons
+  if (togglePasswordBtn && passwordInput && passwordEyeIcon) {
     const showPassword = () => {
       passwordInput.type = "text";
-      togglePasswordBtn.textContent = "👁";   // eye open while visible
+      passwordEyeIcon.classList.remove("fi-rr-eye-crossed");
+      passwordEyeIcon.classList.add("fi-rr-eye");
     };
 
     const hidePassword = () => {
       passwordInput.type = "password";
-      togglePasswordBtn.textContent = "🙈";   // eye closed when hidden
+      passwordEyeIcon.classList.remove("fi-rr-eye");
+      passwordEyeIcon.classList.add("fi-rr-eye-crossed");
     };
 
-    // Mouse & touch start: show
-    togglePasswordBtn.addEventListener("mousedown", (e) => {
-      e.preventDefault();
-      showPassword();
+    // Mouse / touch down on button → show
+    ["mousedown", "touchstart"].forEach(evt => {
+      togglePasswordBtn.addEventListener(evt, (e) => {
+        e.preventDefault();
+        showPassword();
+      }, { passive: false });
     });
 
-    togglePasswordBtn.addEventListener("touchstart", (e) => {
-      e.preventDefault();
-      showPassword();
-    }, { passive: false });
-
-    // Mouse & touch end anywhere: hide
-    window.addEventListener("mouseup", hidePassword);
-    window.addEventListener("touchend", hidePassword);
-    window.addEventListener("touchcancel", hidePassword);
+    // Mouse / touch end anywhere → hide
+    ["mouseup", "touchend", "touchcancel"].forEach(evt => {
+      window.addEventListener(evt, () => {
+        hidePassword();
+      });
+    });
   }
 
   // Email/password signup
@@ -668,7 +673,7 @@
       if (error.code === "auth/email-already-in-use") message = "⚠ Email already registered!";
       else if (error.code === "auth/invalid-email") message = "⚠ Invalid email address.";
       else if (error.code === "auth/weak-password") message = "⚠ Password should be at least 6 characters.";
-      else if (error.code === "auth/unauthorized-domain") message = "⚠ Unauthorized domain. Add this domain in Firebase.";
+      else if (error.code === "auth/unauthorized-domain") message = "⚠ Unauthorized domain. Add this domain in Firebase.`;
       showError(message);
     }
   });
