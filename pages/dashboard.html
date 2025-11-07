@@ -184,20 +184,23 @@
   const LOGIN_URL = "./login.html";
   const SELECTION_URL = "./selection.html";
 
+  // Guard flags to stop ping-pong
+  const FROM = (new URLSearchParams(location.search).get("from") || "").toLowerCase();
+  const LAST_NAV = sessionStorage.getItem("rbx_last_nav") || "";
+
   // ---------- DOM ----------
   const mainDashboard     = document.getElementById("main-dashboard");
-  const sidebarPlanEl     = document.getElementById("sidebar-plan");   // <div id="sidebar-plan" class="sidebar-plan-label">
-  const planNameEl        = document.getElementById("plan-name");      // <strong id="plan-name">
+  const sidebarPlanEl     = document.getElementById("sidebar-plan");
+  const planNameEl        = document.getElementById("plan-name");
   const logoutLink        = document.getElementById("logout");
   const deleteAccountLink = document.getElementById("delete-account");
   const boardTitle        = document.getElementById("board-title");
   const boardSubtitle     = document.getElementById("board-subtitle");
 
-  // Developers UI pieces
   const devTools          = document.getElementById("dev-tools");
   const devUsersContainer = document.getElementById("dev-users");
   const standardBoard     = document.getElementById("standard-board");
-  const firstNavLabelEl   = document.querySelector(".nav-item .label"); // first tab in sidebar (Main Board)
+  const firstNavLabelEl   = document.querySelector(".nav-item .label"); // first tab
 
   let currentUser = null;
   let currentPlan = null;
@@ -217,7 +220,7 @@
     setNavLabelForPlan("Developers");
     if (devTools) devTools.style.display = "block";
     if (standardBoard) standardBoard.style.display = "none";
-    renderAllUsers(); // populate list
+    renderAllUsers();
   }
 
   function showRegularView(){
@@ -254,7 +257,6 @@
 
     updateChangePlanInteractivity();
 
-    // Toggle content based on plan
     if (plan === "Developers") {
       showDevelopersView();
     } else {
@@ -273,7 +275,6 @@
     }
   }
 
-  // Developers: fetch and render all users (email + plan)
   async function renderAllUsers(){
     if (!devUsersContainer) return;
     devUsersContainer.innerHTML = `<div class="dev-grid-row"><div>Loading users…</div><div>—</div></div>`;
@@ -293,7 +294,6 @@
     }
   }
 
-  // Force "Developers" plan for dev emails; also migrate old "Dev" -> "Developers"
   async function ensureDevelopersPlanIfAllowed(user) {
     const isDev = DEV_EMAILS.includes((user.email || "").toLowerCase());
     if (!isDev) return null;
@@ -322,6 +322,8 @@
   if (sidebarPlanEl) {
     sidebarPlanEl.addEventListener("click", () => {
       if (currentPlan === "Developers") return; // locked
+      // Clear guard; next page will set it again if needed
+      sessionStorage.removeItem("rbx_last_nav");
       window.location.href = `${SELECTION_URL}?mode=change`;
     });
   }
@@ -372,23 +374,42 @@
       if (forced) {
         applyPlanUi(forced);
         setDashboardVisibility(true);
+        // Clear the guard once we've rendered successfully
+        sessionStorage.removeItem("rbx_last_nav");
         return;
       }
 
       // Otherwise load stored plan
       const plan = await loadUserPlan(user);
 
-      // If no plan, go select
+      // If no plan:
       if (!plan) {
-        window.location.href = "./selection.html";
+        // Only redirect to selection if we didn't JUST come from there.
+        if (!(FROM === "selection" || LAST_NAV === "from_selection")) {
+          window.location.href = SELECTION_URL;
+          return;
+        }
+        // We just came from selection; don't bounce. Let user click change plan manually.
+        applyPlanUi(null);
+        setDashboardVisibility(true);
+        sessionStorage.removeItem("rbx_last_nav");
         return;
       }
 
+      // Plan available: render
       applyPlanUi(plan);
       setDashboardVisibility(true);
+      sessionStorage.removeItem("rbx_last_nav");
     } catch (e) {
       console.error("Dashboard init error:", e);
-      window.location.href = "./selection.html";
+      // If we didn't just come from selection, send there; else stay
+      if (!(FROM === "selection" || LAST_NAV === "from_selection")) {
+        window.location.href = SELECTION_URL;
+        return;
+      }
+      applyPlanUi(null);
+      setDashboardVisibility(true);
+      sessionStorage.removeItem("rbx_last_nav");
     }
   });
 </script>
