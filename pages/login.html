@@ -5,20 +5,229 @@
   <title>Log In | Remblyx</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    /* same styles as before, including .logo 200px desktop & 115px mobile if you like */
-    /* keep your container/no-scroll setup */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Arial', sans-serif;
+    }
+
+    body {
+      background: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden; /* no full-page scroll */
+      padding: 16px;
+    }
+
+    /* Background */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+    }
+
+    .bg-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: blur(4px);
+      opacity: 0.8;
+    }
+
+    /* Header + logo */
+    .header-row {
+      position: fixed;
+      top: -27px;          /* shifted up like signup */
+      left: 8px;
+      z-index: 20;
+    }
+
+    .logo {
+      height: 200px;       /* big on desktop */
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    .logo:hover {
+      filter: brightness(1.1);
+      transform: scale(1.03);
+    }
+
+    /* Card containers */
+    .container {
+      background: rgba(245, 245, 245, 0.97);
+      border-radius: 16px;
+      padding: 20px 18px 18px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      color: #333;
+      z-index: 10;
+      text-align: center;
+      margin: 0;
+      max-height: calc(100vh - 80px); /* fit on screen */
+      overflow-y: auto;               /* only card scrolls if needed */
+    }
+
+    h2 {
+      margin-bottom: 12px;
+      color: #333;
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    /* Social buttons */
+    .social-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .social-btn {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.25s;
+      color: white;
+      touch-action: manipulation;
+    }
+
+    .gmail-btn { background: #e57373; }
+    .facebook-btn { background: #4267B2; }
+
+    .social-btn img {
+      height: 18px;
+      width: 18px;
+      margin-right: 6px;
+    }
+
+    .social-btn:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+    }
+
+    hr {
+      margin: 10px 0 12px;
+      border: 0;
+      border-top: 1px solid #ccc;
+    }
+
+    /* Inputs & buttons */
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      margin: 6px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      background: white;
+      color: #333;
+    }
+
+    input::placeholder { color: #999; }
+
+    button.submit-btn,
+    #home-box button {
+      width: 100%;
+      padding: 11px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      cursor: pointer;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      transition: 0.25s;
+      touch-action: manipulation;
+    }
+
+    button.submit-btn:hover,
+    #home-box button:hover {
+      opacity: 0.94;
+      transform: translateY(-1px);
+    }
+
+    .error {
+      color: red;
+      font-size: 12px;
+      margin-top: 5px;
+      min-height: 16px;
+    }
+
+    .create-text {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #555;
+    }
+
+    .create-text a {
+      color: #555;
+      font-weight: bold;
+      text-decoration: underline;
+    }
+
+    #home-box { display: none; }
+
+    /* Mobile */
+    @media (max-width: 480px) {
+      body {
+        padding: 10px;
+      }
+
+      .logo {
+        height: 115px;    /* mobile size */
+      }
+
+      .header-row {
+        top: -10px;
+      }
+
+      .container {
+        padding: 18px 14px 14px;
+        border-radius: 14px;
+      }
+
+      h2 {
+        font-size: 20px;
+      }
+
+      .social-btn {
+        font-size: 12px;
+        padding: 7px;
+      }
+
+      button.submit-btn,
+      #home-box button {
+        font-size: 14px;
+        padding: 10px;
+      }
+    }
   </style>
 </head>
 <body>
 
+  <!-- Background -->
   <div class="overlay">
     <img src="../images/background.png" alt="Background" class="bg-image">
   </div>
 
+  <!-- Logo -->
   <div class="header-row">
     <img src="../images/remblyxlogo.png" alt="Logo" class="logo" onclick="window.location.href='../index.html'">
   </div>
 
+  <!-- Login Card -->
   <div id="login-box" class="container">
     <h2>Log In</h2>
 
@@ -39,12 +248,14 @@
       <input type="password" id="password" placeholder="Password" required>
       <button type="submit" class="submit-btn">Log In</button>
     </form>
+
     <p class="create-text">
       Are you a new user? <a href="../pages/signup.html">Create your account</a>
     </p>
   </div>
 
-  <div id="home-box" class="container" style="display:none;">
+  <!-- Logged-in view -->
+  <div id="home-box" class="container">
     <h2>Welcome!</h2>
     <p id="welcome-text"></p>
     <button id="logoutBtn">Logout</button>
@@ -121,9 +332,11 @@
       handleVerifiedOrBlock(user);
     });
 
+    // Email/password login
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       clearError();
+
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value.trim();
 
@@ -151,11 +364,13 @@
       }
     });
 
+    // Logout
     logoutBtn.addEventListener("click", async () => {
       await signOut(auth);
       showLogin();
     });
 
+    // Google login
     gmailBtn.addEventListener("click", async (e) => {
       e.preventDefault();
       if (popupInProgress) return;
@@ -167,6 +382,7 @@
         showHome(result.user);
       } catch (error) {
         if (error.code !== "auth/cancelled-popup-request") {
+          console.error(error);
           showError("⚠ Google sign-in failed.");
         }
       } finally {
@@ -174,6 +390,7 @@
       }
     });
 
+    // Facebook login
     facebookBtn.addEventListener("click", async (e) => {
       e.preventDefault();
       if (popupInProgress) return;
@@ -185,6 +402,7 @@
         showHome(result.user);
       } catch (error) {
         if (error.code !== "auth/cancelled-popup-request") {
+          console.error(error);
           showError("⚠ Facebook sign-in failed.");
         }
       } finally {
