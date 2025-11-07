@@ -271,17 +271,9 @@
 
   // Event handler for changing the plan
   async function handlePlanChange() {
-    const newPlan = prompt("Enter new plan (e.g., Basic, Premium, Enterprise):");
-    if (newPlan) {
-      // Update user's plan in Firestore
-      try {
-        const userRef = doc(db, "users", currentUser.uid);
-        await setDoc(userRef, { plan: newPlan }, { merge: true });
-        alert("Your plan has been updated to " + newPlan);
-        applyPlanUi(newPlan);
-      } catch (error) {
-        console.error("Error updating plan:", error);
-      }
+    // Redirect non-developers to selection.html for plan upgrade
+    if (currentPlan !== "Developers") {
+      window.location.href = SELECTION_URL;
     }
   }
 
