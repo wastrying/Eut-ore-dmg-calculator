@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Log In | Remblyx</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * {
       box-sizing: border-box;
@@ -12,18 +13,19 @@
     }
 
     body {
-      background: white;
+      background: #ffffff;
+      min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
       position: relative;
-      overflow: hidden;
+      overflow: hidden; /* no page scroll */
+      padding: 16px;
     }
 
     /* Overlay background */
     .overlay {
-      position: absolute;
+      position: fixed;
       inset: 0;
       z-index: -1;
     }
@@ -38,41 +40,45 @@
 
     /* Header Row */
     .header-row {
-      position: absolute;
-      top: 5px;
-      left: 5px;
+      position: fixed;
+      top: 8px;
+      left: 8px;
+      z-index: 20;
     }
 
     .logo {
-      height: 100px;
+      height: 70px;
       cursor: pointer;
       transition: 0.3s ease;
     }
 
     .logo:hover {
-      filter: brightness(1.2);
-      transform: scale(1.05);
+      filter: brightness(1.1);
+      transform: scale(1.03);
     }
 
-    /* Login container */
-    .container, #home-box {
-      background: #f5f5f5;
-      border-radius: 15px;
-      padding: 20px 25px;
-      max-width: 450px;
+    /* Login container + home box */
+    .container,
+    #home-box {
+      background: rgba(245, 245, 245, 0.97);
+      border-radius: 16px;
+      padding: 20px 18px 18px;
+      max-width: 420px;
       width: 100%;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
       color: #333;
       z-index: 10;
       position: relative;
       text-align: center;
+      margin: 0;
+      max-height: calc(100vh - 80px); /* fit within screen */
+      overflow-y: auto; /* only the card scrolls if needed */
     }
 
     h2 {
-      text-align: center;
-      margin-bottom: 15px;
+      margin-bottom: 12px;
       color: #333;
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 600;
     }
 
@@ -80,62 +86,78 @@
     .social-buttons {
       display: flex;
       gap: 10px;
-      margin-bottom: 15px;
+      margin-bottom: 14px;
     }
 
     .social-btn {
       flex: 1;
-      padding: 6px;
+      padding: 8px;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
-      font-size: 12px;
+      font-size: 13px;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: 0.3s;
+      transition: 0.25s;
       color: white;
+      touch-action: manipulation;
     }
 
     .gmail-btn { background: #e57373; }
-    .facebook-btn { background: #64b5f6; }
+    .facebook-btn { background: #4267B2; }
 
     .social-btn img {
-      height: 16px;
-      width: 16px;
-      margin-right: 4px;
+      height: 18px;
+      width: 18px;
+      margin-right: 6px;
     }
 
-    .social-btn:hover { opacity: 0.9; }
+    .social-btn:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+    }
 
-    hr { margin: 10px 0; border-color: #ccc; }
+    hr {
+      margin: 10px 0 12px;
+      border: 0;
+      border-top: 1px solid #ccc;
+    }
 
-    input[type="text"], input[type="password"] {
+    input[type="text"],
+    input[type="password"] {
       width: 100%;
-      padding: 8px;
+      padding: 10px;
       margin: 6px 0;
-      border-radius: 6px;
+      border-radius: 8px;
       border: 1px solid #ccc;
       font-size: 14px;
       background: white;
       color: #333;
     }
 
-    button.submit-btn, #home-box button {
+    input::placeholder {
+      color: #999;
+    }
+
+    button.submit-btn,
+    #home-box button {
       width: 100%;
-      padding: 10px;
+      padding: 11px;
       margin-top: 10px;
       border: none;
-      border-radius: 8px;
-      font-size: 16px;
+      border-radius: 10px;
+      font-size: 15px;
       cursor: pointer;
       background: linear-gradient(135deg, #667eea, #764ba2);
       color: white;
-      transition: 0.3s;
+      transition: 0.25s;
+      touch-action: manipulation;
     }
 
-    button.submit-btn:hover, #home-box button:hover {
-      opacity: 0.9;
+    button.submit-btn:hover,
+    #home-box button:hover {
+      opacity: 0.94;
       transform: translateY(-1px);
     }
 
@@ -143,6 +165,7 @@
       color: red;
       font-size: 12px;
       margin-top: 5px;
+      min-height: 16px;
     }
 
     .create-text {
@@ -159,6 +182,38 @@
 
     /* Home box hidden initially */
     #home-box { display: none; }
+
+    /* Mobile tweaks */
+    @media (max-width: 480px) {
+      body {
+        padding: 10px;
+      }
+
+      .logo {
+        height: 56px;
+      }
+
+      .container,
+      #home-box {
+        padding: 18px 14px 14px;
+        border-radius: 14px;
+      }
+
+      h2 {
+        font-size: 20px;
+      }
+
+      .social-btn {
+        font-size: 12px;
+        padding: 7px;
+      }
+
+      button.submit-btn,
+      #home-box button {
+        font-size: 14px;
+        padding: 10px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -179,10 +234,10 @@
 
     <!-- Social login buttons -->
     <div class="social-buttons">
-      <button class="social-btn gmail-btn" onclick="alert('Login with Gmail clicked!')">
+      <button class="social-btn gmail-btn">
         <img src="https://img.icons8.com/color/48/000000/google-logo.png" alt="Gmail Icon">Gmail
       </button>
-      <button class="social-btn facebook-btn" onclick="alert('Login with Facebook clicked!')">
+      <button class="social-btn facebook-btn">
         <img src="https://img.icons8.com/color/48/000000/facebook-new.png" alt="Facebook Icon">Facebook
       </button>
     </div>
@@ -191,7 +246,7 @@
 
     <p id="error" class="error"></p>
     <form id="loginForm">
-      <input type="text" id="email" placeholder="Username or Email" required>
+      <input type="text" id="email" placeholder="Email" required>
       <input type="password" id="password" placeholder="Password" required>
       <button type="submit" class="submit-btn">Log In</button>
     </form>
@@ -201,185 +256,200 @@
   </div>
 
   <!-- Home box after login -->
-  <div id="home-box">
+  <div id="home-box" class="container">
     <h2>Welcome!</h2>
     <p id="welcome-text"></p>
     <button id="logoutBtn">Logout</button>
   </div>
 
   <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import {
-    getAuth,
-    signInWithEmailAndPassword,
-    onAuthStateChanged,
-    signOut,
-    GoogleAuthProvider,
-    signInWithPopup,
-    FacebookAuthProvider
-  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      onAuthStateChanged,
+      signOut,
+      GoogleAuthProvider,
+      FacebookAuthProvider,
+      signInWithPopup,
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-  // Same config as signup page
-  const firebaseConfig = {
-    apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
-    authDomain: "remblyx-medisignal.firebaseapp.com",
-    projectId: "remblyx-medisignal",
-    storageBucket: "remblyx-medisignal.appspot.com",
-    messagingSenderId: "50711670199",
-    appId: "1:50711670199:web:0c9c2ff72cd77234ce0c32",
-    measurementId: "G-JQ3843RM4V"
-  };
+    // Same config as signup page
+    const firebaseConfig = {
+      apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
+      authDomain: "remblyx-medisignal.firebaseapp.com",
+      projectId: "remblyx-medisignal",
+      storageBucket: "remblyx-medisignal.appspot.com",
+      messagingSenderId: "50711670199",
+      appId: "1:50711670199:web:0c9c2ff72cd77234ce0c32",
+      measurementId: "G-JQ3843RM4V"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  console.log("Firebase initialized on login page:", app.name);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    console.log("Firebase initialized on login page:", app.name);
 
-  // DOM elements
-  const loginBox = document.getElementById("login-box");
-  const homeBox = document.getElementById("home-box");
-  const form = document.getElementById("loginForm");
-  const errorText = document.getElementById("error");
-  const welcomeText = document.getElementById("welcome-text");
-  const logoutBtn = document.getElementById("logoutBtn");
+    // DOM elements
+    const loginBox = document.getElementById("login-box");
+    const homeBox = document.getElementById("home-box");
+    const form = document.getElementById("loginForm");
+    const errorText = document.getElementById("error");
+    const welcomeText = document.getElementById("welcome-text");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const gmailBtn = document.querySelector(".gmail-btn");
+    const facebookBtn = document.querySelector(".facebook-btn");
 
-  const gmailBtn = document.querySelector(".gmail-btn");
-  const facebookBtn = document.querySelector(".facebook-btn");
+    const googleProvider = new GoogleAuthProvider();
+    const facebookProvider = new FacebookAuthProvider();
 
-  const googleProvider = new GoogleAuthProvider();
-  const facebookProvider = new FacebookAuthProvider();
+    let popupInProgress = false;
 
-  const showError = (msg) => {
-    errorText.textContent = msg;
-  };
+    const showError = (msg) => {
+      errorText.textContent = msg;
+    };
 
-  const clearError = () => {
-    errorText.textContent = "";
-  };
+    const clearError = () => {
+      errorText.textContent = "";
+    };
 
-  const showHome = (user) => {
-    if (!user) return showLogin();
+    const showHome = (user) => {
+      if (!user) return showLogin();
+      loginBox.style.display = "none";
+      homeBox.style.display = "block";
+      welcomeText.textContent = `You are logged in as ${user.email}`;
+    };
 
-    loginBox.style.display = "none";
-    homeBox.style.display = "block";
-    welcomeText.textContent = `You are logged in as ${user.email}`;
-  };
+    const showLogin = () => {
+      homeBox.style.display = "none";
+      loginBox.style.display = "block";
+      clearError();
+      form.reset();
+    };
 
-  const showLogin = () => {
-    homeBox.style.display = "none";
-    loginBox.style.display = "block";
-    clearError();
-    form.reset();
-  };
+    // Enforce: only verified emails (for email/password)
+    const handleVerifiedOrBlock = async (user) => {
+      if (!user) {
+        showLogin();
+        return;
+      }
 
-  // Enforce: only verified emails (for email/password)
-  const handleVerifiedOrBlock = async (user) => {
-    if (!user) {
-      showLogin();
-      return;
-    }
-
-    // For provider logins (Google/Facebook), email is usually verified already.
-    // For email/password, we strictly require verification.
-    const isPasswordUser = user.providerData.some(p => p.providerId === "password");
-
-    if (isPasswordUser && !user.emailVerified) {
-      showError("Please verify your email before logging in.");
-      await signOut(auth);
-      showLogin();
-      return;
-    }
-
-    showHome(user);
-  };
-
-  // Listen for auth state changes (refresh / already logged in)
-  onAuthStateChanged(auth, (user) => {
-    console.log("Auth state changed:", user?.email || "no user");
-    handleVerifiedOrBlock(user);
-  });
-
-  // Login form submit
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    clearError();
-
-    const emailInput = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value.trim();
-
-    if (!emailInput || !password) {
-      showError("⚠ Please fill in all fields.");
-      return;
-    }
-
-    try {
-      const { user } = await signInWithEmailAndPassword(auth, emailInput, password);
-      console.log("Signed in as:", user.email);
-
-      // Check verification for email/password users
       const isPasswordUser = user.providerData.some(p => p.providerId === "password");
+
       if (isPasswordUser && !user.emailVerified) {
         showError("Please verify your email before logging in.");
         await signOut(auth);
+        showLogin();
         return;
       }
 
       showHome(user);
-    } catch (error) {
-      console.error("Login error:", error);
-      let message = "⚠ Invalid email or password.";
+    };
 
-      if (error.code === "auth/invalid-email") {
-        message = "⚠ Invalid email format.";
-      } else if (error.code === "auth/user-not-found") {
-        message = "⚠ No account found with this email.";
-      } else if (error.code === "auth/wrong-password") {
-        message = "⚠ Incorrect password.";
-      } else if (error.code === "auth/too-many-requests") {
-        message = "⚠ Too many attempts. Try again later.";
+    // Listen for auth state changes
+    onAuthStateChanged(auth, (user) => {
+      console.log("Auth state changed:", user?.email || "no user");
+      handleVerifiedOrBlock(user);
+    });
+
+    // Email/password login
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearError();
+
+      const emailInput = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!emailInput || !password) {
+        showError("⚠ Please fill in all fields.");
+        return;
       }
 
-      showError(message);
+      try {
+        const { user } = await signInWithEmailAndPassword(auth, emailInput, password);
+        console.log("Signed in as:", user.email);
+
+        const isPasswordUser = user.providerData.some(p => p.providerId === "password");
+        if (isPasswordUser && !user.emailVerified) {
+          showError("Please verify your email before logging in.");
+          await signOut(auth);
+          return;
+        }
+
+        showHome(user);
+      } catch (error) {
+        console.error("Login error:", error);
+        let message = "⚠ Invalid email or password.";
+
+        if (error.code === "auth/invalid-email") {
+          message = "⚠ Invalid email format.";
+        } else if (error.code === "auth/user-not-found") {
+          message = "⚠ No account found with this email.";
+        } else if (error.code === "auth/wrong-password") {
+          message = "⚠ Incorrect password.";
+        } else if (error.code === "auth/too-many-requests") {
+          message = "⚠ Too many attempts. Try again later.";
+        }
+
+        showError(message);
+      }
+    });
+
+    // Logout
+    logoutBtn.addEventListener("click", async () => {
+      await signOut(auth);
+      showLogin();
+    });
+
+    // Google login
+    if (gmailBtn) {
+      gmailBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        if (popupInProgress) return;
+        popupInProgress = true;
+
+        clearError();
+
+        try {
+          const result = await signInWithPopup(auth, googleProvider);
+          const user = result.user;
+          console.log("Google sign-in:", user.email);
+          showHome(user);
+        } catch (error) {
+          if (error.code !== "auth/cancelled-popup-request") {
+            console.error("Google login error:", error);
+            showError("⚠ Google sign-in failed.");
+          }
+        } finally {
+          popupInProgress = false;
+        }
+      });
     }
-  });
 
-  // Logout
-  logoutBtn.addEventListener("click", async () => {
-    await signOut(auth);
-    showLogin();
-  });
+    // Facebook login
+    if (facebookBtn) {
+      facebookBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        if (popupInProgress) return;
+        popupInProgress = true;
 
-  // Google login
-  gmailBtn.addEventListener("click", async () => {
-    clearError();
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      console.log("Google sign-in:", user.email);
-      // Google emails are normally verified → allow immediately
-      showHome(user);
-    } catch (error) {
-      console.error("Google login error:", error);
-      showError("⚠ Google sign-in failed.");
+        clearError();
+
+        try {
+          const result = await signInWithPopup(auth, facebookProvider);
+          const user = result.user;
+          console.log("Facebook sign-in:", user.email || "(no email)");
+          showHome(user);
+        } catch (error) {
+          if (error.code !== "auth/cancelled-popup-request") {
+            console.error("Facebook login error:", error);
+            showError("⚠ Facebook sign-in failed.");
+          }
+        } finally {
+          popupInProgress = false;
+        }
+      });
     }
-  });
-
-  // Facebook login
-  facebookBtn.addEventListener("click", async () => {
-    clearError();
-    try {
-      const result = await signInWithPopup(auth, facebookProvider);
-      const user = result.user;
-      console.log("Facebook sign-in:", user.email);
-      showHome(user);
-    } catch (error) {
-      console.error("Facebook login error:", error);
-      showError("⚠ Facebook sign-in failed.");
-    }
-  });
-</script>
-
+  </script>
 
 </body>
 </html>
-
-
