@@ -73,6 +73,7 @@
     }
 
     /* PLAN SELECTION */
+
     #plan-selection {
       background: rgba(255,255,255,0.97);
       border-radius: 16px;
@@ -199,6 +200,7 @@
     }
 
     /* DASHBOARD */
+
     #main-dashboard {
       display: none;
       height: calc(100vh - 90px);
@@ -274,7 +276,7 @@
       display: flex;
       flex-direction: column;
       gap: 1px;
-      cursor: pointer;
+      cursor: pointer;            /* clickable */
       transition: 0.2s;
     }
 
@@ -447,10 +449,12 @@
 </head>
 <body>
 
+  <!-- Background -->
   <div class="overlay">
     <img src="../images/background.png" alt="Background" class="bg-image">
   </div>
 
+  <!-- Logo -->
   <div class="header-row">
     <img src="../images/remblyxlogo.png"
          alt="Remblyx Logo"
@@ -637,6 +641,7 @@
     const planSelectionStatus = document.getElementById("plan-selection-status");
     const mainDashboard = document.getElementById("main-dashboard");
     const planCards = document.querySelectorAll(".plan-card");
+    const sidebarPlanLabel = document.getElementById("sidebar-plan-label");
     const sidebarPlanName = document.getElementById("sidebar-plan-name");
     const logoutLink = document.getElementById("logout");
     const deleteAccountLink = document.getElementById("delete-account");
@@ -662,7 +667,23 @@
     function showMainDashboard(plan) {
       planSelection.style.display = "none";
       mainDashboard.style.display = "grid";
-      sidebarPlanName.textContent = plan || "-";
+
+      const label = plan || "-";
+      sidebarPlanName.textContent = label;
+
+      if (plan === "Basic") {
+        boardTitle.textContent = "Basic Monitoring Board";
+        boardSubtitle.textContent = "Lightweight overview for individual usage.";
+      } else if (plan === "Premium") {
+        boardTitle.textContent = "Premium Team Workspace";
+        boardSubtitle.textContent = "Collaborative overview for teams and advanced alerts.";
+      } else if (plan === "Enterprise") {
+        boardTitle.textContent = "Enterprise Control Center";
+        boardSubtitle.textContent = "Full-scale visibility, integrations, and governance.";
+      } else {
+        boardTitle.textContent = "Remblyx Workspace";
+        boardSubtitle.textContent = "Overview of your monitoring items, owners, and status.";
+      }
     }
 
     function highlightPlanCard(plan) {
@@ -674,12 +695,6 @@
 
     async function loadUserPlan(user) {
       try {
-        if (user.email === "medisignal.remblyx@gmail.com") {
-          showMainDashboard("Dev");
-          sidebarPlanName.textContent = "Dev";
-          return;
-        }
-
         const ref = doc(db, "users", user.uid);
         const snap = await getDoc(ref);
         const savedPlan = snap.exists() ? snap.data().plan : null;
@@ -718,6 +733,7 @@
       }
     }
 
+    // Plan click handlers
     planCards.forEach(card => {
       const plan = card.getAttribute("data-plan");
       const btn = card.querySelector(".plan-btn");
@@ -727,6 +743,7 @@
       };
 
       card.addEventListener("click", handleSelect);
+
       if (btn) {
         btn.addEventListener("click", (e) => {
           e.stopPropagation();
@@ -735,19 +752,21 @@
       }
     });
 
-    // Plan selection button click handler
-    sidebarPlanLabel.addEventListener("click", () => {
-      if (!currentUser) {
-        goToLogin();
-        return;
-      }
-      const currentPlan = sidebarPlanName.textContent.trim();
-      const msg = currentPlan && currentPlan !== "-"
-        ? `Current plan: ${currentPlan}. Choose a new plan to switch.`
-        : "Choose a plan to continue.";
-      showPlanSelection(msg);
-      highlightPlanCard(currentPlan && currentPlan !== "-" ? currentPlan : null);
-    });
+    // Click current plan label to change plan
+    if (sidebarPlanLabel) {
+      sidebarPlanLabel.addEventListener("click", () => {
+        if (!currentUser) {
+          goToLogin();
+          return;
+        }
+        const currentPlan = sidebarPlanName.textContent.trim();
+        const msg = currentPlan && currentPlan !== "-"
+          ? `Current plan: ${currentPlan}. Choose a new plan to switch.`
+          : "Choose a plan to continue.";
+        showPlanSelection(msg);
+        highlightPlanCard(currentPlan && currentPlan !== "-" ? currentPlan : null);
+      });
+    }
 
     // Logout
     logoutLink.addEventListener("click", async () => {
