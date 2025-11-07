@@ -25,12 +25,12 @@
       justify-content: center;
       align-items: center;
       position: relative;
-      overflow-x: hidden;
+      overflow: hidden;
       padding: 16px;
       color: #222;
     }
 
-    /* Blurred background */
+    /* Background */
     .overlay {
       position: fixed;
       inset: 0;
@@ -45,12 +45,12 @@
       opacity: 0.8;
     }
 
-    /* Logo top-left */
+    /* Top logo (clickable to home) */
     .header-row {
       position: fixed;
       top: -27px;
       left: 8px;
-      z-index: 20;
+      z-index: 40;
     }
 
     .logo {
@@ -64,58 +64,67 @@
       transform: scale(1.03);
     }
 
-    /* Main wrapper */
+    /* Wrapper */
     .dashboard-wrapper {
       width: 100%;
-      max-width: 1100px;
+      max-width: 1200px;
       margin-top: 40px;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 18px;
+      gap: 16px;
+      z-index: 10;
+    }
+
+    /* PLAN SELECTION STATE */
+
+    #plan-selection {
+      background: rgba(255,255,255,0.97);
+      border-radius: 16px;
+      padding: 18px 18px 16px;
+      box-shadow: 0 10px 26px rgba(0,0,0,0.18);
+      text-align: center;
+      max-height: calc(100vh - 90px);
+      overflow-y: auto;
     }
 
     .dashboard-title {
-      font-size: 26px;
+      font-size: 24px;
       font-weight: 600;
       color: #222;
+      margin-bottom: 4px;
       text-shadow: 0 1px 2px rgba(0,0,0,0.12);
-      text-align: center;
     }
 
     .dashboard-subtitle {
       font-size: 14px;
       color: #444;
-      text-align: center;
-      max-width: 620px;
-      margin-bottom: 4px;
+      max-width: 640px;
+      margin: 0 auto 10px;
     }
 
-    /* Plans row */
     .plans-row {
       display: flex;
       gap: 16px;
       justify-content: center;
       align-items: stretch;
-      width: 100%;
-      margin-top: 8px;
       flex-wrap: wrap;
+      margin-top: 6px;
     }
 
     .plan-card {
       flex: 1 1 260px;
       max-width: 320px;
-      background: rgba(255,255,255,0.97);
+      background: rgba(250,250,250,0.98);
       border-radius: 16px;
-      padding: 18px 16px 16px;
-      box-shadow: 0 8px 22px rgba(0,0,0,0.18);
+      padding: 16px 14px 14px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.16);
+      border: 1px solid rgba(255,255,255,0.9);
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      border: 1px solid rgba(255,255,255,0.7);
-      backdrop-filter: blur(2px);
       cursor: pointer;
       transition: 0.25s;
+      backdrop-filter: blur(2px);
     }
 
     .plan-card:hover {
@@ -129,16 +138,16 @@
     }
 
     .plan-label {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.06em;
       color: #888;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
 
     .plan-name {
-      font-size: 20px;
+      font-size: 19px;
       font-weight: 600;
       color: #222;
       margin-bottom: 4px;
@@ -147,15 +156,15 @@
     .plan-tagline {
       font-size: 12px;
       color: #666;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .plan-features {
       list-style: none;
+      padding-left: 0;
+      margin: 0 0 10px;
       font-size: 12px;
       color: #444;
-      margin-bottom: 12px;
-      padding-left: 0;
     }
 
     .plan-features li {
@@ -169,7 +178,7 @@
       border-radius: 10px;
       border: none;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 500;
       color: #fff;
       background: linear-gradient(135deg, #667eea, #764ba2);
@@ -182,12 +191,10 @@
       transform: translateY(-1px);
     }
 
-    /* Dashboard content based on plan */
     .active-plan-label {
-      margin-top: 4px;
-      font-size: 14px;
+      font-size: 13px;
       color: #555;
-      text-align: center;
+      margin-top: 6px;
     }
 
     .plan-highlight {
@@ -195,40 +202,266 @@
       color: #667eea;
     }
 
-    .dashboard-content {
-      width: 100%;
-      max-width: 900px;
-      background: rgba(255,255,255,0.97);
-      border-radius: 16px;
-      padding: 16px 16px 14px;
-      box-shadow: 0 8px 22px rgba(0,0,0,0.18);
-      font-size: 13px;
-      color: #333;
+    /* MONDAY-LIKE DASHBOARD STATE */
+
+    #main-dashboard {
+      display: none; /* shown after plan chosen */
+      height: calc(100vh - 90px);
+      max-height: calc(100vh - 90px);
+      background: rgba(255,255,255,0.96);
+      border-radius: 18px;
+      box-shadow: 0 10px 26px rgba(0,0,0,0.2);
+      display: grid;
+      grid-template-columns: 230px 1fr;
+      overflow: hidden;
     }
 
-    .dashboard-section-title {
-      font-size: 16px;
+    /* Sidebar */
+    .sidebar {
+      background: #111827;
+      color: #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      padding: 14px 10px 10px;
+      gap: 10px;
+    }
+
+    .sidebar-title {
+      font-size: 14px;
       font-weight: 600;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
+      padding: 0 4px;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
     }
 
-    .dashboard-list {
-      margin-left: 16px;
-      margin-top: 4px;
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 8px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      color: #d1d5db;
+      transition: 0.2s;
+    }
+
+    .nav-item span.icon-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #4ade80;
+    }
+
+    .nav-item:hover {
+      background: rgba(249,250,251,0.06);
+    }
+
+    .nav-item.active {
+      background: #111827;
+      border-left: 3px solid #667eea;
+      padding-left: 10px;
+      color: #ffffff;
+    }
+
+    .sidebar-spacer {
+      flex: 1;
+    }
+
+    .sidebar-plan-label {
+      font-size: 11px;
+      color: #9ca3af;
+      padding: 6px 6px 4px;
+      border-radius: 8px;
+      border: 1px solid rgba(156,163,175,0.4);
+      margin-bottom: 4px;
+      background: rgba(17,24,39,0.96);
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .sidebar-plan-label strong {
+      color: #60a5fa;
+      font-weight: 600;
     }
 
     .logout-link {
-      margin-top: 8px;
-      font-size: 12px;
-      color: #888;
-      text-align: right;
+      font-size: 11px;
+      color: #9ca3af;
+      text-align: left;
+      padding: 2px 6px;
       cursor: pointer;
       text-decoration: underline;
     }
 
-    /* Mobile */
-    @media (max-width: 768px) {
-      body { padding: 10px; }
+    .logout-link:hover {
+      color: #ffffff;
+    }
+
+    /* Main content area */
+    .main-area {
+      display: flex;
+      flex-direction: column;
+      padding: 10px 12px 10px;
+      gap: 8px;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .board-title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .board-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .board-subtitle {
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    .pill {
+      padding: 5px 9px;
+      border-radius: 999px;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .pill.primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      border: none;
+    }
+
+    .pill:hover {
+      opacity: 0.95;
+    }
+
+    .search-box {
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid #e5e7eb;
+      font-size: 11px;
+      min-width: 120px;
+    }
+
+    /* Board */
+    .board-wrapper {
+      flex: 1;
+      border-radius: 12px;
+      background: #f9fafb;
+      padding: 8px;
+      overflow: auto;
+      border: 1px solid #e5e7eb;
+    }
+
+    .board-header-row,
+    .board-row {
+      display: grid;
+      grid-template-columns: 2fr 1.2fr 1fr 1fr 1.2fr;
+      gap: 6px;
+      align-items: center;
+      font-size: 11px;
+      padding: 6px 6px;
+      border-radius: 8px;
+    }
+
+    .board-header-row {
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      background: #f3f4f6;
+      border-bottom: 1px solid #e5e7eb;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .board-row {
+      background: #ffffff;
+      margin-top: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .status-pill {
+      padding: 3px 7px;
+      border-radius: 999px;
+      font-size: 10px;
+      display: inline-block;
+      text-align: center;
+    }
+
+    .status-green {
+      background: #bbf7d0;
+      color: #166534;
+    }
+
+    .status-yellow {
+      background: #fef9c3;
+      color: #854d0e;
+    }
+
+    .status-red {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .status-blue {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    @media (max-width: 900px) {
+      #main-dashboard {
+        grid-template-columns: 70px 1fr;
+      }
+
+      .sidebar-title,
+      .nav-item span.label,
+      .sidebar-plan-label span.label-text {
+        display: none;
+      }
+
+      .nav-item {
+        justify-content: center;
+        padding: 7px 4px;
+      }
+
+      .sidebar-plan-label {
+        font-size: 9px;
+        padding: 4px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 8px;
+      }
 
       .logo {
         height: 115px;
@@ -236,22 +469,6 @@
 
       .header-row {
         top: -10px;
-      }
-
-      .dashboard-title {
-        font-size: 22px;
-      }
-
-      .dashboard-subtitle {
-        font-size: 13px;
-      }
-
-      .plans-row {
-        gap: 12px;
-      }
-
-      .plan-card {
-        max-width: 100%;
       }
     }
   </style>
@@ -266,74 +483,156 @@
   <!-- Logo -->
   <div class="header-row">
     <img src="../images/remblyxlogo.png"
-         alt="Remblyx"
+         alt="Remblyx Logo"
          class="logo"
          onclick="window.location.href='../index.html'">
   </div>
 
-  <!-- Dashboard -->
   <div class="dashboard-wrapper">
-    <div>
-      <div class="dashboard-title">Welcome to Remblyx</div>
+    <!-- PLAN SELECTION (shown only if no saved plan) -->
+    <div id="plan-selection">
+      <div class="dashboard-title">Choose your Remblyx plan</div>
       <div class="dashboard-subtitle">
-        Choose a plan to unlock features. Your choice is tied to your account and remembered on every login.
+        Pick a workspace level below. We’ll remember it for your account and show a tailored dashboard next time you log in.
       </div>
-      <div id="active-plan-label" class="active-plan-label">
-        No plan selected yet. Pick one below.
-      </div>
-    </div>
+      <div id="plan-selection-status" class="active-plan-label"></div>
 
-    <!-- Plans -->
-    <div class="plans-row">
-      <!-- Basic -->
-      <div class="plan-card" data-plan="Basic">
-        <div class="plan-label">Plan</div>
-        <div class="plan-name">Basic</div>
-        <div class="plan-tagline">For quick testing and personal use.</div>
-        <ul class="plan-features">
-          <li>✔ Core monitoring</li>
-          <li>✔ Limited alerts</li>
-          <li>✔ Single user</li>
-        </ul>
-        <button class="plan-btn">Choose Basic</button>
-      </div>
+      <div class="plans-row">
+        <!-- Basic -->
+        <div class="plan-card" data-plan="Basic">
+          <div class="plan-label">Plan</div>
+          <div class="plan-name">Basic</div>
+          <div class="plan-tagline">For simple personal or student use.</div>
+          <ul class="plan-features">
+            <li>✔ Core monitoring tools</li>
+            <li>✔ Limited alerts</li>
+            <li>✔ 1 workspace</li>
+          </ul>
+          <button class="plan-btn">Use Basic</button>
+        </div>
 
-      <!-- Premium -->
-      <div class="plan-card" data-plan="Premium">
-        <div class="plan-label">Recommended</div>
-        <div class="plan-name">Premium</div>
-        <div class="plan-tagline">For teams that need more control.</div>
-        <ul class="plan-features">
-          <li>✔ Everything in Basic</li>
-          <li>✔ Priority alerts</li>
-          <li>✔ Team collaboration</li>
-          <li>✔ Higher limits</li>
-        </ul>
-        <button class="plan-btn">Choose Premium</button>
-      </div>
+        <!-- Premium -->
+        <div class="plan-card" data-plan="Premium">
+          <div class="plan-label">Recommended</div>
+          <div class="plan-name">Premium</div>
+          <div class="plan-tagline">For teams that need more control.</div>
+          <ul class="plan-features">
+            <li>✔ Everything in Basic</li>
+            <li>✔ Priority alerts</li>
+            <li>✔ Team collaboration</li>
+            <li>✔ Higher limits</li>
+          </ul>
+          <button class="plan-btn">Use Premium</button>
+        </div>
 
-      <!-- Enterprise (was Dev) -->
-      <div class="plan-card" data-plan="Enterprise">
-        <div class="plan-label">Advanced</div>
-        <div class="plan-name">Enterprise</div>
-        <div class="plan-tagline">For integrations & full-scale deployments.</div>
-        <ul class="plan-features">
-          <li>✔ All Premium features</li>
-          <li>✔ API & webhooks</li>
-          <li>✔ Audit logs</li>
-          <li>✔ Priority support</li>
-        </ul>
-        <button class="plan-btn">Choose Enterprise</button>
+        <!-- Enterprise -->
+        <div class="plan-card" data-plan="Enterprise">
+          <div class="plan-label">Advanced</div>
+          <div class="plan-name">Enterprise</div>
+          <div class="plan-tagline">For full-scale deployments & integrations.</div>
+          <ul class="plan-features">
+            <li>✔ All Premium features</li>
+            <li>✔ API & webhooks</li>
+            <li>✔ Audit logs</li>
+            <li>✔ Priority support</li>
+          </ul>
+          <button class="plan-btn">Use Enterprise</button>
+        </div>
       </div>
     </div>
 
-    <!-- Dynamic dashboard content -->
-    <div id="dashboard-content" class="dashboard-content">
-      <div class="dashboard-section-title">Get started</div>
-      <p>Select a plan above to see features tailored to your account.</p>
-    </div>
+    <!-- MONDAY-LIKE DASHBOARD (shown after plan chosen) -->
+    <div id="main-dashboard">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-title">Workspace</div>
 
-    <div id="logout" class="logout-link">Log out</div>
+        <div class="nav-item active">
+          <span class="icon-dot"></span>
+          <span class="label">Main Board</span>
+        </div>
+        <div class="nav-item">
+          <span class="icon-dot"></span>
+          <span class="label">Alerts</span>
+        </div>
+        <div class="nav-item">
+          <span class="icon-dot"></span>
+          <span class="label">Reports</span>
+        </div>
+        <div class="nav-item">
+          <span class="icon-dot"></span>
+          <span class="label">Integrations</span>
+        </div>
+
+        <div class="sidebar-spacer"></div>
+
+        <!-- Plan label bottom-left -->
+        <div id="sidebar-plan-label" class="sidebar-plan-label">
+          <span class="label-text">Current Plan</span>
+          <strong id="sidebar-plan-name">-</strong>
+        </div>
+
+        <div id="logout" class="logout-link">Log out</div>
+      </aside>
+
+      <!-- Main area -->
+      <main class="main-area">
+        <div class="top-bar">
+          <div class="board-title-block">
+            <div id="board-title" class="board-title">Remblyx Workspace</div>
+            <div id="board-subtitle" class="board-subtitle">
+              Overview of your monitoring items, owners, and status.
+            </div>
+          </div>
+          <div class="top-actions">
+            <input class="search-box" placeholder="Search items..." />
+            <div class="pill">Filter</div>
+            <div class="pill">Views</div>
+            <div class="pill primary">+ New Item</div>
+          </div>
+        </div>
+
+        <div class="board-wrapper">
+          <div class="board-header-row">
+            <div>Item</div>
+            <div>Owner</div>
+            <div>Status</div>
+            <div>Due Date</div>
+            <div>Priority</div>
+          </div>
+
+          <!-- Example rows (static demo) -->
+          <div class="board-row">
+            <div>Onboarding checks</div>
+            <div>You</div>
+            <div><span class="status-pill status-green">Done</span></div>
+            <div>Today</div>
+            <div>Low</div>
+          </div>
+          <div class="board-row">
+            <div>Vital alerts configuration</div>
+            <div>Team Lead</div>
+            <div><span class="status-pill status-yellow">In progress</span></div>
+            <div>Tomorrow</div>
+            <div>Medium</div>
+          </div>
+          <div class="board-row">
+            <div>Critical event pipeline</div>
+            <div>Engineering</div>
+            <div><span class="status-pill status-red">Stuck</span></div>
+            <div>Overdue</div>
+            <div>High</div>
+          </div>
+          <div class="board-row">
+            <div>Integration testing</div>
+            <div>DevOps</div>
+            <div><span class="status-pill status-blue">Planned</span></div>
+            <div>Next week</div>
+            <div>Medium</div>
+          </div>
+        </div>
+      </main>
+    </div>
   </div>
 
   <script type="module">
@@ -350,7 +649,6 @@
       setDoc
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-    // Same config as your login/signup
     const firebaseConfig = {
       apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
       authDomain: "remblyx-medisignal.firebaseapp.com",
@@ -365,132 +663,108 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
+    const planSelection = document.getElementById("plan-selection");
+    const planSelectionStatus = document.getElementById("plan-selection-status");
+    const mainDashboard = document.getElementById("main-dashboard");
     const planCards = document.querySelectorAll(".plan-card");
-    const activePlanLabel = document.getElementById("active-plan-label");
-    const dashboardContent = document.getElementById("dashboard-content");
+    const sidebarPlanLabel = document.getElementById("sidebar-plan-label");
+    const sidebarPlanName = document.getElementById("sidebar-plan-name");
     const logoutLink = document.getElementById("logout");
+    const boardTitle = document.getElementById("board-title");
+    const boardSubtitle = document.getElementById("board-subtitle");
 
     let currentUser = null;
 
-    // Redirect helper
     const goToLogin = () => {
       window.location.href = "./login.html";
     };
 
-    // Update UI highlight + text
-    function setActivePlanUI(plan) {
+    function showPlanSelection() {
+      planSelection.style.display = "block";
+      mainDashboard.style.display = "none";
+      planSelectionStatus.innerHTML = "No plan selected yet. Choose one to continue.";
+    }
+
+    function showMainDashboard(plan) {
+      planSelection.style.display = "none";
+      mainDashboard.style.display = "grid";
+
+      const label = plan || "-";
+      sidebarPlanName.textContent = label;
+
+      if (plan === "Basic") {
+        boardTitle.textContent = "Basic Monitoring Board";
+        boardSubtitle.textContent = "Lightweight overview for individual usage.";
+      } else if (plan === "Premium") {
+        boardTitle.textContent = "Premium Team Workspace";
+        boardSubtitle.textContent = "Collaborative overview for teams and advanced alerts.";
+      } else if (plan === "Enterprise") {
+        boardTitle.textContent = "Enterprise Control Center";
+        boardSubtitle.textContent = "Full-scale visibility, integrations, and governance.";
+      } else {
+        boardTitle.textContent = "Remblyx Workspace";
+        boardSubtitle.textContent = "Overview of your monitoring items, owners, and status.";
+      }
+    }
+
+    function highlightPlanCard(plan) {
       planCards.forEach(card => {
         const p = card.getAttribute("data-plan");
         card.classList.toggle("active", p === plan);
       });
-
-      if (!plan) {
-        activePlanLabel.innerHTML = "No plan selected yet. Pick one above.";
-        dashboardContent.innerHTML = `
-          <div class="dashboard-section-title">Get started</div>
-          <p>Select a plan above to see features tailored to your account.</p>
-        `;
-        return;
-      }
-
-      activePlanLabel.innerHTML = `
-        Current plan: <span class="plan-highlight">${plan}</span>
-      `;
-
-      if (plan === "Basic") {
-        dashboardContent.innerHTML = `
-          <div class="dashboard-section-title">Basic Dashboard</div>
-          <p>Welcome to the Basic plan. Perfect for light personal usage.</p>
-          <ul class="dashboard-list">
-            <li>View limited monitoring stats.</li>
-            <li>Configure basic alerts.</li>
-            <li>Upgrade anytime by selecting Premium or Enterprise.</li>
-          </ul>
-        `;
-      } else if (plan === "Premium") {
-        dashboardContent.innerHTML = `
-          <div class="dashboard-section-title">Premium Dashboard</div>
-          <p>You’re on the Premium plan. Great for teams.</p>
-          <ul class="dashboard-list">
-            <li>Team-level monitoring & alerts.</li>
-            <li>Priority notifications & extended limits.</li>
-            <li>Manage users and shared settings.</li>
-          </ul>
-        `;
-      } else if (plan === "Enterprise") {
-        dashboardContent.innerHTML = `
-          <div class="dashboard-section-title">Enterprise Dashboard</div>
-          <p>Enterprise access unlocked. Designed for full-scale deployments.</p>
-          <ul class="dashboard-list">
-            <li>Full API & webhook access.</li>
-            <li>Advanced logs & analytics.</li>
-            <li>Custom integrations & priority support.</li>
-          </ul>
-        `;
-      }
     }
 
-    // Load plan from Firestore for this user
     async function loadUserPlan(user) {
       try {
-        const userRef = doc(db, "users", user.uid);
-        const snap = await getDoc(userRef);
-        if (snap.exists() && snap.data().plan) {
-          setActivePlanUI(snap.data().plan);
+        const ref = doc(db, "users", user.uid);
+        const snap = await getDoc(ref);
+        const savedPlan = snap.exists() ? snap.data().plan : null;
+
+        if (savedPlan) {
+          highlightPlanCard(savedPlan);
+          showMainDashboard(savedPlan);
         } else {
-          setActivePlanUI(null);
+          showPlanSelection();
         }
-      } catch (err) {
-        console.error("Error loading user plan:", err);
-        setActivePlanUI(null);
+      } catch (e) {
+        console.error("Error loading plan:", e);
+        showPlanSelection();
       }
     }
 
-    // Save selected plan to Firestore
     async function saveUserPlan(plan) {
-      if (!currentUser) return;
+      if (!currentUser) {
+        alert("Please log in again.");
+        goToLogin();
+        return;
+      }
       try {
-        const userRef = doc(db, "users", currentUser.uid);
-        await setDoc(
-          userRef,
-          {
-            email: currentUser.email || null,
-            plan: plan
-          },
-          { merge: true }
-        );
-        setActivePlanUI(plan);
-      } catch (err) {
-        console.error("Error saving plan:", err);
-        alert("Could not save plan. Check console / Firestore rules.");
+        const ref = doc(db, "users", currentUser.uid);
+        await setDoc(ref, {
+          email: currentUser.email || null,
+          plan: plan
+        }, { merge: true });
+
+        highlightPlanCard(plan);
+        showMainDashboard(plan);
+      } catch (e) {
+        console.error("Error saving plan:", e);
+        alert("Could not save plan. Check Firestore rules / console.");
       }
     }
 
-    // Attach click handlers to plan cards & buttons
+    // Attach click listeners
     planCards.forEach(card => {
       const plan = card.getAttribute("data-plan");
       const btn = card.querySelector(".plan-btn");
 
-      // Click anywhere on card
-      card.addEventListener("click", (e) => {
-        // Avoid double-trigger if button also clicked (still fine though)
-        if (!currentUser) {
-          alert("Please log in again.");
-          goToLogin();
-          return;
-        }
+      card.addEventListener("click", () => {
         saveUserPlan(plan);
       });
 
-      // Explicit button click (same behavior)
       if (btn) {
         btn.addEventListener("click", (e) => {
           e.stopPropagation();
-          if (!currentUser) {
-            alert("Please log in again.");
-            goToLogin();
-            return;
-          }
           saveUserPlan(plan);
         });
       }
@@ -502,7 +776,7 @@
       goToLogin();
     });
 
-    // Check auth state on load
+    // Auth state
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         goToLogin();
