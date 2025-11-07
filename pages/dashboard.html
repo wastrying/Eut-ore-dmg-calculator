@@ -190,9 +190,9 @@
     }
   }
 
-  function setStatus(text){ 
-    const statusEl = document.getElementById("status"); 
-    if (statusEl) statusEl.textContent = text; 
+  function setStatus(text) {
+    const statusEl = document.getElementById("status");
+    if (statusEl) statusEl.textContent = text;
   }
 
   function highlightPlanCard(plan) {
@@ -296,13 +296,13 @@
       currentPlan = null;
     }
 
-    // Show dashboard immediately
-    setDashboardVisibility(true); // Ensure dashboard is shown
+    // Show the dashboard immediately after user is authenticated
+    setDashboardVisibility(true); // Make sure dashboard is visible
 
     // Apply UI based on user plan
     handlePlanChanges();
 
-    // For developers, immediately redirect to dashboard if they try to upgrade
+    // For developers, immediately redirect to selection page if they try to upgrade
     if (DEV_EMAILS.includes(user.email.toLowerCase())) {
       window.location.href = SELECTION_URL;
       return;
