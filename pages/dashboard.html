@@ -423,18 +423,15 @@
       #main-dashboard {
         grid-template-columns: 70px 1fr;
       }
-
       .sidebar-title,
       .nav-item span.label,
       .sidebar-plan-label span.label-text {
         display: none;
       }
-
       .nav-item {
         justify-content: center;
         padding: 7px 4px;
       }
-
       .sidebar-plan-label {
         font-size: 9px;
         padding: 4px;
@@ -442,17 +439,9 @@
     }
 
     @media (max-width: 600px) {
-      body {
-        padding: 8px;
-      }
-
-      .logo {
-        height: 115px;
-      }
-
-      .header-row {
-        top: -10px;
-      }
+      body { padding: 8px; }
+      .logo { height: 115px; }
+      .header-row { top: -10px; }
     }
   </style>
 </head>
@@ -561,9 +550,6 @@
         <div id="delete-account" class="logout-link" style="color:#f87171;">
           Delete account &amp; data
         </div>
-
-
-        <div id="logout" class="logout-link">Log out</div>
       </aside>
 
       <!-- Main area -->
@@ -627,23 +613,20 @@
   </div>
 
   <script type="module">
-    
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-   import {
-    getAuth,
-    onAuthStateChanged,
-    signOut,
-    deleteUser
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut,
+      deleteUser
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-
-  import {
-   getFirestore,
-   doc,
-   getDoc,
-   setDoc,
-   deleteDoc
-  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc,
+      deleteDoc
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
     // Firebase config
     const firebaseConfig = {
@@ -673,7 +656,7 @@
     let currentUser = null;
 
     const goToLogin = () => {
-      // dashboard.html is in /pages/, login.html should also be in /pages/
+      // dashboard.html is in /pages/, login.html also in /pages/
       window.location.href = "./login.html";
     };
 
@@ -721,6 +704,7 @@
         if (savedPlan) {
           highlightPlanCard(savedPlan);
           showMainDashboard(savedPlan);
+          planSelectionStatus.textContent = `You are currently on the ${savedPlan} plan.`;
         } else {
           showPlanSelection();
         }
@@ -773,39 +757,41 @@
       await signOut(auth);
       goToLogin();
     });
+
     // Delete account + Firestore data
-deleteAccountLink.addEventListener("click", async () => {
-  if (!currentUser) {
-    alert("No user is logged in.");
-    return;
-  }
+    deleteAccountLink.addEventListener("click", async () => {
+      if (!currentUser) {
+        alert("No user is logged in.");
+        return;
+      }
 
-  const confirmDelete = confirm(
-    "Are you sure you want to permanently delete your account and all associated data?"
-  );
-  if (!confirmDelete) return;
+      const confirmDelete = confirm(
+        "Are you sure you want to permanently delete your account and all associated data?"
+      );
+      if (!confirmDelete) return;
 
-  const uid = currentUser.uid;
+      const uid = currentUser.uid;
 
-  try {
-    // 1) Delete Firestore user document
-    await deleteDoc(doc(db, "users", uid));
+      try {
+        // 1) Delete Firestore user document
+        await deleteDoc(doc(db, "users", uid));
 
-    // 2) Delete Firebase Auth user
-    await deleteUser(currentUser);
+        // 2) Delete Firebase Auth user
+        await deleteUser(currentUser);
 
-    alert("Your account and data have been deleted.");
-    window.location.href = "../index.html";
-  } catch (error) {
-    console.error("Delete account error:", error);
+        alert("Your account and data have been deleted.");
+        window.location.href = "../index.html";
+      } catch (error) {
+        console.error("Delete account error:", error);
 
-    if (error.code === "auth/requires-recent-login") {
-      alert("For security, please log in again and then try deleting your account.");
-    } else {
-      alert("Could not delete your account. Please try again.");
-    }
-  }
-});
+        if (error.code === "auth/requires-recent-login") {
+          alert("For security, please log in again and then try deleting your account.");
+        } else {
+          alert("Could not delete your account. Please try again.");
+        }
+      }
+    });
+
     // Auth guard + load plan
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
