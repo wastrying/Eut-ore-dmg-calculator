@@ -245,10 +245,19 @@
       }
     }
 
-    // Allow all users to change their plan
-    if (sidebarPlanEl) {
+    // Check if the user is a developer
+    const isDeveloper = currentPlan === "Developers";
+
+    // If it's a developer account, lock the plan change option
+    if (isDeveloper) {
+      sidebarPlanEl.classList.add("locked");
+      sidebarPlanEl.title = "Developer accounts cannot change plan";
+      sidebarPlanEl.removeEventListener("click", handlePlanChange); // Remove the event listener
+    } else {
+      // If it's not a developer account, allow plan change
       sidebarPlanEl.classList.remove("locked");
       sidebarPlanEl.title = "Click to change plan";
+      sidebarPlanEl.addEventListener("click", handlePlanChange); // Reattach the event listener
     }
 
     // Show delete account option for all users
@@ -258,6 +267,22 @@
 
     if (plan === "Developers") showDevelopersView();
     else showRegularView();
+  }
+
+  // Event handler for changing the plan
+  async function handlePlanChange() {
+    const newPlan = prompt("Enter new plan (e.g., Basic, Premium, Enterprise):");
+    if (newPlan) {
+      // Update user's plan in Firestore
+      try {
+        const userRef = doc(db, "users", currentUser.uid);
+        await setDoc(userRef, { plan: newPlan }, { merge: true });
+        alert("Your plan has been updated to " + newPlan);
+        applyPlanUi(newPlan);
+      } catch (error) {
+        console.error("Error updating plan:", error);
+      }
+    }
   }
 
   async function renderAllUsers() {
@@ -376,22 +401,6 @@
         window.location.href = LOGIN_URL; // Redirect to login page
       } catch (error) {
         console.error("Error deleting account:", error);
-      }
-    }
-  });
-
-  // Allow user to click to upgrade subscription plan
-  sidebarPlanEl.addEventListener("click", async () => {
-    const newPlan = prompt("Enter new plan (e.g., Basic, Premium, Enterprise):");
-    if (newPlan) {
-      // Update user's plan in Firestore
-      try {
-        const userRef = doc(db, "users", currentUser.uid);
-        await setDoc(userRef, { plan: newPlan }, { merge: true });
-        alert("Your plan has been updated to " + newPlan);
-        applyPlanUi(newPlan);
-      } catch (error) {
-        console.error("Error updating plan:", error);
       }
     }
   });
