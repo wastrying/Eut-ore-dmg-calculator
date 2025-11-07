@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,6 +17,7 @@
     .logo:hover { filter:brightness(1.1); transform:scale(1.03); }
 
     .container {
+      <button id="close-selection" class="close-x" aria-label="Back to dashboard" title="Back to dashboard">×</button>
       position: relative; /* for the close-X */
       background: rgba(255,255,255,.97);
       border-radius:16px;
@@ -30,28 +32,28 @@
 
     /* Top-right "back to dashboard" X (hidden by default) */
     .close-x{
-      position:absolute;
-      top:10px;
-      right:12px;
-      width:32px;
-      height:32px;
-      border:none;
-      border-radius:8px;
-      background:#f3f4f6;
-      color:#111827;
-      font-size:18px;
-      cursor:pointer;
-      display:none; /* default hidden; shown if plan exists */
-    }
-    .close-x:hover{ background:#e5e7eb; }
+    position:absolute;
+    top:10px;
+    right:12px;
+    width:32px;
+    height:32px;
+    border:none;
+    border-radius:8px;
+    background:#f3f4f6;
+    color:#111827;
+    font-size:18px;
+    cursor:pointer;
+    display:none; /* default hidden; shown if plan exists */
+  }
+  .close-x:hover{ background:#e5e7eb; }
 
-    /* Current plan button look */
-    .plan-btn.is-current,
-    .plan-btn[disabled]{
-      background:#9ca3af;
-      cursor:not-allowed;
-      opacity:0.9;
-    }
+  /* Current plan button look */
+  .plan-btn.is-current,
+  .plan-btn[disabled]{
+    background:#9ca3af;
+    cursor:not-allowed;
+    opacity:0.9;
+  }
 
     .title { font-size:24px; font-weight:600; margin-bottom:6px; }
     .subtitle { font-size:14px; color:#444; max-width:640px; margin:0 auto 10px; }
@@ -134,6 +136,7 @@
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
   import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
+  // --- Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
     authDomain: "remblyx-medisignal.firebaseapp.com",
@@ -150,59 +153,132 @@
   // --- Elements
   const planCards = document.querySelectorAll(".plan-card");
   const statusEl  = document.getElementById("status");
-  const closeBtn  = document.getElementById("close-to-dashboard");
+  const closeBtn  = document.getElementById("close-selection");
+
+  // --- Helpers
+  const DASHBOARD_URL = "./dashboard.html";
+  const MODE = (new URLSearchParams(location.search).get("mode") || "new").toLowerCase(); // "new" or "change"
+  const DEV_EMAILS = ["medisignal.remblyx@gmail.com"];
 
   let currentUser = null;
   let savedPlan = null;
 
-  // Firebase Authentication: Check if user is logged in
+  function setStatus(text){ if (statusEl) statusEl.textContent = text; }
+
+  function highlightPlanCard(plan) {
+    planCards.forEach(card => {
+      card.classList.toggle("active", card.getAttribute("data-plan") === plan);
+    });
+  }
+
+  function markCurrentPlanButton(plan){
+    planCards.forEach(card => {
+      const name = card.getAttribute("data-plan");
+      const btn  = card.querySelector(".plan-btn");
+      if (!btn) return;
+
+      if (name === plan){
+        btn.textContent = "Currently using";
+        btn.classList.add("is-current");
+        btn.setAttribute("disabled", "disabled");
+        // Ignore clicks on the current card
+        card.onclick = (e) => e.stopPropagation();
+      } else {
+        btn.textContent = `Use ${name}`;
+        btn.classList.remove("is-current");
+        btn.removeAttribute("disabled");
+      }
+    });
+  }
+
+  function bindPlanClicks(user) {
+    planCards.forEach(card => {
+      const name = card.getAttribute("data-plan");
+      const btn  = card.querySelector(".plan-btn");
+
+      if (name === savedPlan) return; // already marked and disabled
+
+      const select = async (e) => {
+        e?.stopPropagation?.();
+        if (MODE === "change" && savedPlan && savedPlan !== name) {
+          const ok = confirm(`Switch plan from ${savedPlan} ➜ ${name}?`);
+          if (!ok) return;
+        }
+        try {
+          await setDoc(doc(db, "users", user.uid), { email: user.email || null, plan: name }, { merge: true });
+          // Guard flag to stop bounce on first dashboard load
+          sessionStorage.setItem("rbx_last_nav", "from_selection");
+          window.location.href = `${DASHBOARD_URL}?from=selection`;
+        } catch (e) {
+          alert("Couldn't save plan. Check Firestore rules/console.");
+          console.error(e);
+        }
+      };
+
+      card.addEventListener("click", select);
+      if (btn) btn.addEventListener("click", select);
+    });
+  }
+
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
-      window.location.href = "./login.html"; // Redirect to login if user is not logged in
+      window.location.href = "./login.html";
       return;
     }
     currentUser = user;
 
-    // Fetch the user's plan from Firestore
+    // Dev accounts never stay here; force Developers and go
+    if (DEV_EMAILS.includes((user.email || "").toLowerCase())) {
+      try {
+        await setDoc(doc(db, "users", user.uid), { email: user.email || null, plan: "Developers" }, { merge: true });
+      } finally {
+        sessionStorage.setItem("rbx_last_nav", "from_selection");
+        window.location.href = `${DASHBOARD_URL}?from=selection`;
+      }
+      return;
+    }
+
+    // Load existing plan (if any)
     try {
       const snap = await getDoc(doc(db, "users", user.uid));
       savedPlan = snap.exists() ? snap.data().plan : null;
     } catch (e) {
+      console.error("Error loading plan:", e);
+      // Stay on selection (don’t bounce) so user can choose a plan to recover
       savedPlan = null;
     }
 
-    // **Prevent immediate redirection** if the user already has a plan.
+    // If a plan exists and user didn't explicitly open "change" mode, go straight to dashboard.
+    if (savedPlan && MODE !== "change") {
+      sessionStorage.setItem("rbx_last_nav", "from_selection");
+      window.location.href = `${DASHBOARD_URL}?from=selection`;
+      return;
+    }
+
+    // Show close X only if user already has a plan
+    if (closeBtn) {
+      if (savedPlan) {
+        closeBtn.style.display = "inline-block";
+        closeBtn.onclick = () => {
+          sessionStorage.setItem("rbx_last_nav", "from_selection");
+          window.location.href = `${DASHBOARD_URL}?from=selection`;
+        };
+      } else {
+        closeBtn.style.display = "none";
+      }
+    }
+
+    // Stay on selection page; show state + disable current button
     if (savedPlan) {
-      setStatus(`You are currently using the ${savedPlan} plan.`); // Display current plan info
-      closeBtn.style.display = "inline-block"; // Show close button
-      closeBtn.onclick = () => {
-        window.location.href = "./dashboard.html"; // Allow return to dashboard without changing plan
-      };
+      highlightPlanCard(savedPlan);
+      markCurrentPlanButton(savedPlan);
+      setStatus(`Current plan: ${savedPlan}. Choose a new plan to switch.`);
     } else {
-      setStatus("Choose a plan to continue.");
+      setStatus("No plan selected yet. Choose one to continue.");
     }
 
-    // **Prevent auto-redirection** and force user to stay on selection if they have a plan.
-    if (savedPlan && !window.location.hash) {
-      return; // Don't redirect if the user has a plan and is not changing it
-    }
-
-    // Handle plan selection (only show new plans if no plan is selected yet)
-    planCards.forEach(card => {
-      const plan = card.getAttribute("data-plan");
-      const btn = card.querySelector(".plan-btn");
-
-      btn.addEventListener("click", async () => {
-        console.log("Button clicked for plan:", plan);  // Debugging message
-        if (plan !== savedPlan) {
-          // Update Firestore with the new selected plan
-          await setDoc(doc(db, "users", user.uid), { plan }, { merge: true });
-          console.log("Plan updated in Firestore");  // Debugging message
-          window.location.href = "./dashboard.html"; // Redirect to dashboard after selecting a new plan
-        }
-      });
-    });
+    bindPlanClicks(user);
   });
-  </script>
+</script>
 </body>
 </html>
