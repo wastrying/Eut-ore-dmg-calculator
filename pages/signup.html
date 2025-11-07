@@ -714,27 +714,36 @@
   });
 
   // Google OAuth
-  googleBtn.addEventListener("click", async (e) => {
-    e.preventDefault();
-    if (popupInProgress) return;
-    popupInProgress = true;
-    clearError();
-    successText.style.display = "none";
-    if (openEmailBtn) openEmailBtn.style.display = "none";
+  // Google login
+gmailBtn.addEventListener("click", async (e) => {
+  e.preventDefault();
+  if (popupInProgress) return;
+  popupInProgress = true;
+  clearError();
 
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      showSuccess(`Signed in with Google as ${user.email}. Redirecting...`);
-      window.location.href = "../pages/login.html";
-    } catch (error) {
-      if (error.code !== "auth/cancelled-popup-request") {
-        showError("⚠ Google sign-in failed. Check Firebase/Google config.");
-      }
-    } finally {
-      popupInProgress = false;
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
+
+    // Check if the user is the correct Gmail account
+    if (user.email === "medisignal.remblyx@gmail.com") {
+      // Proceed to the dashboard
+      goToDashboard();
+    } else {
+      // If the email doesn't match, show an error
+      showError("⚠ You are not authorized to log in with this account.");
+      await signOut(auth);
     }
-  });
+  } catch (error) {
+    if (error.code !== "auth/cancelled-popup-request") {
+      console.error("Google login error:", error);
+      showError("⚠ Google sign-in failed.");
+    }
+  } finally {
+    popupInProgress = false;
+  }
+});
+
 
   // Facebook OAuth
   facebookBtn.addEventListener("click", async (e) => {
@@ -775,4 +784,5 @@
 
 </body>
 </html>
+
 
