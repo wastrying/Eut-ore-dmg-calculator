@@ -44,13 +44,13 @@
     /* Header + logo */
     .header-row {
       position: fixed;
-      top: -27px;          /* shifted up like signup */
+      top: -27px;      /* aligned with signup */
       left: 8px;
       z-index: 20;
     }
 
     .logo {
-      height: 200px;       /* big on desktop */
+      height: 200px;   /* big logo */
       cursor: pointer;
       transition: 0.3s ease;
     }
@@ -60,7 +60,7 @@
       transform: scale(1.03);
     }
 
-    /* Card containers */
+    /* Card */
     .container {
       background: rgba(245, 245, 245, 0.97);
       border-radius: 16px;
@@ -72,7 +72,7 @@
       z-index: 10;
       text-align: center;
       margin: 0;
-      max-height: calc(100vh - 80px); /* fit on screen */
+      max-height: calc(100vh - 80px); /* fit under logo */
       overflow-y: auto;               /* only card scrolls if needed */
     }
 
@@ -101,7 +101,7 @@
       align-items: center;
       justify-content: center;
       transition: 0.25s;
-      color: white;
+      color: #fff;
       touch-action: manipulation;
     }
 
@@ -134,14 +134,13 @@
       border-radius: 8px;
       border: 1px solid #ccc;
       font-size: 14px;
-      background: white;
+      background: #fff;
       color: #333;
     }
 
     input::placeholder { color: #999; }
 
-    button.submit-btn,
-    #home-box button {
+    button.submit-btn {
       width: 100%;
       padding: 11px;
       margin-top: 10px;
@@ -150,13 +149,12 @@
       font-size: 15px;
       cursor: pointer;
       background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white;
+      color: #fff;
       transition: 0.25s;
       touch-action: manipulation;
     }
 
-    button.submit-btn:hover,
-    #home-box button:hover {
+    button.submit-btn:hover {
       opacity: 0.94;
       transform: translateY(-1px);
     }
@@ -180,7 +178,10 @@
       text-decoration: underline;
     }
 
-    #home-box { display: none; }
+    /* Unused home box (kept for safety) */
+    #home-box {
+      display: none;
+    }
 
     /* Mobile */
     @media (max-width: 480px) {
@@ -189,7 +190,7 @@
       }
 
       .logo {
-        height: 115px;    /* mobile size */
+        height: 115px;
       }
 
       .header-row {
@@ -210,8 +211,7 @@
         padding: 7px;
       }
 
-      button.submit-btn,
-      #home-box button {
+      button.submit-btn {
         font-size: 14px;
         padding: 10px;
       }
@@ -246,6 +246,7 @@
     <hr>
 
     <p id="error" class="error"></p>
+
     <form id="loginForm">
       <input type="text" id="email" placeholder="Email" required>
       <input type="password" id="password" placeholder="Password" required>
@@ -253,11 +254,12 @@
     </form>
 
     <p class="create-text">
-      Are you a new user? <a href="../pages/signup.html">Create your account</a>
+      Are you a new user? <a href="./signup.html">Create your account</a>
+      <!-- assuming login.html and signup.html are both in /pages/ -->
     </p>
   </div>
 
-  <!-- Logged-in view -->
+  <!-- (Old home box hidden; not used now) -->
   <div id="home-box" class="container">
     <h2>Welcome!</h2>
     <p id="welcome-text"></p>
@@ -290,47 +292,60 @@
     const auth = getAuth(app);
 
     const loginBox = document.getElementById("login-box");
-    const homeBox = document.getElementById("home-box");
+    const homeBox = document.getElementById("home-box"); // unused visual
     const form = document.getElementById("loginForm");
     const errorText = document.getElementById("error");
-    const welcomeText = document.getElementById("welcome-text");
-    const logoutBtn = document.getElementById("logoutBtn");
     const gmailBtn = document.querySelector(".gmail-btn");
     const facebookBtn = document.querySelector(".facebook-btn");
+    const logoutBtn = document.getElementById("logoutBtn"); // only used if you decide to later
 
     const googleProvider = new GoogleAuthProvider();
     const facebookProvider = new FacebookAuthProvider();
     let popupInProgress = false;
 
-    const showError = (msg) => { errorText.textContent = msg; };
-    const clearError = () => { errorText.textContent = ""; };
+    const DASHBOARD_URL = "./dashboard.html"; // /pages/dashboard.html
 
-    const showHome = (user) => {
-      if (!user) return showLogin();
-      loginBox.style.display = "none";
-      homeBox.style.display = "block";
-      welcomeText.textContent = `You are logged in as ${user.email}`;
+    const showError = (msg) => {
+      errorText.textContent = msg;
+    };
+
+    const clearError = () => {
+      errorText.textContent = "";
+    };
+
+    const goToDashboard = () => {
+      window.location.href = DASHBOARD_URL;
     };
 
     const showLogin = () => {
-      homeBox.style.display = "none";
+      // we only have login view now
       loginBox.style.display = "block";
+      if (homeBox) homeBox.style.display = "none";
       clearError();
       form.reset();
     };
 
     const handleVerifiedOrBlock = async (user) => {
-      if (!user) return showLogin();
+      if (!user) {
+        showLogin();
+        return;
+      }
+
       const isPasswordUser = user.providerData.some(p => p.providerId === "password");
+
+      // require verification for email/password users
       if (isPasswordUser && !user.emailVerified) {
         showError("Please verify your email before logging in.");
         await signOut(auth);
         showLogin();
         return;
       }
-      showHome(user);
+
+      // all good → go dashboard
+      goToDashboard();
     };
 
+    // If already logged in when opening page
     onAuthStateChanged(auth, (user) => {
       handleVerifiedOrBlock(user);
     });
@@ -350,14 +365,17 @@
 
       try {
         const { user } = await signInWithEmailAndPassword(auth, email, password);
+
         const isPasswordUser = user.providerData.some(p => p.providerId === "password");
         if (isPasswordUser && !user.emailVerified) {
           showError("Please verify your email before logging in.");
           await signOut(auth);
           return;
         }
-        showHome(user);
+
+        goToDashboard();
       } catch (error) {
+        console.error("Login error:", error);
         let message = "⚠ Invalid email or password.";
         if (error.code === "auth/invalid-email") message = "⚠ Invalid email format.";
         else if (error.code === "auth/user-not-found") message = "⚠ No account found with this email.";
@@ -367,11 +385,13 @@
       }
     });
 
-    // Logout
-    logoutBtn.addEventListener("click", async () => {
-      await signOut(auth);
-      showLogin();
-    });
+    // Optional: Logout (only relevant if you reuse #home-box somewhere)
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", async () => {
+        await signOut(auth);
+        showLogin();
+      });
+    }
 
     // Google login
     gmailBtn.addEventListener("click", async (e) => {
@@ -382,10 +402,12 @@
 
       try {
         const result = await signInWithPopup(auth, googleProvider);
-        showHome(result.user);
+        const user = result.user;
+        // Google accounts are already verified
+        goToDashboard();
       } catch (error) {
         if (error.code !== "auth/cancelled-popup-request") {
-          console.error(error);
+          console.error("Google login error:", error);
           showError("⚠ Google sign-in failed.");
         }
       } finally {
@@ -402,10 +424,11 @@
 
       try {
         const result = await signInWithPopup(auth, facebookProvider);
-        showHome(result.user);
+        const user = result.user;
+        goToDashboard();
       } catch (error) {
         if (error.code !== "auth/cancelled-popup-request") {
-          console.error(error);
+          console.error("Facebook login error:", error);
           showError("⚠ Facebook sign-in failed.");
         }
       } finally {
@@ -415,5 +438,3 @@
   </script>
 </body>
 </html>
-
-
