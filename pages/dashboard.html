@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Remblyx Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <link rel="icon" type="image/png" sizes="32x32" href="../images/medisignal.png">
   <link rel="icon" type="image/png" sizes="192x192" href="../images/medisignal.png">
   <link rel="apple-touch-icon" href="../images/medisignal.png">
@@ -104,6 +103,13 @@
       planSelection.style.display = "none";
       mainDashboard.style.display = "grid";
       sidebarPlanName.textContent = plan || "-";
+    }
+
+    function highlightPlanCard(plan) {
+      planCards.forEach(card => {
+        const p = card.getAttribute("data-plan");
+        card.classList.toggle("active", p === plan);
+      });
     }
 
     async function saveUserPlan(plan) {
