@@ -245,24 +245,15 @@
       }
     }
 
-    // Lock "change plan" for Developers
+    // Allow all users to change their plan
     if (sidebarPlanEl) {
-      if (currentPlan === "Developers") {
-        sidebarPlanEl.classList.add("locked");
-        sidebarPlanEl.title = "Plan is managed (Developers). Changes are disabled.";
-      } else {
-        sidebarPlanEl.classList.remove("locked");
-        sidebarPlanEl.title = "Click to change plan";
-      }
+      sidebarPlanEl.classList.remove("locked");
+      sidebarPlanEl.title = "Click to change plan";
     }
 
-    // Handle visibility of "Delete account & data" and "Change Plan"
+    // Show delete account option for all users
     if (deleteAccountLink) {
-      if (currentPlan === "Developers") {
-        deleteAccountLink.style.display = "block"; // Show delete account option for Developers
-      } else {
-        deleteAccountLink.style.display = "none"; // Hide it for non-developers
-      }
+      deleteAccountLink.style.display = "block"; // Always show delete account option
     }
 
     if (plan === "Developers") showDevelopersView();
@@ -370,20 +361,18 @@
     }
   });
 
-  // DELETE ACCOUNT & DATA (only for Developers)
+  // DELETE ACCOUNT & DATA (Available for all users)
   deleteAccountLink.addEventListener("click", async () => {
-    if (currentPlan !== "Developers") {
-      alert("You cannot delete your account or data unless you're on the Developer plan.");
-      return;
-    }
-
-    try {
-      await deleteUser(auth.currentUser);
-      alert("Your account has been deleted.");
-      window.location.href = LOGIN_URL; // Redirect to login page
-    } catch (error) {
-      console.error("Error deleting account:", error);
+    if (confirm("Are you sure you want to delete your account and data? This action cannot be undone.")) {
+      try {
+        await deleteUser(auth.currentUser);
+        alert("Your account has been deleted.");
+        window.location.href = LOGIN_URL; // Redirect to login page
+      } catch (error) {
+        console.error("Error deleting account:", error);
+      }
     }
   });
 </script>
-
+</body>
+</html>
