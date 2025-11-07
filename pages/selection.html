@@ -193,9 +193,11 @@
       const btn = card.querySelector(".plan-btn");
 
       btn.addEventListener("click", async () => {
+        console.log("Button clicked for plan:", plan);  // Debugging message
         if (plan !== savedPlan) {
           // Update Firestore with the new selected plan
           await setDoc(doc(db, "users", user.uid), { plan }, { merge: true });
+          console.log("Plan updated in Firestore");  // Debugging message
           window.location.href = "./dashboard.html"; // Redirect to dashboard after selecting a new plan
         }
       });
