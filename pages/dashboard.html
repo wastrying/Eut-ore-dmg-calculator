@@ -205,16 +205,16 @@
     /* MONDAY-LIKE DASHBOARD STATE */
 
     #main-dashboard {
-      display: none; /* shown after plan chosen */
-      height: calc(100vh - 90px);
-      max-height: calc(100vh - 90px);
-      background: rgba(255,255,255,0.96);
-      border-radius: 18px;
-      box-shadow: 0 10px 26px rgba(0,0,0,0.2);
-      display: grid;
-      grid-template-columns: 230px 1fr;
-      overflow: hidden;
-    }
+  display: none; /* start hidden; JS will set display: grid when ready */
+  height: calc(100vh - 90px);
+  max-height: calc(100vh - 90px);
+  background: rgba(255,255,255,0.96);
+  border-radius: 18px;
+  box-shadow: 0 10px 26px rgba(0,0,0,0.2);
+  grid-template-columns: 230px 1fr;
+  overflow: hidden;
+}
+
 
     /* Sidebar */
     .sidebar {
