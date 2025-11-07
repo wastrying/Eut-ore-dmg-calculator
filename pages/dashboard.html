@@ -155,7 +155,6 @@
   import { getAuth, onAuthStateChanged, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
   import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-  // --- Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
     authDomain: "remblyx-medisignal.firebaseapp.com",
@@ -165,6 +164,7 @@
     appId: "1:50711670199:web:0c9c2ff72cd77234ce0c32",
     measurementId: "G-JQ3843RM4V"
   };
+
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
@@ -175,9 +175,7 @@
   const logoutLink = document.getElementById("logout");
   const deleteAccountLink = document.getElementById("delete-account");
   const closeSelectionBtn = document.getElementById("close-selection");  // Close button for selection page
-
-  const selectionContainer = document.querySelector(".container"); // The container that holds the selection page
-  const planCards = document.querySelectorAll(".plan-card");
+  const mainDashboard = document.getElementById("main-dashboard");  // Make sure this exists in the HTML
 
   // --- Variables
   const DEV_EMAILS = ["medisignal.remblyx@gmail.com"]; // Developer email addresses
@@ -186,26 +184,36 @@
   let currentPlan = null;
 
   // --- Helpers
-  function setStatus(text){ if (statusEl) statusEl.textContent = text; }
+  function setDashboardVisibility(show) {
+    if (mainDashboard) {
+      mainDashboard.style.display = show ? "grid" : "none"; // Explicitly toggle visibility
+    }
+  }
+
+  function setStatus(text){ 
+    const statusEl = document.getElementById("status"); 
+    if (statusEl) statusEl.textContent = text; 
+  }
 
   function highlightPlanCard(plan) {
+    const planCards = document.querySelectorAll(".plan-card");
     planCards.forEach(card => {
       card.classList.toggle("active", card.getAttribute("data-plan") === plan);
     });
   }
 
-  function markCurrentPlanButton(plan){
+  function markCurrentPlanButton(plan) {
+    const planCards = document.querySelectorAll(".plan-card");
     planCards.forEach(card => {
       const name = card.getAttribute("data-plan");
-      const btn  = card.querySelector(".plan-btn");
+      const btn = card.querySelector(".plan-btn");
       if (!btn) return;
 
-      if (name === plan){
+      if (name === plan) {
         btn.textContent = "Currently using";
         btn.classList.add("is-current");
         btn.setAttribute("disabled", "disabled");
-        // Ignore clicks on the current card
-        card.onclick = (e) => e.stopPropagation();
+        card.onclick = (e) => e.stopPropagation(); // Disable further clicks
       } else {
         btn.textContent = `Use ${name}`;
         btn.classList.remove("is-current");
@@ -215,9 +223,10 @@
   }
 
   function bindPlanClicks(user) {
+    const planCards = document.querySelectorAll(".plan-card");
     planCards.forEach(card => {
       const name = card.getAttribute("data-plan");
-      const btn  = card.querySelector(".plan-btn");
+      const btn = card.querySelector(".plan-btn");
 
       if (name === currentPlan) return; // already marked and disabled
 
@@ -243,6 +252,7 @@
 
   // --- Plan UI and Handling
   function handlePlanChanges() {
+    const selectionContainer = document.querySelector(".container");
     if (currentPlan === "Developers") {
       // Disable plan changes for developers
       if (sidebarPlanEl) {
@@ -286,6 +296,9 @@
       currentPlan = null;
     }
 
+    // Show dashboard immediately
+    setDashboardVisibility(true); // Ensure dashboard is shown
+
     // Apply UI based on user plan
     handlePlanChanges();
 
@@ -322,7 +335,6 @@
       }
     }
   });
-
 </script>
 </body>
 </html>
