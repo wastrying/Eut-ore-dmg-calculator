@@ -16,7 +16,6 @@
     .logo:hover { filter:brightness(1.1); transform:scale(1.03); }
 
     .container {
-      <button id="close-selection" class="close-x" aria-label="Back to dashboard" title="Back to dashboard">×</button>
       position: relative; /* for the close-X */
       background: rgba(255,255,255,.97);
       border-radius:16px;
@@ -31,28 +30,28 @@
 
     /* Top-right "back to dashboard" X (hidden by default) */
     .close-x{
-    position:absolute;
-    top:10px;
-    right:12px;
-    width:32px;
-    height:32px;
-    border:none;
-    border-radius:8px;
-    background:#f3f4f6;
-    color:#111827;
-    font-size:18px;
-    cursor:pointer;
-    display:none; /* default hidden; shown if plan exists */
-  }
-  .close-x:hover{ background:#e5e7eb; }
+      position:absolute;
+      top:10px;
+      right:12px;
+      width:32px;
+      height:32px;
+      border:none;
+      border-radius:8px;
+      background:#f3f4f6;
+      color:#111827;
+      font-size:18px;
+      cursor:pointer;
+      display:none; /* default hidden; shown if plan exists */
+    }
+    .close-x:hover{ background:#e5e7eb; }
 
-  /* Current plan button look */
-  .plan-btn.is-current,
-  .plan-btn[disabled]{
-    background:#9ca3af;
-    cursor:not-allowed;
-    opacity:0.9;
-  }
+    /* Current plan button look */
+    .plan-btn.is-current,
+    .plan-btn[disabled]{
+      background:#9ca3af;
+      cursor:not-allowed;
+      opacity:0.9;
+    }
 
     .title { font-size:24px; font-weight:600; margin-bottom:6px; }
     .subtitle { font-size:14px; color:#444; max-width:640px; margin:0 auto 10px; }
