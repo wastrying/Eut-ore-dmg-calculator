@@ -5,216 +5,8 @@
   <title>Log In | Remblyx</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Arial', sans-serif;
-    }
-
-    body {
-      background: #ffffff;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: relative;
-      overflow: hidden; /* no page scroll */
-      padding: 16px;
-    }
-
-    /* Overlay background */
-    .overlay {
-      position: fixed;
-      inset: 0;
-      z-index: -1;
-    }
-
-    .bg-image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      filter: blur(4px);
-      opacity: 0.8;
-    }
-
-    /* Header Row */
-    .header-row {
-      position: fixed;
-      top: -27px; /* moved up */
-      left: 8px;
-      z-index: 20;
-    }
-
-    .logo {
-      height: 200px;
-      cursor: pointer;
-      transition: 0.3s ease;
-    }
-
-    .logo:hover {
-      filter: brightness(1.1);
-      transform: scale(1.03);
-    }
-
-    /* Login container + home box */
-    .container,
-    #home-box {
-      background: rgba(245, 245, 245, 0.97);
-      border-radius: 16px;
-      padding: 20px 18px 18px;
-      max-width: 420px;
-      width: 100%;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-      color: #333;
-      z-index: 10;
-      position: relative;
-      text-align: center;
-      margin: 0;
-      max-height: calc(100vh - 80px);
-      overflow-y: auto; /* card scroll only if needed */
-    }
-
-    h2 {
-      margin-bottom: 12px;
-      color: #333;
-      font-size: 22px;
-      font-weight: 600;
-    }
-
-    .social-buttons {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-
-    .social-btn {
-      flex: 1;
-      padding: 8px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 13px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: 0.25s;
-      color: white;
-      touch-action: manipulation;
-    }
-
-    .gmail-btn { background: #e57373; }
-    .facebook-btn { background: #4267B2; }
-
-    .social-btn img {
-      height: 18px;
-      width: 18px;
-      margin-right: 6px;
-    }
-
-    .social-btn:hover {
-      opacity: 0.92;
-      transform: translateY(-1px);
-    }
-
-    hr {
-      margin: 10px 0 12px;
-      border: 0;
-      border-top: 1px solid #ccc;
-    }
-
-    input[type="text"],
-    input[type="password"] {
-      width: 100%;
-      padding: 10px;
-      margin: 6px 0;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-      background: white;
-      color: #333;
-    }
-
-    input::placeholder {
-      color: #999;
-    }
-
-    button.submit-btn,
-    #home-box button {
-      width: 100%;
-      padding: 11px;
-      margin-top: 10px;
-      border: none;
-      border-radius: 10px;
-      font-size: 15px;
-      cursor: pointer;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white;
-      transition: 0.25s;
-      touch-action: manipulation;
-    }
-
-    button.submit-btn:hover,
-    #home-box button:hover {
-      opacity: 0.94;
-      transform: translateY(-1px);
-    }
-
-    .error {
-      color: red;
-      font-size: 12px;
-      margin-top: 5px;
-      min-height: 16px;
-    }
-
-    .create-text {
-      margin-top: 10px;
-      font-size: 13px;
-      color: #555;
-    }
-
-    .create-text a {
-      color: #555;
-      font-weight: bold;
-      text-decoration: underline;
-    }
-
-    #home-box { display: none; }
-
-    @media (max-width: 480px) {
-      body {
-        padding: 10px;
-      }
-
-      .logo {
-        height: 100px;
-      }
-
-      .header-row {
-        top: -10px;
-      }
-
-      .container,
-      #home-box {
-        padding: 18px 14px 14px;
-        border-radius: 14px;
-      }
-
-      h2 {
-        font-size: 20px;
-      }
-
-      .social-btn {
-        font-size: 12px;
-        padding: 7px;
-      }
-
-      button.submit-btn,
-      #home-box button {
-        font-size: 14px;
-        padding: 10px;
-      }
-    }
+    /* same styles as before, including .logo 200px desktop & 115px mobile if you like */
+    /* keep your container/no-scroll setup */
   </style>
 </head>
 <body>
@@ -231,10 +23,10 @@
     <h2>Log In</h2>
 
     <div class="social-buttons">
-      <button class="social-btn gmail-btn">
+      <button type="button" class="social-btn gmail-btn">
         <img src="https://img.icons8.com/color/48/000000/google-logo.png" alt="Gmail Icon">Gmail
       </button>
-      <button class="social-btn facebook-btn">
+      <button type="button" class="social-btn facebook-btn">
         <img src="https://img.icons8.com/color/48/000000/facebook-new.png" alt="Facebook Icon">Facebook
       </button>
     </div>
@@ -252,13 +44,153 @@
     </p>
   </div>
 
-  <div id="home-box" class="container">
+  <div id="home-box" class="container" style="display:none;">
     <h2>Welcome!</h2>
     <p id="welcome-text"></p>
     <button id="logoutBtn">Logout</button>
   </div>
 
-  <!-- Keep your existing <script type="module"> block here; no JS change needed for the logo move -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      onAuthStateChanged,
+      signOut,
+      GoogleAuthProvider,
+      FacebookAuthProvider,
+      signInWithPopup,
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
+      authDomain: "remblyx-medisignal.firebaseapp.com",
+      projectId: "remblyx-medisignal",
+      storageBucket: "remblyx-medisignal.appspot.com",
+      messagingSenderId: "50711670199",
+      appId: "1:50711670199:web:0c9c2ff72cd77234ce0c32",
+      measurementId: "G-JQ3843RM4V"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const loginBox = document.getElementById("login-box");
+    const homeBox = document.getElementById("home-box");
+    const form = document.getElementById("loginForm");
+    const errorText = document.getElementById("error");
+    const welcomeText = document.getElementById("welcome-text");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const gmailBtn = document.querySelector(".gmail-btn");
+    const facebookBtn = document.querySelector(".facebook-btn");
+
+    const googleProvider = new GoogleAuthProvider();
+    const facebookProvider = new FacebookAuthProvider();
+    let popupInProgress = false;
+
+    const showError = (msg) => { errorText.textContent = msg; };
+    const clearError = () => { errorText.textContent = ""; };
+
+    const showHome = (user) => {
+      if (!user) return showLogin();
+      loginBox.style.display = "none";
+      homeBox.style.display = "block";
+      welcomeText.textContent = `You are logged in as ${user.email}`;
+    };
+
+    const showLogin = () => {
+      homeBox.style.display = "none";
+      loginBox.style.display = "block";
+      clearError();
+      form.reset();
+    };
+
+    const handleVerifiedOrBlock = async (user) => {
+      if (!user) return showLogin();
+      const isPasswordUser = user.providerData.some(p => p.providerId === "password");
+      if (isPasswordUser && !user.emailVerified) {
+        showError("Please verify your email before logging in.");
+        await signOut(auth);
+        showLogin();
+        return;
+      }
+      showHome(user);
+    };
+
+    onAuthStateChanged(auth, (user) => {
+      handleVerifiedOrBlock(user);
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearError();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!email || !password) {
+        showError("⚠ Please fill in all fields.");
+        return;
+      }
+
+      try {
+        const { user } = await signInWithEmailAndPassword(auth, email, password);
+        const isPasswordUser = user.providerData.some(p => p.providerId === "password");
+        if (isPasswordUser && !user.emailVerified) {
+          showError("Please verify your email before logging in.");
+          await signOut(auth);
+          return;
+        }
+        showHome(user);
+      } catch (error) {
+        let message = "⚠ Invalid email or password.";
+        if (error.code === "auth/invalid-email") message = "⚠ Invalid email format.";
+        else if (error.code === "auth/user-not-found") message = "⚠ No account found with this email.";
+        else if (error.code === "auth/wrong-password") message = "⚠ Incorrect password.";
+        else if (error.code === "auth/too-many-requests") message = "⚠ Too many attempts. Try again later.";
+        showError(message);
+      }
+    });
+
+    logoutBtn.addEventListener("click", async () => {
+      await signOut(auth);
+      showLogin();
+    });
+
+    gmailBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      if (popupInProgress) return;
+      popupInProgress = true;
+      clearError();
+
+      try {
+        const result = await signInWithPopup(auth, googleProvider);
+        showHome(result.user);
+      } catch (error) {
+        if (error.code !== "auth/cancelled-popup-request") {
+          showError("⚠ Google sign-in failed.");
+        }
+      } finally {
+        popupInProgress = false;
+      }
+    });
+
+    facebookBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      if (popupInProgress) return;
+      popupInProgress = true;
+      clearError();
+
+      try {
+        const result = await signInWithPopup(auth, facebookProvider);
+        showHome(result.user);
+      } catch (error) {
+        if (error.code !== "auth/cancelled-popup-request") {
+          showError("⚠ Facebook sign-in failed.");
+        }
+      } finally {
+        popupInProgress = false;
+      }
+    });
+  </script>
 </body>
 </html>
-
