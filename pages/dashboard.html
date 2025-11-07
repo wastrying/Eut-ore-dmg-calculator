@@ -1,1 +1,288 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Remblyx Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Tab icon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="../images/medisignal.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="../images/medisignal.png">
+  <link rel="apple-touch-icon" href="../images/medisignal.png">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Arial', sans-serif;
+    }
+
+    body {
+      background: #f5f5f5;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow-x: hidden;
+      padding: 16px;
+      color: #222;
+    }
+
+    /* Blurred background */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+    }
+
+    .bg-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: blur(4px);
+      opacity: 0.8;
+    }
+
+    /* Logo top-left */
+    .header-row {
+      position: fixed;
+      top: -27px;
+      left: 8px;
+      z-index: 20;
+    }
+
+    .logo {
+      height: 200px;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    .logo:hover {
+      filter: brightness(1.1);
+      transform: scale(1.03);
+    }
+
+    /* Main wrapper */
+    .dashboard-wrapper {
+      width: 100%;
+      max-width: 1100px;
+      margin-top: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .dashboard-title {
+      font-size: 26px;
+      font-weight: 600;
+      color: #222;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.12);
+      text-align: center;
+    }
+
+    .dashboard-subtitle {
+      font-size: 14px;
+      color: #444;
+      text-align: center;
+      max-width: 620px;
+      margin-bottom: 4px;
+    }
+
+    /* Plans row */
+    .plans-row {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      align-items: stretch;
+      width: 100%;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .plan-card {
+      flex: 1 1 260px;
+      max-width: 320px;
+      background: rgba(255,255,255,0.97);
+      border-radius: 16px;
+      padding: 18px 16px 16px;
+      box-shadow: 0 8px 22px rgba(0,0,0,0.18);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      border: 1px solid rgba(255,255,255,0.7);
+      backdrop-filter: blur(2px);
+    }
+
+    .plan-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #888;
+      margin-bottom: 4px;
+    }
+
+    .plan-name {
+      font-size: 20px;
+      font-weight: 600;
+      color: #222;
+      margin-bottom: 4px;
+    }
+
+    .plan-tagline {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+
+    .plan-features {
+      list-style: none;
+      font-size: 12px;
+      color: #444;
+      margin-bottom: 12px;
+      padding-left: 0;
+    }
+
+    .plan-features li {
+      margin-bottom: 4px;
+    }
+
+    .plan-btn {
+      margin-top: auto;
+      align-self: stretch;
+      padding: 9px 10px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: #fff;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      transition: 0.25s;
+      text-align: center;
+    }
+
+    .plan-btn:hover {
+      opacity: 0.96;
+      transform: translateY(-1px);
+    }
+
+    /* Make Premium stand out a bit */
+    .plan-card.premium {
+      border: 1px solid #667eea;
+      box-shadow: 0 10px 26px rgba(102,126,234,0.28);
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+
+      .logo {
+        height: 115px;
+      }
+
+      .header-row {
+        top: -10px;
+      }
+
+      .dashboard-title {
+        font-size: 22px;
+      }
+
+      .dashboard-subtitle {
+        font-size: 13px;
+      }
+
+      .plans-row {
+        gap: 12px;
+      }
+
+      .plan-card {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background -->
+  <div class="overlay">
+    <img src="../images/background.png" alt="Background" class="bg-image">
+  </div>
+
+  <!-- Logo -->
+  <div class="header-row">
+    <img src="../images/remblyxlogo.png"
+         alt="Remblyx"
+         class="logo"
+         onclick="window.location.href='../index.html'">
+  </div>
+
+  <!-- Dashboard content -->
+  <div class="dashboard-wrapper">
+    <div>
+      <div class="dashboard-title">Choose Your Remblyx Plan</div>
+      <div class="dashboard-subtitle">
+        Select the tier that fits your workflow. You can adjust or upgrade later.
+      </div>
+    </div>
+
+    <div class="plans-row">
+      <!-- Basic -->
+      <div class="plan-card">
+        <div class="plan-label">Plan</div>
+        <div class="plan-name">Basic</div>
+        <div class="plan-tagline">For quick testing and personal use.</div>
+        <ul class="plan-features">
+          <li>✔ Core features</li>
+          <li>✔ Limited alerts</li>
+          <li>✔ Single user access</li>
+        </ul>
+        <button class="plan-btn" onclick="selectPlan('Basic')">Choose Basic</button>
+      </div>
+
+      <!-- Premium -->
+      <div class="plan-card premium">
+        <div class="plan-label">Recommended</div>
+        <div class="plan-name">Premium</div>
+        <div class="plan-tagline">For teams who need reliability.</div>
+        <ul class="plan-features">
+          <li>✔ Everything in Basic</li>
+          <li>✔ Priority notifications</li>
+          <li>✔ Team collaboration</li>
+          <li>✔ Extended usage limits</li>
+        </ul>
+        <button class="plan-btn" onclick="selectPlan('Premium')">Choose Premium</button>
+      </div>
+
+      <!-- Dev -->
+      <div class="plan-card">
+        <div class="plan-label">Advanced</div>
+        <div class="plan-name">Dev</div>
+        <div class="plan-tagline">For developers & integrations.</div>
+        <ul class="plan-features">
+          <li>✔ API access</li>
+          <li>✔ Webhooks & logs</li>
+          <li>✔ Sandbox & testing tools</li>
+        </ul>
+        <button class="plan-btn" onclick="selectPlan('Dev')">Choose Dev</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // For now this just logs; plug into your flow later
+    function selectPlan(plan) {
+      console.log("Selected plan:", plan);
+      // e.g. redirect or save choice:
+      // window.location.href = "./checkout.html?plan=" + encodeURIComponent(plan);
+    }
+  </script>
+</body>
+</html>
