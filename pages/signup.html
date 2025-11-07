@@ -177,6 +177,7 @@
       color: #667eea;
       text-decoration: underline;
       font-size: 12px;
+      cursor: pointer;
     }
 
     .terms-error input[type="checkbox"] {
@@ -234,6 +235,126 @@
       color: #000;
     }
 
+    /* Terms Modal (Microsoft-style) */
+    .terms-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 10px;
+    }
+
+    .terms-modal {
+      background: #ffffff;
+      border-radius: 14px;
+      max-width: 520px;
+      width: 100%;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+      padding: 18px 18px 14px;
+    }
+
+    .terms-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 10px;
+    }
+
+    .terms-modal-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1f1f1f;
+    }
+
+    .terms-close-btn {
+      background: transparent;
+      border: none;
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      color: #666;
+    }
+
+    .terms-close-btn:hover {
+      color: #000;
+    }
+
+    .terms-modal-subtitle {
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 8px;
+    }
+
+    .terms-modal-content {
+      flex: 1;
+      padding: 8px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      background: #fafafa;
+      border: 1px solid #ddd;
+      overflow-y: auto;
+      font-size: 12px;
+      color: #444;
+    }
+
+    .terms-modal-content h3 {
+      font-size: 13px;
+      margin: 8px 0 4px;
+      font-weight: 600;
+      color: #222;
+    }
+
+    .terms-modal-content p {
+      margin-bottom: 6px;
+      line-height: 1.4;
+    }
+
+    .terms-modal-content ul {
+      padding-left: 16px;
+      margin-bottom: 6px;
+    }
+
+    .terms-modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .terms-btn {
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: none;
+      font-size: 13px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .terms-btn-secondary {
+      background: #e0e0e0;
+      color: #333;
+    }
+
+    .terms-btn-secondary:hover {
+      background: #d5d5d5;
+    }
+
+    .terms-btn-primary {
+      background: #0067b8; /* Microsoft-ish blue */
+      color: #fff;
+    }
+
+    .terms-btn-primary:hover {
+      background: #00539a;
+    }
+
     /* Mobile tweaks */
     @media (max-width: 480px) {
       body {
@@ -270,6 +391,12 @@
 
       .terms-inline a {
         font-size: 11px;
+      }
+
+      .terms-modal {
+        max-width: 100%;
+        max-height: 90vh;
+        padding: 14px 12px 10px;
       }
     }
   </style>
@@ -317,7 +444,8 @@
     <div class="terms-inline" id="terms-wrapper">
       <label>
         <input type="checkbox" id="terms">
-        I agree to the <a href="#" target="_blank">Terms &amp; Conditions</a>
+        I agree to the
+        <a id="terms-link">Terms &amp; Conditions</a>
       </label>
       <div id="terms-error" class="error-message">⚠ Please check this box to continue.</div>
     </div>
@@ -328,6 +456,52 @@
   <a href="../pages/login.html" class="sign-in-link">
     Already have an account? <span>Sign In</span>
   </a>
+</div>
+
+<!-- Microsoft-style Terms Modal -->
+<div id="terms-modal-backdrop" class="terms-modal-backdrop">
+  <div class="terms-modal">
+    <div class="terms-modal-header">
+      <div class="terms-modal-title">Remblyx Terms &amp; Conditions</div>
+      <button class="terms-close-btn" id="terms-close-btn" aria-label="Close terms">&times;</button>
+    </div>
+    <div class="terms-modal-subtitle">
+      Please review these terms before creating your Remblyx account.
+    </div>
+    <div class="terms-modal-content">
+      <!-- Sample content – replace with your real terms -->
+      <p>By creating a Remblyx account, you agree to our usage policies, data handling practices, and security standards.</p>
+
+      <h3>1. Data usage</h3>
+      <p>
+        We securely store account information to provide core functionality. We do not sell your personal data.
+      </p>
+
+      <h3>2. Acceptable use</h3>
+      <ul>
+        <li>No unauthorized access, reverse engineering, or abuse of the platform.</li>
+        <li>No use of Remblyx for harmful, fraudulent, or illegal activities.</li>
+      </ul>
+
+      <h3>3. Security</h3>
+      <p>
+        You are responsible for keeping your login credentials confidential. Notify us immediately if you suspect unauthorized access.
+      </p>
+
+      <h3>4. Updates to terms</h3>
+      <p>
+        Terms may be updated periodically. Continued use of your account after changes means you accept the updated terms.
+      </p>
+
+      <p>
+        If you do not agree, do not create or continue using your Remblyx account.
+      </p>
+    </div>
+    <div class="terms-modal-footer">
+      <button class="terms-btn terms-btn-secondary" id="terms-cancel-btn">Cancel</button>
+      <button class="terms-btn terms-btn-primary" id="terms-accept-btn">Accept &amp; Continue</button>
+    </div>
+  </div>
 </div>
 
 <script type="module">
@@ -366,6 +540,13 @@
   const googleBtn = document.querySelector(".gmail-btn");
   const facebookBtn = document.querySelector(".facebook-btn");
 
+  // Terms modal DOM
+  const termsLink = document.getElementById("terms-link");
+  const termsModalBackdrop = document.getElementById("terms-modal-backdrop");
+  const termsCloseBtn = document.getElementById("terms-close-btn");
+  const termsCancelBtn = document.getElementById("terms-cancel-btn");
+  const termsAcceptBtn = document.getElementById("terms-accept-btn");
+
   // Providers
   const googleProvider = new GoogleAuthProvider();
   const facebookProvider = new FacebookAuthProvider();
@@ -400,14 +581,63 @@
     console.error("Signup form not found in DOM");
   }
 
-  // Email + Password signup with verification
+  // --- Terms Modal behavior ---
+
+  const openTermsModal = () => {
+    termsModalBackdrop.style.display = "flex";
+  };
+
+  const closeTermsModal = () => {
+    termsModalBackdrop.style.display = "none";
+  };
+
+  if (termsLink) {
+    termsLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      openTermsModal();
+    });
+  }
+
+  if (termsCloseBtn) {
+    termsCloseBtn.addEventListener("click", () => {
+      closeTermsModal();
+    });
+  }
+
+  if (termsCancelBtn) {
+    termsCancelBtn.addEventListener("click", () => {
+      closeTermsModal();
+    });
+  }
+
+  if (termsAcceptBtn) {
+    termsAcceptBtn.addEventListener("click", () => {
+      // Auto-check the terms box when they accept
+      if (terms) {
+        terms.checked = true;
+        termsError.classList.remove("show");
+        termsWrapper.classList.remove("terms-error");
+      }
+      closeTermsModal();
+    });
+  }
+
+  // Click outside modal closes it (optional)
+  termsModalBackdrop.addEventListener("click", (e) => {
+    if (e.target === termsModalBackdrop) {
+      closeTermsModal();
+    }
+  });
+
+  // --- Email + Password signup with verification ---
+
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     clearError();
     successText.style.display = "none";
     if (openEmailBtn) openEmailBtn.style.display = "none";
 
-    // Terms
+    // Terms required
     if (!terms.checked) {
       termsError.classList.add("show");
       termsWrapper.classList.add("terms-error");
@@ -470,7 +700,8 @@
     }
   });
 
-  // Google sign-in
+  // --- Google sign-in ---
+
   if (googleBtn) {
     googleBtn.addEventListener("click", async (e) => {
       e.preventDefault();
@@ -498,7 +729,8 @@
     });
   }
 
-  // Facebook sign-in
+  // --- Facebook sign-in ---
+
   if (facebookBtn) {
     facebookBtn.addEventListener("click", async (e) => {
       e.preventDefault();
