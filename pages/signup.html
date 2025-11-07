@@ -4,13 +4,9 @@
   <meta charset="UTF-8">
   <title>Sign Up | Remblyx</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Arial', sans-serif;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Arial', sans-serif; }
 
     body {
       background: #f5f5f5;
@@ -56,7 +52,7 @@
     }
 
     .container {
-      background: rgba(255, 255, 255, 0.97);
+      background: rgba(255,255,255,0.97);
       border-radius: 16px;
       padding: 22px 20px 20px;
       width: 100%;
@@ -227,24 +223,17 @@
 
     .sign-in-link:hover span { color: #000; }
 
+    /* (Minimal modal stub; you can keep your full version) */
     .terms-modal-backdrop { display:none; }
 
     @media (max-width: 480px) {
       body { padding: 10px; }
-
-      .logo {
-        height: 115px;
-      }
-
-      .header-row {
-        top: -10px;
-      }
-
+      .logo { height: 115px; }
+      .header-row { top: -10px; }
       .container {
         padding: 18px 14px 16px;
         border-radius: 14px;
       }
-
       h2 { font-size: 20px; }
     }
   </style>
@@ -339,7 +328,6 @@
   const openEmailBtn = document.getElementById("open-email-btn");
   const googleBtn = document.querySelector(".gmail-btn");
   const facebookBtn = document.querySelector(".facebook-btn");
-  const termsLink = document.getElementById("terms-link");
 
   const googleProvider = new GoogleAuthProvider();
   const facebookProvider = new FacebookAuthProvider();
@@ -369,7 +357,7 @@
     return "https://" + domain;
   };
 
-  // Email/password sign up
+  // Email/password signup
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     clearError();
@@ -418,17 +406,15 @@
       terms.checked = false;
     } catch (error) {
       let message = "⚠ Something went wrong. Please try again.";
-
       if (error.code === "auth/email-already-in-use") message = "⚠ Email already registered!";
       else if (error.code === "auth/invalid-email") message = "⚠ Invalid email address.";
       else if (error.code === "auth/weak-password") message = "⚠ Password should be at least 6 characters.";
       else if (error.code === "auth/unauthorized-domain") message = "⚠ Unauthorized domain. Add this domain in Firebase.";
-
       showError(message);
     }
   });
 
-  // Google sign in (signup page)
+  // Google OAuth
   googleBtn.addEventListener("click", async (e) => {
     e.preventDefault();
     if (popupInProgress) return;
@@ -443,14 +429,14 @@
       window.location.href = "../pages/login.html";
     } catch (error) {
       if (error.code !== "auth/cancelled-popup-request") {
-        showError("⚠ Google sign-in failed. Check your Firebase + OAuth config.");
+        showError("⚠ Google sign-in failed. Check Firebase/Google config.");
       }
     } finally {
       popupInProgress = false;
     }
   });
 
-  // Facebook sign in (signup page)
+  // Facebook OAuth
   facebookBtn.addEventListener("click", async (e) => {
     e.preventDefault();
     if (popupInProgress) return;
@@ -465,14 +451,13 @@
       window.location.href = "../pages/login.html";
     } catch (error) {
       if (error.code !== "auth/cancelled-popup-request") {
-        showError("⚠ Facebook sign-in failed. Check your Facebook + Firebase config.");
+        showError("⚠ Facebook sign-in failed. Check Facebook + Firebase config.");
       }
     } finally {
       popupInProgress = false;
     }
   });
 
-  // Terms checkbox live feedback
   terms.addEventListener("change", () => {
     if (terms.checked) {
       termsError.classList.remove("show");
