@@ -182,6 +182,7 @@
   const boardTitle = document.getElementById("board-title");
   const boardSubtitle = document.getElementById("board-subtitle");
   const firstNavLabelEl = document.querySelector(".nav-item .label");
+  const userSearchBox = document.getElementById("user-search");  // Search box for users
 
   const devTools = document.getElementById("dev-tools");
   const devUsersContainer = document.getElementById("dev-users");
@@ -254,6 +255,15 @@
     // Show delete account option for all users
     if (deleteAccountLink) {
       deleteAccountLink.style.display = "block"; // Always show delete account option
+    }
+
+    // Only show the user search box for developers
+    if (userSearchBox) {
+      if (plan === "Developers") {
+        userSearchBox.style.display = "block";  // Show the search box for developers
+      } else {
+        userSearchBox.style.display = "none";   // Hide the search box for non-developers
+      }
     }
 
     if (plan === "Developers") showDevelopersView();
@@ -380,22 +390,27 @@
     }
   });
 
-  // Allow user to click to upgrade subscription plan
+  // Allow user to click to upgrade subscription plan (non-developers will be redirected)
   sidebarPlanEl.addEventListener("click", async () => {
-    const newPlan = prompt("Enter new plan (e.g., Basic, Premium, Enterprise):");
-    if (newPlan) {
-      // Update user's plan in Firestore
-      try {
-        const userRef = doc(db, "users", currentUser.uid);
-        await setDoc(userRef, { plan: newPlan }, { merge: true });
-        alert("Your plan has been updated to " + newPlan);
-        applyPlanUi(newPlan);
-      } catch (error) {
-        console.error("Error updating plan:", error);
+    if (currentPlan !== "Developers") {
+      // Non-developers are redirected to the selection page
+      window.location.href = SELECTION_URL;
+    } else {
+      // Developers can manually change their plan
+      const newPlan = prompt("Enter new plan (e.g., Basic, Premium, Enterprise):");
+      if (newPlan) {
+        // Update user's plan in Firestore
+        try {
+          const userRef = doc(db, "users", currentUser.uid);
+          await setDoc(userRef, { plan: newPlan }, { merge: true });
+          alert("Your plan has been updated to " + newPlan);
+          applyPlanUi(newPlan);
+        } catch (error) {
+          console.error("Error updating plan:", error);
+        }
       }
     }
   });
 </script>
-
 </body>
 </html>
