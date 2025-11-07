@@ -32,7 +32,6 @@
       padding: 16px;
     }
 
-    /* Background */
     .overlay {
       position: fixed;
       inset: 0;
@@ -47,7 +46,6 @@
       opacity: 0.8;
     }
 
-    /* Logo header */
     .header-row {
       position: fixed;
       top: -27px;
@@ -66,7 +64,6 @@
       transform: scale(1.02);
     }
 
-    /* Card */
     .container {
       background: rgba(255, 255, 255, 0.97);
       border-radius: 16px;
@@ -88,7 +85,6 @@
       font-weight: 600;
     }
 
-    /* Social buttons */
     .social-buttons {
       display: flex;
       gap: 10px;
@@ -130,7 +126,6 @@
       border-top: 1px solid #ddd;
     }
 
-    /* Inputs */
     input[type="text"],
     input[type="email"],
     input[type="password"] {
@@ -148,7 +143,6 @@
       color: #999;
     }
 
-    /* Password wrapper + toggle */
     .password-wrapper {
       position: relative;
       width: 100%;
@@ -157,7 +151,7 @@
 
     .password-wrapper input {
       margin: 0;
-      padding-right: 38px; /* space for eye icon */
+      padding-right: 38px;
     }
 
     .toggle-password {
@@ -182,7 +176,6 @@
       color: #333;
     }
 
-    /* Submit + open email */
     button.submit-btn {
       width: 100%;
       padding: 11px;
@@ -208,7 +201,6 @@
       display: none;
     }
 
-    /* Terms row */
     .terms-inline {
       margin-top: 8px;
       font-size: 12px;
@@ -237,7 +229,6 @@
       box-shadow: 0 0 6px red;
     }
 
-    /* Messages */
     .error-message {
       color: #d32f2f;
       font-size: 12px;
@@ -264,7 +255,6 @@
       text-align: left;
     }
 
-    /* Sign in link */
     .sign-in-link {
       display: block;
       text-align: center;
@@ -284,7 +274,6 @@
       color: #000;
     }
 
-    /* Terms Modal */
     .terms-modal-backdrop {
       position: fixed;
       inset: 0;
@@ -372,7 +361,6 @@
       margin-bottom: 6px;
     }
 
-    /* Mobile */
     @media (max-width: 480px) {
       body { padding: 10px; }
       .logo { height: 115px; }
@@ -591,7 +579,7 @@
     });
   }
 
-  // Press & hold to show password using Flaticon icons
+  // Press & hold to show password (icons: crossed when hidden, eye when visible)
   if (togglePasswordBtn && passwordInput && passwordEyeIcon) {
     const showPassword = () => {
       passwordInput.type = "text";
@@ -605,7 +593,6 @@
       passwordEyeIcon.classList.add("fi-rr-eye-crossed");
     };
 
-    // Mouse / touch down on button → show
     ["mousedown", "touchstart"].forEach(evt => {
       togglePasswordBtn.addEventListener(evt, (e) => {
         e.preventDefault();
@@ -613,8 +600,7 @@
       }, { passive: false });
     });
 
-    // Mouse / touch end anywhere → hide
-    ["mouseup", "touchend", "touchcancel"].forEach(evt => {
+    ["mouseup", "mouseleave", "touchend", "touchcancel"].forEach(evt => {
       window.addEventListener(evt, () => {
         hidePassword();
       });
@@ -673,7 +659,7 @@
       if (error.code === "auth/email-already-in-use") message = "⚠ Email already registered!";
       else if (error.code === "auth/invalid-email") message = "⚠ Invalid email address.";
       else if (error.code === "auth/weak-password") message = "⚠ Password should be at least 6 characters.";
-      else if (error.code === "auth/unauthorized-domain") message = "⚠ Unauthorized domain. Add this domain in Firebase.`;
+      else if (error.code === "auth/unauthorized-domain") message = "⚠ Unauthorized domain. Add this domain in Firebase.";
       showError(message);
     }
   });
