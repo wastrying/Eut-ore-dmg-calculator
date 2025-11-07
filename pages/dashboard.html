@@ -155,6 +155,7 @@
   import { getAuth, onAuthStateChanged, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
   import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
+  // --- Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
     authDomain: "remblyx-medisignal.firebaseapp.com",
@@ -164,253 +165,164 @@
     appId: "1:50711670199:web:0c9c2ff72cd77234ce0c32",
     measurementId: "G-JQ3843RM4V"
   };
-
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  // Config / DOM
-  const DEV_EMAILS = ["medisignal.remblyx@gmail.com"]; // List of dev emails for restricted access to "Developer" plan
-  const LOGIN_URL = "./login.html";
-  const SELECTION_URL = "./selection.html";
-
-  const mainDashboard = document.getElementById("main-dashboard");
+  // --- DOM elements
   const sidebarPlanEl = document.getElementById("sidebar-plan");
   const planNameEl = document.getElementById("plan-name");
   const logoutLink = document.getElementById("logout");
   const deleteAccountLink = document.getElementById("delete-account");
-  const boardTitle = document.getElementById("board-title");
-  const boardSubtitle = document.getElementById("board-subtitle");
-  const firstNavLabelEl = document.querySelector(".nav-item .label");
-  const userSearchBox = document.getElementById("user-search");  // Search box for users
+  const closeSelectionBtn = document.getElementById("close-selection");  // Close button for selection page
 
-  const devTools = document.getElementById("dev-tools");
-  const devUsersContainer = document.getElementById("dev-users");
-  const standardBoard = document.getElementById("standard-board");
+  const selectionContainer = document.querySelector(".container"); // The container that holds the selection page
+  const planCards = document.querySelectorAll(".plan-card");
 
+  // --- Variables
+  const DEV_EMAILS = ["medisignal.remblyx@gmail.com"]; // Developer email addresses
+  const SELECTION_URL = "./selection.html"; // URL for the selection page
   let currentUser = null;
   let currentPlan = null;
 
-  // UI helpers (robust to missing DOM)
-  function setDashboardVisibility(show) {
-    if (mainDashboard) mainDashboard.style.display = show ? "grid" : "none";
+  // --- Helpers
+  function setStatus(text){ if (statusEl) statusEl.textContent = text; }
+
+  function highlightPlanCard(plan) {
+    planCards.forEach(card => {
+      card.classList.toggle("active", card.getAttribute("data-plan") === plan);
+    });
   }
 
-  function safeTxt(el, txt) {
-    if (el) el.textContent = txt;
-  }
+  function markCurrentPlanButton(plan){
+    planCards.forEach(card => {
+      const name = card.getAttribute("data-plan");
+      const btn  = card.querySelector(".plan-btn");
+      if (!btn) return;
 
-  function setNavLabelForPlan(plan) {
-    if (!firstNavLabelEl) return;
-    firstNavLabelEl.textContent = (plan === "Developers") ? "Command Center" : "Main Board";
-  }
-
-  function showDevelopersView() {
-    setNavLabelForPlan("Developers");
-    if (devTools) devTools.style.display = "block";
-    if (standardBoard) standardBoard.style.display = "none";
-    renderAllUsers();
-  }
-
-  function showRegularView() {
-    setNavLabelForPlan(currentPlan);
-    if (devTools) devTools.style.display = "none";
-    if (standardBoard) standardBoard.style.display = "block";
-  }
-
-  function applyPlanUi(plan) {
-    currentPlan = plan || null;
-    safeTxt(planNameEl, currentPlan || "-");
-
-    if (boardTitle && boardSubtitle) {
-      switch (plan) {
-        case "Basic":
-          boardTitle.textContent = "Basic Monitoring Board";
-          boardSubtitle.textContent = "Lightweight overview for individual usage.";
-          break;
-        case "Premium":
-          boardTitle.textContent = "Premium Team Workspace";
-          boardSubtitle.textContent = "Collaborative overview for teams and advanced alerts.";
-          break;
-        case "Enterprise":
-          boardTitle.textContent = "Enterprise Control Center";
-          boardSubtitle.textContent = "Full-scale visibility, integrations, and governance.";
-          break;
-        case "Developers":
-          boardTitle.textContent = "Developer Command Center";
-          boardSubtitle.textContent = "Internal tools, diagnostics, and elevated limits.";
-          break;
-        default:
-          boardTitle.textContent = "Remblyx Workspace";
-          boardSubtitle.textContent = "Overview of your monitoring items, owners, and status.";
-      }
-    }
-
-    // Allow all users to change their plan
-    if (sidebarPlanEl) {
-      sidebarPlanEl.classList.remove("locked");
-      sidebarPlanEl.title = "Click to change plan";
-    }
-
-    // Show delete account option for all users
-    if (deleteAccountLink) {
-      deleteAccountLink.style.display = "block"; // Always show delete account option
-    }
-
-    // Only show the user search box for developers
-    if (userSearchBox) {
-      if (plan === "Developers") {
-        userSearchBox.style.display = "block";  // Show the search box for developers
+      if (name === plan){
+        btn.textContent = "Currently using";
+        btn.classList.add("is-current");
+        btn.setAttribute("disabled", "disabled");
+        // Ignore clicks on the current card
+        card.onclick = (e) => e.stopPropagation();
       } else {
-        userSearchBox.style.display = "none";   // Hide the search box for non-developers
+        btn.textContent = `Use ${name}`;
+        btn.classList.remove("is-current");
+        btn.removeAttribute("disabled");
       }
-    }
-
-    if (plan === "Developers") showDevelopersView();
-    else showRegularView();
+    });
   }
 
-  async function renderAllUsers() {
-    if (!devUsersContainer) return;
-    devUsersContainer.innerHTML = `<div class="dev-grid-row"><div>Loading users…</div><div>—</div></div>`;
-    try {
-      const snap = await getDocs(collection(db, "users"));
-      let rows = "";
-      snap.forEach(d => {
-        const data = d.data() || {};
-        const email = data.email || "(no email)";
-        const plan = data.plan || "-";
-        rows += `<div class="dev-grid-row"><div>${email}</div><div>${plan}</div></div>`;
-      });
-      devUsersContainer.innerHTML = rows || `<div class="dev-grid-row"><div>No users found</div><div>—</div></div>`;
-    } catch (e) {
-      console.error("renderAllUsers error:", e);
-      devUsersContainer.innerHTML = `<div class="dev-grid-row"><div>Permission denied or error</div><div>—</div></div>`;
-    }
-  }
+  function bindPlanClicks(user) {
+    planCards.forEach(card => {
+      const name = card.getAttribute("data-plan");
+      const btn  = card.querySelector(".plan-btn");
 
-  async function ensureDevelopersPlanIfAllowed(user) {
-    const isDev = DEV_EMAILS.includes((user.email || "").toLowerCase());
-    if (!isDev) return null;
-    try {
-      const ref = doc(db, "users", user.uid);
-      const snap = await getDoc(ref);
-      const existing = snap.exists() ? (snap.data().plan || null) : null;
-      if (existing === "Developers") return "Developers";
-      await setDoc(ref, { email: user.email || null, plan: "Developers" }, { merge: true });
-      return "Developers";
-    } catch (e) {
-      console.warn("ensureDevelopersPlanIfAllowed:", e);
-      return null;
-    }
-  }
+      if (name === currentPlan) return; // already marked and disabled
 
-  async function loadUserPlan(user) {
-    try {
-      const ref = doc(db, "users", user.uid);
-      const snap = await getDoc(ref);
-      let plan = snap.exists() ? (snap.data().plan || null) : null;
-      if (plan === "Dev") {
-        await setDoc(ref, { plan: "Developers" }, { merge: true });
-        plan = "Developers";
-      }
-      return plan;
-    } catch (e) {
-      console.warn("loadUserPlan failed:", e);
-      return null;
-    }
-  }
-
-  // Fetch user details
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      window.location.href = LOGIN_URL;
-      return;
-    }
-    currentUser = user;
-
-    // Show the shell immediately so you never see a blank page
-    setDashboardVisibility(true);
-
-    try {
-      // Force Developers for dev email
-      const forced = await ensureDevelopersPlanIfAllowed(user);
-      if (forced) {
-        applyPlanUi(forced);
-        sessionStorage.removeItem("rbx_last_nav");
-        return;
-      }
-
-      const plan = await loadUserPlan(user);
-
-      if (!plan) {
-        if (!(FROM === "selection" || LAST_NAV === "from_selection")) {
-          window.location.href = SELECTION_URL;
-          return;
+      const select = async (e) => {
+        e?.stopPropagation?.();
+        if (currentPlan && currentPlan !== name) {
+          const ok = confirm(`Switch plan from ${currentPlan} ➜ ${name}?`);
+          if (!ok) return;
         }
-        applyPlanUi(null);
-        sessionStorage.removeItem("rbx_last_nav");
-        return;
-      }
+        try {
+          await setDoc(doc(db, "users", user.uid), { email: user.email || null, plan: name }, { merge: true });
+          window.location.href = SELECTION_URL;
+        } catch (e) {
+          alert("Couldn't save plan. Check Firestore rules/console.");
+          console.error(e);
+        }
+      };
 
-      applyPlanUi(plan);
-      sessionStorage.removeItem("rbx_last_nav");
-    } catch (e) {
-      console.error("Dashboard init error:", e);
-      applyPlanUi(null);
+      card.addEventListener("click", select);
+      if (btn) btn.addEventListener("click", select);
+    });
+  }
+
+  // --- Plan UI and Handling
+  function handlePlanChanges() {
+    if (currentPlan === "Developers") {
+      // Disable plan changes for developers
+      if (sidebarPlanEl) {
+        sidebarPlanEl.classList.add("locked");
+        sidebarPlanEl.setAttribute("title", "Plan change is disabled for Developers");
+      }
+      // Hide selection button for developers
+      selectionContainer.style.display = "none";
+    } else {
+      // Allow plan changes for non-developers
+      if (sidebarPlanEl) {
+        sidebarPlanEl.classList.remove("locked");
+        sidebarPlanEl.setAttribute("title", "Click to change plan");
+      }
+      // Show selection button for non-developers
+      selectionContainer.style.display = "block";
     }
+  }
+
+  // --- Handle close of selection page
+  closeSelectionBtn.addEventListener("click", () => {
+    window.location.href = "./dashboard.html";
   });
 
-  // LOGOUT
+  // --- AuthState Changed Logic
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = "./login.html";
+      return;
+    }
+
+    currentUser = user;
+
+    // Fetch user plan from Firestore
+    try {
+      const userRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userRef);
+      currentPlan = userDoc.exists() ? userDoc.data().plan : null;
+    } catch (e) {
+      console.error("Error loading user plan:", e);
+      currentPlan = null;
+    }
+
+    // Apply UI based on user plan
+    handlePlanChanges();
+
+    // For developers, immediately redirect to dashboard if they try to upgrade
+    if (DEV_EMAILS.includes(user.email.toLowerCase())) {
+      window.location.href = SELECTION_URL;
+      return;
+    }
+
+    bindPlanClicks(user);
+  });
+
+  // --- Logout functionality
   logoutLink.addEventListener("click", async () => {
     try {
       await signOut(auth);
-      window.location.href = LOGIN_URL;
+      window.location.href = "./login.html";
     } catch (error) {
       console.error("Error during logout: ", error);
     }
   });
 
-  // DELETE ACCOUNT & DATA (Available for all users)
+  // --- Delete Account & Data
   deleteAccountLink.addEventListener("click", async () => {
     if (confirm("Are you sure you want to delete your account and data? This action cannot be undone.")) {
       try {
-        // 1. Delete user data from Firestore
-        const userRef = doc(db, "users", currentUser.uid);
-        await deleteDoc(userRef);  // Delete the user's document
-
-        // 2. Delete the Firebase Authentication user
+        // Delete the user's data and the Firebase Authentication user
+        await deleteDoc(doc(db, "users", currentUser.uid));
         await deleteUser(auth.currentUser);
-
         alert("Your account and data have been deleted.");
-        window.location.href = LOGIN_URL; // Redirect to login page
+        window.location.href = "./login.html"; // Redirect to login page
       } catch (error) {
         console.error("Error deleting account:", error);
       }
     }
   });
 
-  // Allow user to click to upgrade subscription plan (non-developers will be redirected)
-  sidebarPlanEl.addEventListener("click", async () => {
-    if (currentPlan !== "Developers") {
-      // Non-developers are redirected to the selection page
-      window.location.href = SELECTION_URL;
-    } else {
-      // Developers can manually change their plan
-      const newPlan = prompt("Enter new plan (e.g., Basic, Premium, Enterprise):");
-      if (newPlan) {
-        // Update user's plan in Firestore
-        try {
-          const userRef = doc(db, "users", currentUser.uid);
-          await setDoc(userRef, { plan: newPlan }, { merge: true });
-          alert("Your plan has been updated to " + newPlan);
-          applyPlanUi(newPlan);
-        } catch (error) {
-          console.error("Error updating plan:", error);
-        }
-      }
-    }
-  });
 </script>
 </body>
 </html>
