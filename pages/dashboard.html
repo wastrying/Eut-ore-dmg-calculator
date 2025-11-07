@@ -7,16 +7,99 @@
   <link rel="icon" type="image/png" sizes="32x32" href="../images/medisignal.png" />
   <link rel="apple-touch-icon" href="../images/medisignal.png" />
   <style>
-    /* Your existing styles go here */
+    /* When plan is Developers, make the plan chip look locked */
+    .sidebar-plan-label.locked{
+      opacity: 0.7;
+      cursor: not-allowed;
+      border-color: #6b7280;
+    }
+
+    /* Simple 2-column grid for the Developers user list */
+    .dev-grid-header,
+    .dev-grid-row{
+      display: grid;
+      grid-template-columns: 2fr 1fr; /* Email | Plan */
+      gap: 6px;
+      align-items: center;
+      font-size: 11px;
+      padding: 6px;
+      border-radius: 8px;
+    }
+    .dev-grid-header{
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      background: #f3f4f6;
+      border-bottom: 1px solid #e5e7eb;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+    .dev-grid-row{
+      background: #ffffff;
+      margin-top: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+    body{background:#f5f5f5;min-height:100vh;display:flex;justify-content:center;align-items:center;position:relative;overflow:hidden;padding:16px;color:#222}
+    .overlay{position:fixed;inset:0;z-index:-1}
+    .bg-image{width:100%;height:100%;object-fit:cover;filter:blur(4px);opacity:.8}
+    .header-row{position:fixed;top:-27px;left:8px;z-index:40}
+    .logo{height:200px;cursor:pointer;transition:.3s ease}
+    .logo:hover{filter:brightness(1.1);transform:scale(1.03)}
+    .wrapper{width:100%;max-width:1200px;margin-top:40px;display:flex;flex-direction:column;gap:16px;z-index:10}
+
+    /* layout */
+    #main-dashboard{
+      display:none; height:calc(100vh - 90px); max-height:calc(100vh - 90px);
+      background:rgba(255,255,255,.96); border-radius:18px; box-shadow:0 10px 26px rgba(0,0,0,.2);
+      grid-template-columns:230px 1fr; overflow:hidden;
+    }
+    .sidebar{background:#111827;color:#e5e7eb;display:flex;flex-direction:column;padding:14px 10px 10px;gap:10px}
+    .sidebar-title{font-size:14px;font-weight:600;margin-bottom:4px;padding:0 4px;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em}
+    .nav-item{display:flex;align-items:center;gap:6px;padding:7px 8px;border-radius:8px;font-size:13px;cursor:pointer;color:#d1d5db;transition:.2s}
+    .nav-item:hover{background:rgba(249,250,251,.06)}
+    .nav-item.active{background:#111827;border-left:3px solid #667eea;padding-left:10px;color:#fff}
+    .icon-dot{width:7px;height:7px;border-radius:999px;background:#4ade80}
+    .sidebar-spacer{flex:1}
+    .sidebar-plan-label{font-size:11px;color:#9ca3af;padding:6px 6px 4px;border-radius:8px;border:1px solid rgba(156,163,175,.4);background:rgba(17,24,39,.96);display:flex;flex-direction:column;gap:1px;cursor:pointer;transition:.2s}
+    .sidebar-plan-label:hover{background:rgba(31,41,55,1);border-color:#60a5fa}
+    .sidebar-plan-label strong{color:#60a5fa;font-weight:600}
+    .logout-link{font-size:11px;color:#9ca3af;text-align:left;padding:2px 6px;cursor:pointer;text-decoration:underline}
+    .logout-link:hover{color:#fff}
+
+    .main-area{display:flex;flex-direction:column;padding:10px 12px 10px;gap:8px}
+    .top-bar{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .board-title{font-size:18px;font-weight:600;color:#111827}
+    .board-subtitle{font-size:11px;color:#6b7280}
+    .top-actions{display:flex;align-items:center;gap:6px;font-size:11px}
+    .pill{padding:5px 9px;border-radius:999px;border:1px solid #e5e7eb;background:#f9fafb;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+    .pill.primary{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none}
+    .search-box{padding:4px 8px;border-radius:999px;border:1px solid #e5e7eb;font-size:11px;min-width:120px}
+    .board-wrapper{flex:1;border-radius:12px;background:#f9fafb;padding:8px;overflow:auto;border:1px solid #e5e7eb}
+    .board-header-row,.board-row{display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1.2fr;gap:6px;align-items:center;font-size:11px;padding:6px;border-radius:8px}
+    .board-header-row{font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;background:#f3f4f6;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:5}
+    .board-row{background:#fff;margin-top:4px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+    .status-pill{padding:3px 7px;border-radius:999px;font-size:10px;display:inline-block;text-align:center}
+    .status-green{background:#bbf7d0;color:#166534}.status-yellow{background:#fef9c3;color:#854d0e}.status-red{background:#fee2e2;color:#991b1b}.status-blue{background:#dbeafe;color:#1d4ed8}
+
+    @media (max-width:900px){ #main-dashboard{grid-template-columns:70px 1fr} .sidebar-title,.nav-item .label,.sidebar-plan-label .label-text{display:none} }
   </style>
 </head>
 <body>
   <div class="overlay"><img src="../images/background.png" class="bg-image" alt=""></div>
 
+  <div class="header-row">
+    <img src="../images/remblyxlogo.png" alt="Remblyx" class="logo" onclick="window.location.href='../index.html'">
+  </div>
+
   <div class="wrapper">
     <div id="main-dashboard">
       <aside class="sidebar">
         <div class="sidebar-title">Workspace</div>
+
         <div class="nav-item active"><span class="icon-dot"></span><span class="label">Main Board</span></div>
         <div class="nav-item"><span class="icon-dot"></span><span class="label">Alerts</span></div>
         <div class="nav-item"><span class="icon-dot"></span><span class="label">Reports</span></div>
@@ -24,6 +107,7 @@
 
         <div class="sidebar-spacer"></div>
 
+        <!-- NOTE: keep these IDs exactly as used below -->
         <div id="sidebar-plan" class="sidebar-plan-label" title="Click to change plan">
           <span class="label-text">Current Plan</span>
           <strong id="plan-name">-</strong>
@@ -43,7 +127,7 @@
           </div>
         </div>
 
-        <!-- Developers Command Center -->
+        <!-- Developers Command Center (moved here) -->
         <div id="dev-tools" class="board-wrapper" style="display:none;">
           <div class="dev-grid-header">
             <div>Email</div>
@@ -52,7 +136,7 @@
           <div id="dev-users"></div>
         </div>
 
-        <!-- Standard board -->
+        <!-- Standard board (hidden for Developers plan) -->
         <div id="standard-board" class="board-wrapper">
           <div class="board-header-row">
             <div>Item</div><div>Owner</div><div>Status</div><div>Due Date</div><div>Priority</div>
@@ -66,118 +150,251 @@
     </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
-      authDomain: "remblyx-medisignal.firebaseapp.com",
-      projectId: "remblyx-medisignal",
-      storageBucket: "remblyx-medisignal.appspot.com",
-      messagingSenderId: "50711670199",
-      appId: "1:50711670199:web:0c9c2ff72cd77234ce0c32",
-      measurementId: "G-JQ3843RM4V"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
+    authDomain: "remblyx-medisignal.firebaseapp.com",
+    projectId: "remblyx-medisignal",
+    storageBucket: "remblyx-medisignal.appspot.com",
+    messagingSenderId: "50711670199",
+    appId: "1:50711670199:web:0c9c2ff72cd77234ce0c32",
+    measurementId: "G-JQ3843RM4V"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-    const DEV_EMAILS = ["medisignal.remblyx@gmail.com"];
-    let currentUser = null;
-    let currentPlan = null;
+  // Config / DOM
+  const DEV_EMAILS = ["medisignal.remblyx@gmail.com"]; // List of dev emails for restricted access to "Developer" plan
+  const LOGIN_URL = "./login.html";
+  const SELECTION_URL = "./selection.html";
 
-    const sidebarPlanEl = document.getElementById("sidebar-plan");
-    const planNameEl = document.getElementById("plan-name");
-    const logoutLink = document.getElementById("logout");
-    const deleteAccountLink = document.getElementById("delete-account");
-    const mainDashboard = document.getElementById("main-dashboard");
+  const mainDashboard = document.getElementById("main-dashboard");
+  const sidebarPlanEl = document.getElementById("sidebar-plan");
+  const planNameEl = document.getElementById("plan-name");
+  const logoutLink = document.getElementById("logout");
+  const deleteAccountLink = document.getElementById("delete-account");
+  const boardTitle = document.getElementById("board-title");
+  const boardSubtitle = document.getElementById("board-subtitle");
+  const firstNavLabelEl = document.querySelector(".nav-item .label");
 
-    function setDashboardVisibility(show) {
-      if (mainDashboard) {
-        mainDashboard.style.display = show ? "grid" : "none";
+  const devTools = document.getElementById("dev-tools");
+  const devUsersContainer = document.getElementById("dev-users");
+  const standardBoard = document.getElementById("standard-board");
+
+  let currentUser = null;
+  let currentPlan = null;
+
+  // UI helpers (robust to missing DOM)
+  function setDashboardVisibility(show) {
+    if (mainDashboard) mainDashboard.style.display = show ? "grid" : "none";
+  }
+
+  function safeTxt(el, txt) {
+    if (el) el.textContent = txt;
+  }
+
+  function setNavLabelForPlan(plan) {
+    if (!firstNavLabelEl) return;
+    firstNavLabelEl.textContent = (plan === "Developers") ? "Command Center" : "Main Board";
+  }
+
+  function showDevelopersView() {
+    setNavLabelForPlan("Developers");
+    if (devTools) devTools.style.display = "block";
+    if (standardBoard) standardBoard.style.display = "none";
+    renderAllUsers();
+  }
+
+  function showRegularView() {
+    setNavLabelForPlan(currentPlan);
+    if (devTools) devTools.style.display = "none";
+    if (standardBoard) standardBoard.style.display = "block";
+  }
+
+  function applyPlanUi(plan) {
+    currentPlan = plan || null;
+    safeTxt(planNameEl, currentPlan || "-");
+
+    if (boardTitle && boardSubtitle) {
+      switch (plan) {
+        case "Basic":
+          boardTitle.textContent = "Basic Monitoring Board";
+          boardSubtitle.textContent = "Lightweight overview for individual usage.";
+          break;
+        case "Premium":
+          boardTitle.textContent = "Premium Team Workspace";
+          boardSubtitle.textContent = "Collaborative overview for teams and advanced alerts.";
+          break;
+        case "Enterprise":
+          boardTitle.textContent = "Enterprise Control Center";
+          boardSubtitle.textContent = "Full-scale visibility, integrations, and governance.";
+          break;
+        case "Developers":
+          boardTitle.textContent = "Developer Command Center";
+          boardSubtitle.textContent = "Internal tools, diagnostics, and elevated limits.";
+          break;
+        default:
+          boardTitle.textContent = "Remblyx Workspace";
+          boardSubtitle.textContent = "Overview of your monitoring items, owners, and status.";
       }
     }
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        window.location.href = "./login.html";
-        return;
-      }
-
-      currentUser = user;
-      const userRef = doc(db, "users", user.uid);
-      const userDoc = await getDoc(userRef);
-      currentPlan = userDoc.exists() ? userDoc.data().plan : null;
-
-      // Show dashboard immediately
-      setDashboardVisibility(true);  // Ensures the dashboard is shown immediately
-
-      // Apply plan changes
-      if (currentPlan === "Developers") {
-        sidebarPlanEl.classList.add("locked");
-        sidebarPlanEl.setAttribute("title", "Plan change is disabled for Developers");
-      } else {
-        sidebarPlanEl.classList.remove("locked");
-      }
-
-      // For developers, redirect to selection if they try to upgrade
-      if (DEV_EMAILS.includes(user.email.toLowerCase())) {
-        window.location.href = "./selection.html";
-        return;
-      }
-
-      // Render users if developer
-      if (currentPlan === "Developers") {
-        renderAllUsers();
-      }
-    });
-
-    // Display all users for Developers
-    async function renderAllUsers() {
-      const devUsersContainer = document.getElementById("dev-users");
-      devUsersContainer.innerHTML = `<div class="dev-grid-row"><div>Loading users…</div><div>—</div></div>`;
-      try {
-        const snap = await getDocs(collection(db, "users"));
-        let rows = "";
-        snap.forEach(d => {
-          const data = d.data() || {};
-          const email = data.email || "(no email)";
-          const plan = data.plan || "-";
-          rows += `<div class="dev-grid-row"><div>${email}</div><div>${plan}</div></div>`;
-        });
-        devUsersContainer.innerHTML = rows || `<div class="dev-grid-row"><div>No users found</div><div>—</div></div>`;
-      } catch (e) {
-        console.error("renderAllUsers error:", e);
-        devUsersContainer.innerHTML = `<div class="dev-grid-row"><div>Permission denied or error</div><div>—</div></div>`;
-      }
+    // Allow all users to change their plan
+    if (sidebarPlanEl) {
+      sidebarPlanEl.classList.remove("locked");
+      sidebarPlanEl.title = "Click to change plan";
     }
 
-    // Logout functionality
-    logoutLink.addEventListener("click", async () => {
-      try {
-        await signOut(auth);
-        window.location.href = "./login.html";
-      } catch (error) {
-        console.error("Error during logout: ", error);
-      }
-    });
+    // Show delete account option for all users
+    if (deleteAccountLink) {
+      deleteAccountLink.style.display = "block"; // Always show delete account option
+    }
 
-    // Delete account functionality
-    deleteAccountLink.addEventListener("click", async () => {
-      if (confirm("Are you sure you want to delete your account and data? This action cannot be undone.")) {
-        try {
-          await deleteDoc(doc(db, "users", currentUser.uid));  // Delete from Firestore
-          await deleteUser(auth.currentUser);  // Delete from Firebase Auth
-          alert("Your account and data have been deleted.");
-          window.location.href = "./login.html";  // Redirect after deletion
-        } catch (error) {
-          console.error("Error deleting account:", error);
+    if (plan === "Developers") showDevelopersView();
+    else showRegularView();
+  }
+
+  async function renderAllUsers() {
+    if (!devUsersContainer) return;
+    devUsersContainer.innerHTML = `<div class="dev-grid-row"><div>Loading users…</div><div>—</div></div>`;
+    try {
+      const snap = await getDocs(collection(db, "users"));
+      let rows = "";
+      snap.forEach(d => {
+        const data = d.data() || {};
+        const email = data.email || "(no email)";
+        const plan = data.plan || "-";
+        rows += `<div class="dev-grid-row"><div>${email}</div><div>${plan}</div></div>`;
+      });
+      devUsersContainer.innerHTML = rows || `<div class="dev-grid-row"><div>No users found</div><div>—</div></div>`;
+    } catch (e) {
+      console.error("renderAllUsers error:", e);
+      devUsersContainer.innerHTML = `<div class="dev-grid-row"><div>Permission denied or error</div><div>—</div></div>`;
+    }
+  }
+
+  async function ensureDevelopersPlanIfAllowed(user) {
+    const isDev = DEV_EMAILS.includes((user.email || "").toLowerCase());
+    if (!isDev) return null;
+    try {
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+      const existing = snap.exists() ? (snap.data().plan || null) : null;
+      if (existing === "Developers") return "Developers";
+      await setDoc(ref, { email: user.email || null, plan: "Developers" }, { merge: true });
+      return "Developers";
+    } catch (e) {
+      console.warn("ensureDevelopersPlanIfAllowed:", e);
+      return null;
+    }
+  }
+
+  async function loadUserPlan(user) {
+    try {
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+      let plan = snap.exists() ? (snap.data().plan || null) : null;
+      if (plan === "Dev") {
+        await setDoc(ref, { plan: "Developers" }, { merge: true });
+        plan = "Developers";
+      }
+      return plan;
+    } catch (e) {
+      console.warn("loadUserPlan failed:", e);
+      return null;
+    }
+  }
+
+  // Fetch user details
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = LOGIN_URL;
+      return;
+    }
+    currentUser = user;
+
+    // Show the shell immediately so you never see a blank page
+    setDashboardVisibility(true);
+
+    try {
+      // Force Developers for dev email
+      const forced = await ensureDevelopersPlanIfAllowed(user);
+      if (forced) {
+        applyPlanUi(forced);
+        sessionStorage.removeItem("rbx_last_nav");
+        return;
+      }
+
+      const plan = await loadUserPlan(user);
+
+      if (!plan) {
+        if (!(FROM === "selection" || LAST_NAV === "from_selection")) {
+          window.location.href = SELECTION_URL;
+          return;
         }
+        applyPlanUi(null);
+        sessionStorage.removeItem("rbx_last_nav");
+        return;
       }
-    });
-  </script>
+
+      applyPlanUi(plan);
+      sessionStorage.removeItem("rbx_last_nav");
+    } catch (e) {
+      console.error("Dashboard init error:", e);
+      applyPlanUi(null);
+    }
+  });
+
+  // LOGOUT
+  logoutLink.addEventListener("click", async () => {
+    try {
+      await signOut(auth);
+      window.location.href = LOGIN_URL;
+    } catch (error) {
+      console.error("Error during logout: ", error);
+    }
+  });
+
+  // DELETE ACCOUNT & DATA (Available for all users)
+  deleteAccountLink.addEventListener("click", async () => {
+    if (confirm("Are you sure you want to delete your account and data? This action cannot be undone.")) {
+      try {
+        // 1. Delete user data from Firestore
+        const userRef = doc(db, "users", currentUser.uid);
+        await deleteDoc(userRef);  // Delete the user's document
+
+        // 2. Delete the Firebase Authentication user
+        await deleteUser(auth.currentUser);
+
+        alert("Your account and data have been deleted.");
+        window.location.href = LOGIN_URL; // Redirect to login page
+      } catch (error) {
+        console.error("Error deleting account:", error);
+      }
+    }
+  });
+
+  // Allow user to click to upgrade subscription plan
+  sidebarPlanEl.addEventListener("click", async () => {
+    const newPlan = prompt("Enter new plan (e.g., Basic, Premium, Enterprise):");
+    if (newPlan) {
+      // Update user's plan in Firestore
+      try {
+        const userRef = doc(db, "users", currentUser.uid);
+        await setDoc(userRef, { plan: newPlan }, { merge: true });
+        alert("Your plan has been updated to " + newPlan);
+        applyPlanUi(newPlan);
+      } catch (error) {
+        console.error("Error updating plan:", error);
+      }
+    }
+  });
+</script>
 </body>
 </html>
