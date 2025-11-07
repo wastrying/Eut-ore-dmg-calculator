@@ -147,24 +147,13 @@
   </div>
 
   <script type="module">
+  // Firebase
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
   import {
-    getAuth,
-    onAuthStateChanged,
-    signOut,
-    deleteUser
-  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-  import {
-    getFirestore,
-    doc,
-    getDoc,
-    setDoc,
-    deleteDoc,
-    collection,
-    getDocs
+    getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-  // ---------- Firebase ----------
   const firebaseConfig = {
     apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
     authDomain: "remblyx-medisignal.firebaseapp.com",
@@ -174,109 +163,101 @@
     appId: "1:50711670199:web:0c9c2ff72cd77234ce0c32",
     measurementId: "G-JQ3843RM4V"
   };
-
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db   = getFirestore(app);
 
-  // ---------- Constants ----------
-  const DEV_EMAILS = ["medisignal.remblyx@gmail.com"]; // add more if needed
+  // ─────────────────────────────────────────────────────────────
+  // Config / DOM
+  const DEV_EMAILS = ["medisignal.remblyx@gmail.com"];   // keep updated
   const LOGIN_URL = "./login.html";
   const SELECTION_URL = "./selection.html";
 
-  // Guard flags to stop ping-pong
   const FROM = (new URLSearchParams(location.search).get("from") || "").toLowerCase();
   const LAST_NAV = sessionStorage.getItem("rbx_last_nav") || "";
 
-  // ---------- DOM ----------
-  const mainDashboard     = document.getElementById("main-dashboard");
-  const sidebarPlanEl     = document.getElementById("sidebar-plan");
-  const planNameEl        = document.getElementById("plan-name");
+  const mainDashboard     = document.getElementById("main-dashboard");   // MUST exist
+  const sidebarPlanEl     = document.getElementById("sidebar-plan");     // <div id="sidebar-plan" ...>
+  const planNameEl        = document.getElementById("plan-name");        // <strong id="plan-name">
   const logoutLink        = document.getElementById("logout");
   const deleteAccountLink = document.getElementById("delete-account");
   const boardTitle        = document.getElementById("board-title");
   const boardSubtitle     = document.getElementById("board-subtitle");
+  const firstNavLabelEl   = document.querySelector(".nav-item .label");  // first tab text
 
-  const devTools          = document.getElementById("dev-tools");
-  const devUsersContainer = document.getElementById("dev-users");
-  const standardBoard     = document.getElementById("standard-board");
-  const firstNavLabelEl   = document.querySelector(".nav-item .label"); // first tab
+  const devTools          = document.getElementById("dev-tools");        // optional (safe if missing)
+  const devUsersContainer = document.getElementById("dev-users");        // optional (safe if missing)
+  const standardBoard     = document.getElementById("standard-board");   // optional (safe if missing)
 
   let currentUser = null;
   let currentPlan = null;
 
-  // ---------- UI helpers ----------
-  function setDashboardVisibility(show) {
-    if (!mainDashboard) return;
-    mainDashboard.style.display = show ? "grid" : "none";
+  // ─────────────────────────────────────────────────────────────
+  // UI helpers (robust to missing DOM)
+  function setDashboardVisibility(show){
+    if (mainDashboard) mainDashboard.style.display = show ? "grid" : "none";
   }
-
+  function safeTxt(el, txt){ if (el) el.textContent = txt; }
   function setNavLabelForPlan(plan){
     if (!firstNavLabelEl) return;
     firstNavLabelEl.textContent = (plan === "Developers") ? "Command Center" : "Main Board";
   }
-
   function showDevelopersView(){
     setNavLabelForPlan("Developers");
-    if (devTools) devTools.style.display = "block";
+    if (devTools)      devTools.style.display = "block";
     if (standardBoard) standardBoard.style.display = "none";
     renderAllUsers();
   }
-
   function showRegularView(){
     setNavLabelForPlan(currentPlan);
-    if (devTools) devTools.style.display = "none";
+    if (devTools)      devTools.style.display = "none";
     if (standardBoard) standardBoard.style.display = "block";
   }
-
-  function applyPlanUi(plan) {
+  function applyPlanUi(plan){
     currentPlan = plan || null;
-    if (planNameEl) planNameEl.textContent = currentPlan || "-";
+    safeTxt(planNameEl, currentPlan || "-");
 
-    switch (plan) {
-      case "Basic":
-        boardTitle.textContent = "Basic Monitoring Board";
-        boardSubtitle.textContent = "Lightweight overview for individual usage.";
-        break;
-      case "Premium":
-        boardTitle.textContent = "Premium Team Workspace";
-        boardSubtitle.textContent = "Collaborative overview for teams and advanced alerts.";
-        break;
-      case "Enterprise":
-        boardTitle.textContent = "Enterprise Control Center";
-        boardSubtitle.textContent = "Full-scale visibility, integrations, and governance.";
-        break;
-      case "Developers":
-        boardTitle.textContent = "Developers Command Center";
-        boardSubtitle.textContent = "Internal tools, diagnostics, and elevated limits.";
-        break;
-      default:
-        boardTitle.textContent = "Remblyx Workspace";
-        boardSubtitle.textContent = "Overview of your monitoring items, owners, and status.";
+    if (boardTitle && boardSubtitle){
+      switch (plan) {
+        case "Basic":
+          boardTitle.textContent = "Basic Monitoring Board";
+          boardSubtitle.textContent = "Lightweight overview for individual usage.";
+          break;
+        case "Premium":
+          boardTitle.textContent = "Premium Team Workspace";
+          boardSubtitle.textContent = "Collaborative overview for teams and advanced alerts.";
+          break;
+        case "Enterprise":
+          boardTitle.textContent = "Enterprise Control Center";
+          boardSubtitle.textContent = "Full-scale visibility, integrations, and governance.";
+          break;
+        case "Developers":
+          boardTitle.textContent = "Developers Command Center";
+          boardSubtitle.textContent = "Internal tools, diagnostics, and elevated limits.";
+          break;
+        default:
+          boardTitle.textContent = "Remblyx Workspace";
+          boardSubtitle.textContent = "Overview of your monitoring items, owners, and status.";
+      }
     }
 
-    updateChangePlanInteractivity();
-
-    if (plan === "Developers") {
-      showDevelopersView();
-    } else {
-      showRegularView();
+    // Lock "change plan" for Developers
+    if (sidebarPlanEl){
+      if (currentPlan === "Developers"){
+        sidebarPlanEl.classList.add("locked");
+        sidebarPlanEl.title = "Plan is managed (Developers). Changes are disabled.";
+      } else {
+        sidebarPlanEl.classList.remove("locked");
+        sidebarPlanEl.title = "Click to change plan";
+      }
     }
-  }
 
-  function updateChangePlanInteractivity(){
-    if (!sidebarPlanEl) return;
-    if (currentPlan === "Developers") {
-      sidebarPlanEl.classList.add("locked");
-      sidebarPlanEl.title = "Plan is managed (Developers). Changes are disabled.";
-    } else {
-      sidebarPlanEl.classList.remove("locked");
-      sidebarPlanEl.title = "Click to change plan";
-    }
+    if (plan === "Developers") showDevelopersView();
+    else                      showRegularView();
   }
 
   async function renderAllUsers(){
-    if (!devUsersContainer) return;
+    if (!devUsersContainer) return; // safe if you didn't add the dev grid
     devUsersContainer.innerHTML = `<div class="dev-grid-row"><div>Loading users…</div><div>—</div></div>`;
     try {
       const snap = await getDocs(collection(db, "users"));
@@ -294,56 +275,58 @@
     }
   }
 
-  async function ensureDevelopersPlanIfAllowed(user) {
+  async function ensureDevelopersPlanIfAllowed(user){
     const isDev = DEV_EMAILS.includes((user.email || "").toLowerCase());
     if (!isDev) return null;
-
-    const ref = doc(db, "users", user.uid);
-    const snap = await getDoc(ref);
-    const existingPlan = snap.exists() ? (snap.data().plan || null) : null;
-
-    if (existingPlan === "Developers") return "Developers";
-    await setDoc(ref, { email: user.email || null, plan: "Developers" }, { merge: true });
-    return "Developers";
-  }
-
-  async function loadUserPlan(user) {
-    const ref = doc(db, "users", user.uid);
-    const snap = await getDoc(ref);
-    let plan = snap.exists() ? (snap.data().plan || null) : null;
-    if (plan === "Dev") {
-      await setDoc(ref, { plan: "Developers" }, { merge: true });
-      plan = "Developers";
+    try {
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+      const existing = snap.exists() ? (snap.data().plan || null) : null;
+      if (existing === "Developers") return "Developers";
+      await setDoc(ref, { email: user.email || null, plan: "Developers" }, { merge: true });
+      return "Developers";
+    } catch (e) {
+      console.warn("ensureDevelopersPlanIfAllowed:", e);
+      // Even if this fails, still show dashboard (no blank screen)
+      return null;
     }
-    return plan;
   }
 
-  // ---------- Events ----------
-  if (sidebarPlanEl) {
+  async function loadUserPlan(user){
+    try {
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+      let plan = snap.exists() ? (snap.data().plan || null) : null;
+      if (plan === "Dev"){ // legacy -> Developers
+        await setDoc(ref, { plan: "Developers" }, { merge: true });
+        plan = "Developers";
+      }
+      return plan;
+    } catch (e) {
+      console.warn("loadUserPlan failed:", e);
+      return null; // don't crash UI
+    }
+  }
+
+  // Click handlers
+  if (sidebarPlanEl){
     sidebarPlanEl.addEventListener("click", () => {
       if (currentPlan === "Developers") return; // locked
-      // Clear guard; next page will set it again if needed
       sessionStorage.removeItem("rbx_last_nav");
       window.location.href = `${SELECTION_URL}?mode=change`;
     });
   }
-
-  if (logoutLink) {
+  if (logoutLink){
     logoutLink.addEventListener("click", async () => {
       await signOut(auth);
       window.location.href = LOGIN_URL;
     });
   }
-
-  if (deleteAccountLink) {
+  if (deleteAccountLink){
     deleteAccountLink.addEventListener("click", async () => {
-      if (!currentUser) {
-        alert("No user is logged in.");
-        return;
-      }
+      if (!currentUser){ alert("No user is logged in."); return; }
       const ok = confirm("Are you sure you want to permanently delete your account and all associated data?");
       if (!ok) return;
-
       try { await deleteDoc(doc(db, "users", currentUser.uid)); } catch {}
       try {
         await deleteUser(currentUser);
@@ -360,56 +343,50 @@
     });
   }
 
-  // ---------- Auth guard ----------
+  // Auth guard — SHOW UI FIRST, then fetch plan
   onAuthStateChanged(auth, async (user) => {
-    if (!user) {
+    if (!user){
       window.location.href = LOGIN_URL;
       return;
     }
     currentUser = user;
 
+    // Show the shell immediately so you never see a blank page
+    setDashboardVisibility(true);
+
     try {
-      // If dev email, force Developers
+      // Force Developers for dev email
       const forced = await ensureDevelopersPlanIfAllowed(user);
-      if (forced) {
+      if (forced){
         applyPlanUi(forced);
-        setDashboardVisibility(true);
-        // Clear the guard once we've rendered successfully
         sessionStorage.removeItem("rbx_last_nav");
         return;
       }
 
-      // Otherwise load stored plan
       const plan = await loadUserPlan(user);
 
-      // If no plan:
-      if (!plan) {
-        // Only redirect to selection if we didn't JUST come from there.
-        if (!(FROM === "selection" || LAST_NAV === "from_selection")) {
+      if (!plan){
+        // Only redirect to selection if we didn't JUST come from there
+        if (!(FROM === "selection" || LAST_NAV === "from_selection")){
           window.location.href = SELECTION_URL;
           return;
         }
-        // We just came from selection; don't bounce. Let user click change plan manually.
+        // No plan but came from selection — keep dashboard visible and idle
         applyPlanUi(null);
-        setDashboardVisibility(true);
         sessionStorage.removeItem("rbx_last_nav");
         return;
       }
 
-      // Plan available: render
       applyPlanUi(plan);
-      setDashboardVisibility(true);
       sessionStorage.removeItem("rbx_last_nav");
     } catch (e) {
       console.error("Dashboard init error:", e);
-      // If we didn't just come from selection, send there; else stay
-      if (!(FROM === "selection" || LAST_NAV === "from_selection")) {
-        window.location.href = SELECTION_URL;
-        return;
-      }
+      // Keep the UI visible even on error
       applyPlanUi(null);
-      setDashboardVisibility(true);
-      sessionStorage.removeItem("rbx_last_nav");
+      // If we didn't come from selection, offer a path out
+      if (!(FROM === "selection" || LAST_NAV === "from_selection")){
+        // optional: show a toast / message rather than redirecting immediately
+      }
     }
   });
 </script>
