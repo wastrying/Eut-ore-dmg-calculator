@@ -365,14 +365,37 @@
   deleteAccountLink.addEventListener("click", async () => {
     if (confirm("Are you sure you want to delete your account and data? This action cannot be undone.")) {
       try {
+        // 1. Delete user data from Firestore
+        const userRef = doc(db, "users", currentUser.uid);
+        await deleteDoc(userRef);  // Delete the user's document
+
+        // 2. Delete the Firebase Authentication user
         await deleteUser(auth.currentUser);
-        alert("Your account has been deleted.");
+
+        alert("Your account and data have been deleted.");
         window.location.href = LOGIN_URL; // Redirect to login page
       } catch (error) {
         console.error("Error deleting account:", error);
       }
     }
   });
+
+  // Allow user to click to upgrade subscription plan
+  sidebarPlanEl.addEventListener("click", async () => {
+    const newPlan = prompt("Enter new plan (e.g., Basic, Premium, Enterprise):");
+    if (newPlan) {
+      // Update user's plan in Firestore
+      try {
+        const userRef = doc(db, "users", currentUser.uid);
+        await setDoc(userRef, { plan: newPlan }, { merge: true });
+        alert("Your plan has been updated to " + newPlan);
+        applyPlanUi(newPlan);
+      } catch (error) {
+        console.error("Error updating plan:", error);
+      }
+    }
+  });
 </script>
+
 </body>
 </html>
