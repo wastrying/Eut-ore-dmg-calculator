@@ -242,7 +242,6 @@
       savedPlan = snap.exists() ? snap.data().plan : null;
     } catch (e) {
       console.error("Error loading plan:", e);
-      // Stay on selection (don’t bounce) so user can choose a plan to recover
       savedPlan = null;
     }
 
