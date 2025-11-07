@@ -30,7 +30,6 @@
       color: #222;
     }
 
-    /* Background */
     .overlay {
       position: fixed;
       inset: 0;
@@ -45,7 +44,6 @@
       opacity: 0.8;
     }
 
-    /* Top logo */
     .header-row {
       position: fixed;
       top: -27px;
@@ -64,7 +62,6 @@
       transform: scale(1.03);
     }
 
-    /* Wrapper */
     .dashboard-wrapper {
       width: 100%;
       max-width: 1200px;
@@ -202,10 +199,10 @@
       color: #667eea;
     }
 
-    /* MONDAY-LIKE DASHBOARD */
+    /* DASHBOARD */
 
     #main-dashboard {
-      display: none; /* JS sets to grid once ready */
+      display: none;
       height: calc(100vh - 90px);
       max-height: calc(100vh - 90px);
       background: rgba(255,255,255,0.96);
@@ -215,7 +212,6 @@
       overflow: hidden;
     }
 
-    /* Sidebar */
     .sidebar {
       background: #111827;
       color: #e5e7eb;
@@ -280,11 +276,18 @@
       display: flex;
       flex-direction: column;
       gap: 1px;
+      cursor: pointer;            /* clickable */
+      transition: 0.2s;
     }
 
     .sidebar-plan-label strong {
       color: #60a5fa;
       font-weight: 600;
+    }
+
+    .sidebar-plan-label:hover {
+      background: rgba(31,41,55,1);
+      border-color: #60a5fa;
     }
 
     .logout-link {
@@ -300,7 +303,6 @@
       color: #ffffff;
     }
 
-    /* Main content */
     .main-area {
       display: flex;
       flex-direction: column;
@@ -472,7 +474,6 @@
       </div>
 
       <div class="plans-row">
-        <!-- Basic -->
         <div class="plan-card" data-plan="Basic">
           <div class="plan-label">Plan</div>
           <div class="plan-name">Basic</div>
@@ -485,7 +486,6 @@
           <button class="plan-btn">Use Basic</button>
         </div>
 
-        <!-- Premium -->
         <div class="plan-card" data-plan="Premium">
           <div class="plan-label">Recommended</div>
           <div class="plan-name">Premium</div>
@@ -499,7 +499,6 @@
           <button class="plan-btn">Use Premium</button>
         </div>
 
-        <!-- Enterprise -->
         <div class="plan-card" data-plan="Enterprise">
           <div class="plan-label">Advanced</div>
           <div class="plan-name">Enterprise</div>
@@ -515,9 +514,8 @@
       </div>
     </div>
 
-    <!-- DASHBOARD -->
+    <!-- MAIN DASHBOARD -->
     <div id="main-dashboard">
-      <!-- Sidebar -->
       <aside class="sidebar">
         <div class="sidebar-title">Workspace</div>
 
@@ -540,7 +538,6 @@
 
         <div class="sidebar-spacer"></div>
 
-        <!-- Plan label bottom-left -->
         <div id="sidebar-plan-label" class="sidebar-plan-label">
           <span class="label-text">Current Plan</span>
           <strong id="sidebar-plan-name">-</strong>
@@ -552,7 +549,6 @@
         </div>
       </aside>
 
-      <!-- Main area -->
       <main class="main-area">
         <div class="top-bar">
           <div class="board-title-block">
@@ -578,7 +574,6 @@
             <div>Priority</div>
           </div>
 
-          <!-- Demo rows -->
           <div class="board-row">
             <div>Onboarding checks</div>
             <div>You</div>
@@ -628,7 +623,6 @@
       deleteDoc
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
       authDomain: "remblyx-medisignal.firebaseapp.com",
@@ -647,6 +641,7 @@
     const planSelectionStatus = document.getElementById("plan-selection-status");
     const mainDashboard = document.getElementById("main-dashboard");
     const planCards = document.querySelectorAll(".plan-card");
+    const sidebarPlanLabel = document.getElementById("sidebar-plan-label");
     const sidebarPlanName = document.getElementById("sidebar-plan-name");
     const logoutLink = document.getElementById("logout");
     const deleteAccountLink = document.getElementById("delete-account");
@@ -656,14 +651,17 @@
     let currentUser = null;
 
     const goToLogin = () => {
-      // dashboard.html is in /pages/, login.html also in /pages/
       window.location.href = "./login.html";
     };
 
-    function showPlanSelection() {
+    function showPlanSelection(initialMessage) {
       planSelection.style.display = "block";
       mainDashboard.style.display = "none";
-      planSelectionStatus.textContent = "No plan selected yet. Choose one to continue.";
+      if (initialMessage) {
+        planSelectionStatus.textContent = initialMessage;
+      } else {
+        planSelectionStatus.textContent = "No plan selected yet. Choose one to continue.";
+      }
     }
 
     function showMainDashboard(plan) {
@@ -740,17 +738,35 @@
       const plan = card.getAttribute("data-plan");
       const btn = card.querySelector(".plan-btn");
 
-      card.addEventListener("click", () => {
+      const handleSelect = () => {
         saveUserPlan(plan);
-      });
+      };
+
+      card.addEventListener("click", handleSelect);
 
       if (btn) {
         btn.addEventListener("click", (e) => {
           e.stopPropagation();
-          saveUserPlan(plan);
+          handleSelect();
         });
       }
     });
+
+    // Click current plan label to change plan
+    if (sidebarPlanLabel) {
+      sidebarPlanLabel.addEventListener("click", () => {
+        if (!currentUser) {
+          goToLogin();
+          return;
+        }
+        const currentPlan = sidebarPlanName.textContent.trim();
+        const msg = currentPlan && currentPlan !== "-"
+          ? `Current plan: ${currentPlan}. Choose a new plan to switch.`
+          : "Choose a plan to continue.";
+        showPlanSelection(msg);
+        highlightPlanCard(currentPlan && currentPlan !== "-" ? currentPlan : null);
+      });
+    }
 
     // Logout
     logoutLink.addEventListener("click", async () => {
@@ -773,10 +789,7 @@
       const uid = currentUser.uid;
 
       try {
-        // 1) Delete Firestore user document
         await deleteDoc(doc(db, "users", uid));
-
-        // 2) Delete Firebase Auth user
         await deleteUser(currentUser);
 
         alert("Your account and data have been deleted.");
