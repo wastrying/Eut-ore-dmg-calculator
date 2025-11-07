@@ -95,86 +95,112 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import {
+    getAuth,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    setDoc
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
-      authDomain: "remblyx-medisignal.firebaseapp.com",
-      projectId: "remblyx-medisignal",
-      storageBucket: "remblyx-medisignal.appspot.com",
-      messagingSenderId: "50711670199",
-      appId: "1:50711670199:web:0c9c2ff72cd77234ce0c32",
-      measurementId: "G-JQ3843RM4V"
-    };
+  // --- Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
+    authDomain: "remblyx-medisignal.firebaseapp.com",
+    projectId: "remblyx-medisignal",
+    storageBucket: "remblyx-medisignal.appspot.com",
+    messagingSenderId: "50711670199",
+    appId: "1:50711670199:web:0c9c2ff72cd77234ce0c32",
+    measurementId: "G-JQ3843RM4V"
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-    const DEV_EMAIL = "medisignal.remblyx@gmail.com";
+  // --- Elements (adjust selectors to your markup)
+  const planCards = document.querySelectorAll(".plan-card");
+  const statusEl  = document.getElementById("plan-selection-status");
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+  // --- Helpers
+  const DASHBOARD_URL = "./dashboard.html";
+  const MODE = new URLSearchParams(location.search).get("mode") || "new"; // "new" or "change"
+  let currentUser = null;
+  let savedPlan = null;
 
-    const statusEl = document.getElementById("status");
-    const planCards = Array.from(document.querySelectorAll(".plan-card"));
-
-    function highlight(plan) {
-      planCards.forEach(c => c.classList.toggle("active", c.dataset.plan === plan));
-    }
-
-    async function savePlan(uid, email, plan) {
-      await setDoc(doc(db, "users", uid), { email: email || null, plan }, { merge: true });
-    }
-
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        // not logged in → go to login
-        window.location.href = "./login.html";
-        return;
-      }
-
-      // Dev account: force Dev plan and skip selection
-      if (user.email === DEV_EMAIL) {
-        await savePlan(user.uid, user.email, "Dev");
-        window.location.href = "./dashboard.html";
-        return;
-      }
-
-      // Non-dev: if plan exists, skip to dashboard; otherwise stay here
-      try {
-        const snap = await getDoc(doc(db, "users", user.uid));
-        const plan = snap.exists() ? snap.data().plan : null;
-        if (plan) {
-          window.location.href = "./dashboard.html";
-          return;
-        }
-        statusEl.textContent = "No plan selected yet. Choose one to continue.";
-      } catch (e) {
-        console.error(e);
-        statusEl.textContent = "Could not load your plan. Please choose one.";
-      }
-    });
-
-    // Choose a plan → persist then go dashboard
+  function highlightPlanCard(plan) {
     planCards.forEach(card => {
-      const plan = card.dataset.plan;
-      const click = async (e) => {
-        e.stopPropagation();
-        const user = auth.currentUser;
-        if (!user) return (window.location.href = "./login.html");
+      card.classList.toggle("active", card.getAttribute("data-plan") === plan);
+    });
+  }
+
+  function enablePlanClicks() {
+    planCards.forEach(card => {
+      const plan = card.getAttribute("data-plan");
+      const btn  = card.querySelector(".plan-btn");
+      const select = async () => {
+        // If switching while in change-mode, optionally confirm
+        if (MODE === "change" && savedPlan && savedPlan !== plan) {
+          const ok = confirm(`Switch plan from ${savedPlan} ➜ ${plan}?`);
+          if (!ok) return;
+        }
         try {
-          highlight(plan);
-          await savePlan(user.uid, user.email, plan);
-          window.location.href = "./dashboard.html";
+          await setDoc(doc(db, "users", currentUser.uid), {
+            email: currentUser.email || null,
+            plan
+          }, { merge: true });
+          // After picking or switching, go to dashboard
+          window.location.href = DASHBOARD_URL;
         } catch (e) {
+          alert("Couldn't save plan. Check Firestore rules/console.");
           console.error(e);
-          statusEl.textContent = "Failed to save plan. Check Firestore rules.";
         }
       };
-      card.addEventListener("click", click);
-      const btn = card.querySelector(".plan-btn");
-      if (btn) btn.addEventListener("click", click);
+
+      card.addEventListener("click", select);
+      if (btn) btn.addEventListener("click", (e) => { e.stopPropagation(); select(); });
     });
-  </script>
+  }
+
+  function showSelection(message) {
+    // If your page hides/shows containers, do it here.
+    if (statusEl) statusEl.textContent = message || "Choose a plan to continue.";
+    enablePlanClicks();
+  }
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = "./login.html";
+      return;
+    }
+    currentUser = user;
+
+    // Load user's current plan
+    try {
+      const snap = await getDoc(doc(db, "users", user.uid));
+      savedPlan = snap.exists() ? snap.data().plan : null;
+    } catch (e) {
+      console.error("Error loading plan:", e);
+    }
+
+    // If user already has a plan and they came here from login (no change mode),
+    // send them straight to the dashboard.
+    if (savedPlan && MODE !== "change") {
+      window.location.href = DASHBOARD_URL;
+      return;
+    }
+
+    // Otherwise, keep them on the selection page and highlight current plan (if any).
+    if (savedPlan) {
+      highlightPlanCard(savedPlan);
+      showSelection(`Current plan: ${savedPlan}. Choose a new plan to switch.`);
+    } else {
+      showSelection("No plan selected yet. Choose one to continue.");
+    }
+  });
+</script>
 </body>
 </html>
