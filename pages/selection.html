@@ -17,23 +17,31 @@
     .header{position:fixed;top:8px;left:12px;display:flex;align-items:center;gap:10px;z-index:20}
     .logo{height:56px;user-select:none;pointer-events:none}
 
-    /* Close (top-right X) */
+    .container{
+      position:relative; /* so the close button anchors inside the box */
+      width:100%;max-width:980px;background:rgba(255,255,255,.96);
+      border-radius:18px;box-shadow:0 12px 28px rgba(0,0,0,.22);
+      padding:20px;display:flex;flex-direction:column;gap:16px;
+    }
+
+    /* Close (top-right X INSIDE the box) */
     .close-btn{
-      position:fixed;top:12px;right:12px;z-index:30;
+      position:absolute;top:10px;right:10px;z-index:30;
       width:36px;height:36px;border-radius:999px;border:none;background:#111827;color:#fff;
       font-size:20px;line-height:36px;text-align:center;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.25);
       transition:transform .15s ease,opacity .15s ease,background .15s ease;
     }
     .close-btn:hover{transform:scale(1.05);background:#0b1220}
 
-    .container{
-      width:100%;max-width:980px;background:rgba(255,255,255,.96);
-      border-radius:18px;box-shadow:0 12px 28px rgba(0,0,0,.22);
-      padding:20px;display:flex;flex-direction:column;gap:16px;
-    }
-
+    .title-wrap{padding-right:48px} /* room for the X */
     .title{font-size:22px;font-weight:700}
     .subtitle{font-size:13px;color:#6b7280}
+
+    .current-indicator{
+      font-size:12px;color:#0b3a2e;background:#e6fff5;border:1px solid #b7f7dd;
+      display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;margin-top:6px;
+    }
+    .dot{width:8px;height:8px;border-radius:999px;background:#10b981}
 
     .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:6px}
     @media (max-width:900px){ .plans{grid-template-columns:1fr} }
@@ -42,21 +50,31 @@
       border:1px solid #e5e7eb;border-radius:14px;background:#fff;
       padding:16px;display:flex;flex-direction:column;gap:10px;
       box-shadow:0 2px 6px rgba(0,0,0,.06);
+      transition:border-color .15s ease, box-shadow .15s ease;
     }
+    .card:hover{border-color:#c7d2fe;box-shadow:0 6px 18px rgba(102,126,234,.15)}
+
+    /* Highlight the CURRENT plan card */
+    .card.current{
+      border-color:#93c5fd;
+      box-shadow:0 8px 24px rgba(59,130,246,.18);
+    }
+
     .card-header{display:flex;align-items:baseline;justify-content:space-between}
     .plan-name{font-size:16px;font-weight:700}
-    .badge-current{font-size:11px;padding:3px 8px;border-radius:999px;background:#ecfeff;color:#0369a1;border:1px solid #bae6fd}
+    .badge-current{
+      font-size:11px;padding:3px 8px;border-radius:999px;background:#ecfeff;color:#0369a1;border:1px solid #bae6fd;
+      display:none;
+    }
 
     .price{font-size:22px;font-weight:800}
     .per{font-size:12px;color:#6b7280;margin-left:4px}
 
     .features{font-size:13px;color:#374151;display:flex;flex-direction:column;gap:6px;list-style:none}
     .features li{display:flex;gap:8px;align-items:flex-start}
-    .dot{width:6px;height:6px;border-radius:999px;background:#667eea;margin-top:6px}
+    .feat-dot{width:6px;height:6px;border-radius:999px;background:#667eea;margin-top:6px}
 
-    .choose{
-      margin-top:auto;display:flex;gap:8px
-    }
+    .choose{margin-top:auto;display:flex;gap:8px}
     .btn{
       flex:1;padding:10px;border-radius:10px;border:1px solid #e5e7eb;background:#f9fafb;cursor:pointer;font-weight:600;font-size:14px;
       transition:transform .1s ease,box-shadow .1s ease,opacity .15s ease;
@@ -67,9 +85,6 @@
 
     .footnote{font-size:12px;color:#6b7280;text-align:center;margin-top:4px}
     .status{font-size:12px;color:#6b7280;text-align:center;min-height:16px}
-
-    /* subtle highlight on hover */
-    .card:hover{border-color:#c7d2fe;box-shadow:0 6px 18px rgba(102,126,234,.15)}
   </style>
 </head>
 <body>
@@ -79,13 +94,18 @@
     <img src="../images/remblyxlogo.png" alt="Remblyx" class="logo">
   </div>
 
-  <!-- X: only way back (besides choosing a plan) -->
-  <button id="closeBtn" class="close-btn" aria-label="Close and return to dashboard">×</button>
-
   <div class="container">
-    <div>
+    <!-- X INSIDE THE BOX -->
+    <button id="closeBtn" class="close-btn" aria-label="Close and return to dashboard">×</button>
+
+    <div class="title-wrap">
       <div class="title">Choose your plan</div>
       <div class="subtitle">Pick a plan to personalize your dashboard. You can change it anytime.</div>
+      <!-- Current plan indicator -->
+      <div id="current-indicator" class="current-indicator" style="display:none;">
+        <span class="dot"></span>
+        <span>You’re currently on <strong id="current-plan-name">—</strong></span>
+      </div>
     </div>
 
     <div id="status" class="status"></div>
@@ -95,13 +115,13 @@
       <div class="card" id="card-basic">
         <div class="card-header">
           <div class="plan-name">Basic</div>
-          <span class="badge-current" id="badge-basic" style="display:none;">Current</span>
+          <span class="badge-current" id="badge-basic">Current</span>
         </div>
         <div><span class="price">$0</span><span class="per">/ mo</span></div>
         <ul class="features">
-          <li><span class="dot"></span><span>Single user dashboard</span></li>
-          <li><span class="dot"></span><span>Core monitoring widgets</span></li>
-          <li><span class="dot"></span><span>Email notifications</span></li>
+          <li><span class="feat-dot"></span><span>Single user dashboard</span></li>
+          <li><span class="feat-dot"></span><span>Core monitoring widgets</span></li>
+          <li><span class="feat-dot"></span><span>Email notifications</span></li>
         </ul>
         <div class="choose">
           <button class="btn primary" id="choose-basic">Choose Basic</button>
@@ -112,13 +132,13 @@
       <div class="card" id="card-premium">
         <div class="card-header">
           <div class="plan-name">Premium</div>
-          <span class="badge-current" id="badge-premium" style="display:none;">Current</span>
+          <span class="badge-current" id="badge-premium">Current</span>
         </div>
         <div><span class="price">$15</span><span class="per">/ mo</span></div>
         <ul class="features">
-          <li><span class="dot"></span><span>Team collaboration</span></li>
-          <li><span class="dot"></span><span>Advanced alerts & filters</span></li>
-          <li><span class="dot"></span><span>Priority support</span></li>
+          <li><span class="feat-dot"></span><span>Team collaboration</span></li>
+          <li><span class="feat-dot"></span><span>Advanced alerts & filters</span></li>
+          <li><span class="feat-dot"></span><span>Priority support</span></li>
         </ul>
         <div class="choose">
           <button class="btn primary" id="choose-premium">Choose Premium</button>
@@ -129,13 +149,13 @@
       <div class="card" id="card-enterprise">
         <div class="card-header">
           <div class="plan-name">Enterprise</div>
-          <span class="badge-current" id="badge-enterprise" style="display:none;">Current</span>
+          <span class="badge-current" id="badge-enterprise">Current</span>
         </div>
         <div><span class="price">$49</span><span class="per">/ mo</span></div>
         <ul class="features">
-          <li><span class="dot"></span><span>Org-wide governance</span></li>
-          <li><span class="dot"></span><span>SSO & advanced integrations</span></li>
-          <li><span class="dot"></span><span>Dedicated success manager</span></li>
+          <li><span class="feat-dot"></span><span>Org-wide governance</span></li>
+          <li><span class="feat-dot"></span><span>SSO & advanced integrations</span></li>
+          <li><span class="feat-dot"></span><span>Dedicated success manager</span></li>
         </ul>
         <div class="choose">
           <button class="btn primary" id="choose-enterprise">Choose Enterprise</button>
@@ -176,29 +196,49 @@
     const badgePremium = document.getElementById("badge-premium");
     const badgeEnterprise = document.getElementById("badge-enterprise");
 
+    const cardBasic = document.getElementById("card-basic");
+    const cardPremium = document.getElementById("card-premium");
+    const cardEnterprise = document.getElementById("card-enterprise");
+
+    const currentIndicator = document.getElementById("current-indicator");
+    const currentPlanNameEl = document.getElementById("current-plan-name");
+
     const DASHBOARD_URL = "./dashboard.html";
     const LOGIN_URL = "./login.html";
 
     function setStatus(msg){ if(statusEl){ statusEl.textContent = msg || ""; } }
-    function showCurrent(plan){
-      badgeBasic.style.display = (plan==="Basic") ? "inline-block" : "none";
-      badgePremium.style.display = (plan==="Premium") ? "inline-block" : "none";
-      badgeEnterprise.style.display = (plan==="Enterprise") ? "inline-block" : "none";
 
-      // Disable button for current plan to avoid no-op writes
+    function clearBadgesAndHighlights(){
+      badgeBasic.style.display = "none";
+      badgePremium.style.display = "none";
+      badgeEnterprise.style.display = "none";
+      cardBasic.classList.remove("current");
+      cardPremium.classList.remove("current");
+      cardEnterprise.classList.remove("current");
+    }
+
+    function showCurrent(plan){
+      // top label
+      currentIndicator.style.display = "inline-flex";
+      currentPlanNameEl.textContent = plan || "—";
+
+      // badges + highlight + disable matching button
+      clearBadgesAndHighlights();
       chooseBasicBtn.disabled = (plan==="Basic");
       choosePremiumBtn.disabled = (plan==="Premium");
       chooseEnterpriseBtn.disabled = (plan==="Enterprise");
+
+      if (plan === "Basic"){ badgeBasic.style.display = "inline-block"; cardBasic.classList.add("current"); }
+      else if (plan === "Premium"){ badgePremium.style.display = "inline-block"; cardPremium.classList.add("current"); }
+      else if (plan === "Enterprise"){ badgeEnterprise.style.display = "inline-block"; cardEnterprise.classList.add("current"); }
+      else { /* unknown plan: no highlight */ }
     }
 
     async function writePlanAndGo(uid, plan){
       try{
         setStatus("Saving your selection…");
-        // Update/merge user doc with chosen plan
         await setDoc(doc(db, "users", uid), { plan }, { merge: true });
-        // Optional: flag we came from selection (if you want to read it later)
         try{ sessionStorage.setItem("rbx_last_nav", "from_selection"); }catch{}
-        // Replace to avoid an extra back step to selection
         window.location.replace(DASHBOARD_URL);
       }catch(e){
         console.error(e);
@@ -206,20 +246,22 @@
       }
     }
 
-    // Attach handlers after we know the user
     onAuthStateChanged(auth, async (user)=>{
       if(!user){
-        // not logged in → go to login
         window.location.replace(LOGIN_URL);
         return;
       }
 
-      // Load current plan to show "Current" badge
+      // Load current plan and reflect in UI
       try{
         const ref = doc(db, "users", user.uid);
         const snap = await getDoc(ref);
-        const plan = snap.exists() ? (snap.data().plan || null) : null;
-        if (plan) showCurrent(plan);
+        let plan = snap.exists() ? (snap.data().plan || null) : null;
+
+        // Fallback if missing (your app elsewhere defaults to Basic anyway)
+        if (!plan) plan = "Basic";
+
+        showCurrent(plan);
       }catch(e){
         console.warn("Could not load current plan:", e);
       }
