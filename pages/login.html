@@ -114,6 +114,12 @@
       FacebookAuthProvider,
       signInWithPopup,
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
@@ -127,6 +133,7 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app);
 
     const loginBox = document.getElementById("login-box");
     const homeBox = document.getElementById("home-box");
@@ -144,10 +151,9 @@
     const facebookProvider = new FacebookAuthProvider();
     let popupInProgress = false;
 
-    /* ▼▼ CHANGE: redirect target is selection.html ▼▼ */
+    // Redirect target
     const SELECTION_URL = "./dashboard.html";
-    const goToSelection = () => { window.location.href = SELECTION_URL; };
-    /* ▲▲ CHANGE ▲▲ */
+    const goToSelection = () => { window.location.replace(SELECTION_URL); };
 
     const showError = (msg) => { errorText.textContent = msg; };
     const clearError = () => { errorText.textContent = ""; };
@@ -158,6 +164,18 @@
       clearError();
       form.reset();
     };
+
+    async function ensureDefaultPlanIfMissing(user) {
+      try {
+        const ref = doc(db, "users", user.uid);
+        const snap = await getDoc(ref);
+        if (!snap.exists() || !snap.data().plan) {
+          await setDoc(ref, { email: user.email || null, plan: "Basic" }, { merge: true });
+        }
+      } catch (e) {
+        console.warn("ensureDefaultPlanIfMissing:", e);
+      }
+    }
 
     const handleVerifiedOrBlock = async (user) => {
       if (!user) {
@@ -171,9 +189,9 @@
         showLogin();
         return;
       }
-      /* ▼▼ CHANGE ▼▼ */
+      // Verified or OAuth → ensure default plan then redirect
+      await ensureDefaultPlanIfMissing(user);
       goToSelection();
-      /* ▲▲ CHANGE ▲▲ */
     };
 
     onAuthStateChanged(auth, (user) => {
@@ -238,9 +256,8 @@
           await signOut(auth);
           return;
         }
-        /* ▼▼ CHANGE ▼▼ */
+        await ensureDefaultPlanIfMissing(user);
         goToSelection();
-        /* ▲▲ CHANGE ▲▲ */
       } catch (error) {
         console.error("Login error:", error);
         let message = "⚠ Invalid email or password.";
@@ -268,9 +285,8 @@
       clearError();
       try {
         await signInWithPopup(auth, googleProvider);
-        /* ▼▼ CHANGE ▼▼ */
+        await ensureDefaultPlanIfMissing(auth.currentUser);
         goToSelection();
-        /* ▲▲ CHANGE ▲▲ */
       } catch (error) {
         if (error.code !== "auth/cancelled-popup-request") {
           console.error("Google login error:", error);
@@ -289,9 +305,8 @@
       clearError();
       try {
         await signInWithPopup(auth, facebookProvider);
-        /* ▼▼ CHANGE ▼▼ */
+        await ensureDefaultPlanIfMissing(auth.currentUser);
         goToSelection();
-        /* ▲▲ CHANGE ▲▲ */
       } catch (error) {
         if (error.code !== "auth/cancelled-popup-request") {
           console.error("Facebook login error:", error);
@@ -304,4 +319,3 @@
   </script>
 </body>
 </html>
-
