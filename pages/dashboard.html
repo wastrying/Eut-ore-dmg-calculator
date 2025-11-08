@@ -150,18 +150,12 @@
     /* Phone + small tablets */
     @media (max-width:640px){
       /* Header position; larger logo; small fixed home box */
-      .header-row{
-        top: max(0px, env(safe-area-inset-top));
-        left: max(6px, env(safe-area-inset-left));
-      }
+      .header-row{ top: max(0px, env(safe-area-inset-top)); left: max(6px, env(safe-area-inset-left)); }
 
       .home-tap{
-        position:absolute;
-        top: 6px; left: 6px;
-        width: 44px; height: 44px;      /* fixed hit area */
-        border-radius: 10px;
-        background: transparent; border: none;
-        cursor: pointer;
+        position:absolute; top: 6px; left: 6px;
+        width: 44px; height: 44px; border-radius: 10px;
+        background: transparent; border: none; cursor: pointer;
       }
       .home-tap:focus-visible{ outline:2px solid #60a5fa; outline-offset:2px; }
 
@@ -362,10 +356,12 @@
   if (openSidebarBtn) openSidebarBtn.addEventListener("click", openDrawer);
   if (backdropEl) backdropEl.addEventListener("click", closeDrawer);
   window.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDrawer(); });
+
+  // ✅ Only close on nav item clicks; DO NOT close for plan/logout/delete
   if (sidebarEl) {
     sidebarEl.addEventListener("click", (e) => {
-      const item = e.target.closest(".nav-item, #sidebar-plan, .logout-link");
-      if (item) closeDrawer();
+      const nav = e.target.closest(".nav-item");
+      if (nav) closeDrawer();
     });
   }
 
