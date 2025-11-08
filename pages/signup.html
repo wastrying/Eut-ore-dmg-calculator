@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Sign Up | Remblyx</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -211,6 +211,13 @@
     signOut,
     onAuthStateChanged
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import {
+    getFirestore,
+    doc,
+    setDoc,
+    serverTimestamp,
+    getDoc
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
@@ -224,6 +231,7 @@
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
+  const db = getFirestore(app);
 
   // --- Elements
   const form = document.getElementById("signup-form");
@@ -249,9 +257,9 @@
   const facebookProvider = new FacebookAuthProvider();
   let popupInProgress = false;
 
-  // Redirect target (selection)
+  // Redirect target (dashboard)
   const SELECTION_URL = "./dashboard.html";
-  const goToSelection = () => { window.location.href = SELECTION_URL; };
+  const goToSelection = () => { window.location.replace(SELECTION_URL); };
 
   const showError = (msg) => { errorText.textContent = msg; errorText.classList.add("show"); };
   const clearError = () => { errorText.textContent = ""; errorText.classList.remove("show"); };
@@ -313,6 +321,21 @@
     });
   }
 
+  async function ensureDefaultPlanIfMissing(user) {
+    try {
+      const ref = doc(db, "users", user.uid);
+      const s = await getDoc(ref);
+      if (!s.exists() || !s.data().plan) {
+        await setDoc(ref, {
+          email: user.email || null,
+          plan: "Basic"
+        }, { merge: true });
+      }
+    } catch (e) {
+      console.warn("ensureDefaultPlanIfMissing:", e);
+    }
+  }
+
   // Email/password signup
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -340,12 +363,22 @@
     try {
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
 
+      // Create/merge the user's doc with default plan
+      try {
+        await setDoc(doc(db, "users", user.uid), {
+          email,
+          plan: "Basic",
+          createdAt: serverTimestamp()
+        }, { merge: true });
+      } catch (e) {
+        console.warn("default plan write failed (will be retried at login):", e);
+      }
+
       // Send verification, then sign out to prevent unverified access
       try {
         await sendEmailVerification(user);
       } catch (err) {
         showError("⚠ Account created, but failed to send verification email.");
-        // still sign out; user is unverified
       }
 
       // Show instructions + "Open my email" button
@@ -360,7 +393,7 @@
         openEmailBtn.style.display = "inline-block";
       }
 
-      // Important: log out unverified password users
+      // Log out unverified password users
       try { await signOut(auth); } catch {}
 
       form.reset();
@@ -375,7 +408,7 @@
     }
   });
 
-  // Google OAuth → go straight to selection
+  // Google OAuth → ensure plan then go to dashboard
   googleBtn.addEventListener("click", async (e) => {
     e.preventDefault();
     if (popupInProgress) return;
@@ -386,6 +419,7 @@
 
     try {
       await signInWithPopup(auth, new GoogleAuthProvider());
+      await ensureDefaultPlanIfMissing(auth.currentUser);
       goToSelection();
     } catch (error) {
       if (error.code !== "auth/cancelled-popup-request") {
@@ -396,7 +430,7 @@
     }
   });
 
-  // Facebook OAuth → go straight to selection
+  // Facebook OAuth → ensure plan then go to dashboard
   facebookBtn.addEventListener("click", async (e) => {
     e.preventDefault();
     if (popupInProgress) return;
@@ -407,6 +441,7 @@
 
     try {
       await signInWithPopup(auth, new FacebookAuthProvider());
+      await ensureDefaultPlanIfMissing(auth.currentUser);
       goToSelection();
     } catch (error) {
       if (error.code !== "auth/cancelled-popup-request") {
@@ -418,14 +453,14 @@
   });
 
   // If user somehow lands here already logged-in (e.g., OAuth return), route appropriately
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     if (!user) return;
     const isPasswordUser = user.providerData.some(p => p.providerId === "password");
     if (!isPasswordUser) {
-      // OAuth users are considered verified → allow
+      await ensureDefaultPlanIfMissing(user);
       goToSelection();
     }
-    // For password users, require verification (handled on login after they verify)
+    // Password users must verify via email first (handled on login page)
   });
 
   // Ensure "Open my email" hidden initially
@@ -434,4 +469,3 @@
 
 </body>
 </html>
-
