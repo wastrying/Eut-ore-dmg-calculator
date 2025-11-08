@@ -193,6 +193,37 @@ img { max-width: 100%; height: auto; display: block; }
     font-weight: bold;
   }
 }
+/* === Compact spacing just for the Subscription Plans section === */
+section#subscription-plans h2{
+  margin-bottom: 12px;            /* tighter heading */
+}
+section#subscription-plans p{
+  margin: 6px 0 0;                /* tighten the paragraph under the title */
+  line-height: 1.4;
+}
+
+/* Desktop table: smaller padding + line-height + font */
+#subscription-plans .table-desktop th,
+#subscription-plans .table-desktop td{
+  padding: 10px 8px;              /* was 15px */
+  line-height: 1.3;               /* was ~1.6 via body text */
+  font-size: 0.95em;
+  border-bottom: 0.5px solid rgba(255,255,255,0.15); /* thinner row divider */
+}
+#subscription-plans .table-desktop th{
+  font-weight: 600;               /* slightly lighter than bold for density */
+}
+
+/* Mobile matrix: even tighter padding & text */
+@media (max-width: 520px){
+  #subscription-plans .table-mobile th,
+  #subscription-plans .table-mobile td{
+    padding: 6px 4px;             /* was 10px */
+    font-size: 0.9em;             /* slightly smaller text */
+    line-height: 1.25;
+    border: 0.5px solid rgba(255,255,255,0.15);
+  }
+}
 
 
 
@@ -352,6 +383,7 @@ img { max-width: 100%; height: auto; display: block; }
 
 </body>
 </html>
+
 
 
 
