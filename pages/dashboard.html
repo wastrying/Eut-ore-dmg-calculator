@@ -30,15 +30,17 @@
     }
     .overlay{position:fixed;inset:0;z-index:-1}
     .bg-image{width:100%;height:100%;object-fit:cover;filter:blur(4px);opacity:.8}
+
     .header-row{position:fixed;top:8px;left:8px;z-index:40}
     .logo{height:160px;cursor:pointer;transition:.3s ease}
     .logo:hover{filter:brightness(1.1);transform:scale(1.03)}
+
     .wrapper{width:100%;max-width:1200px;margin-top:58px;display:flex;flex-direction:column;gap:16px;z-index:10}
 
     /* ---------- Main Grid ---------- */
     #main-dashboard{
       display:none;
-      height:calc(100dvh - 110px); /* use dynamic vh for mobile browser chrome */
+      height:calc(100dvh - 110px);
       max-height:calc(100dvh - 110px);
       background:rgba(255,255,255,.96);
       border-radius:var(--radius-lg);
@@ -109,7 +111,7 @@
     .backdrop{
       position:fixed;inset:0;background:rgba(0,0,0,.35);
       opacity:0;pointer-events:none;transition:opacity .2s ease;
-      z-index:1000; /* raised so it's above header/logo */
+      z-index:1000; /* above header/logo */
     }
     .backdrop.show{opacity:1;pointer-events:auto}
 
@@ -128,7 +130,6 @@
         transform:translateX(0);transition:left .25s ease;box-shadow:8px 0 20px rgba(0,0,0,.25)
       }
       .sidebar.open{left:0}
-      /* Hide some labels for compact nav (kept from your version) */
       .sidebar-title,.nav-item .label,.sidebar-plan-label .label-text{display:none}
       .search-box{min-width:0;width:100%}
       .top-actions{flex:1;justify-content:flex-end}
@@ -145,19 +146,31 @@
 
     /* Phone + small tablets */
     @media (max-width:640px){
-      /* move header higher and make it a larger tap target ONLY on phones */
+      /* Position header safely; no padding here so tap box is controlled by the button */
       .header-row{
         top: max(0px, env(safe-area-inset-top));
         left: max(6px, env(safe-area-inset-left));
-        padding: 12px 14px;   /* bigger tap box */
-        border-radius: 12px;
-        cursor: pointer;
       }
 
-      /* keep content clear of the fixed header (logo + padding ≈ 74px) */
-      .wrapper{ margin-top:76px }
+      /* The tiny, fixed tap box for going home */
+      .home-tap{
+        position:absolute;
+        top: 6px; left: 6px;
+        width: 44px; height: 44px;      /* fixed hit area */
+        border-radius: 10px;
+        background: transparent; border: none;
+        cursor: pointer;
+      }
+      .home-tap:focus-visible{
+        outline:2px solid #60a5fa; outline-offset:2px;
+      }
 
-      .logo{height:50px}
+      /* Bigger logo on phones, but not clickable */
+      .logo{ height:72px; pointer-events:none }
+
+      /* Space for header (logo height + a bit) */
+      .wrapper{ margin-top:86px }
+
       .board-title{font-size:clamp(14px, 4vw, 18px)}
       .board-subtitle{display:none}
 
@@ -199,6 +212,8 @@
   <div class="overlay"><img src="../images/background.png" class="bg-image" alt=""></div>
 
   <div class="header-row">
+    <!-- Small fixed home button (phones) -->
+    <button id="home-tap" class="home-tap" aria-label="Go to home" title="Home"></button>
     <img src="../images/remblyxlogo.png" alt="Remblyx" class="logo" onclick="window.location.href='../index.html'">
   </div>
 
@@ -283,7 +298,7 @@
   const db = getFirestore(app);
 
   // Config / DOM
-  const DEV_EMAILS = ["medisignal.remblyx@gmail.com"]; // who can see/edit dev tools
+  const DEV_EMAILS = ["medisignal.remblyx@gmail.com"];
   const LOGIN_URL = "./login.html";
   const SELECTION_URL = "./selection.html";
   const PLAN_OPTIONS = ["Basic","Premium","Enterprise","Developers"];
@@ -329,7 +344,6 @@
   if (openSidebarBtn) openSidebarBtn.addEventListener("click", openDrawer);
   if (backdropEl) backdropEl.addEventListener("click", closeDrawer);
   window.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDrawer(); });
-  // Close drawer after any nav click (use event delegation)
   if (sidebarEl) {
     sidebarEl.addEventListener("click", (e) => {
       const item = e.target.closest(".nav-item, #sidebar-plan, .logout-link");
@@ -376,7 +390,6 @@
     if (plan === "Developers") showDevelopersView(); else showRegularView();
   }
 
-  // Ensure dev emails are always on Developers plan
   async function ensureDevelopersPlanIfAllowed(user) {
     const isDev = ["medisignal.remblyx@gmail.com"].includes((user.email || "").toLowerCase());
     if (!isDev) return null;
@@ -393,7 +406,6 @@
     }
   }
 
-  // Default to Basic if missing
   async function loadUserPlan(user) {
     try {
       const ref = doc(db, "users", user.uid);
@@ -456,7 +468,6 @@
     }
   }
 
-  // Save plan change
   async function updatePlanForUser(uid, newPlan) {
     const status = document.getElementById(`status-${uid}`);
     if (status) { status.className = "inline-status"; status.textContent = "Saving…"; }
@@ -472,7 +483,6 @@
     }
   }
 
-  // Event delegation for dropdown changes
   if (devUsersContainer) {
     devUsersContainer.addEventListener("change", (e) => {
       const el = e.target;
@@ -484,12 +494,10 @@
     });
   }
 
-  // Search
   if (searchInput) {
     searchInput.addEventListener("input", () => renderList(searchInput.value));
   }
 
-  // Auth flow
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
       window.location.href = LOGIN_URL;
@@ -507,7 +515,6 @@
     }
   });
 
-  // LOGOUT
   if (logoutLink) {
     logoutLink.addEventListener("click", async () => {
       try { await signOut(auth); window.location.href = LOGIN_URL; }
@@ -515,7 +522,6 @@
     });
   }
 
-  // DELETE ACCOUNT & DATA
   if (deleteAccountLink) {
     deleteAccountLink.addEventListener("click", async () => {
       if (!confirm("Are you sure you want to delete your account and data? This action cannot be undone.")) return;
@@ -530,7 +536,6 @@
     });
   }
 
-  // Plan chip behavior
   if (sidebarPlanEl) {
     sidebarPlanEl.addEventListener("click", async () => {
       if (currentPlan === "Developers") {
@@ -550,9 +555,9 @@
     });
   }
 
-  /* Make the padded header clickable ONLY on phones */
+  /* Phones only: small fixed home box; logo is not clickable */
   if (window.matchMedia('(max-width: 640px)').matches) {
-    document.querySelector('.header-row')?.addEventListener('click', () => {
+    document.getElementById('home-tap')?.addEventListener('click', () => {
       window.location.href = '../index.html';
     });
   }
