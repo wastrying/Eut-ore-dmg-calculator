@@ -165,6 +165,7 @@
   // Config / DOM
   const DEV_EMAILS = ["medisignal.remblyx@gmail.com"]; // who can see/edit dev tools
   const LOGIN_URL = "./login.html";
+  const SELECTION_URL = "./selection.html";
   const PLAN_OPTIONS = ["Basic","Premium","Enterprise","Developers"];
 
   const mainDashboard = document.getElementById("main-dashboard");
@@ -217,7 +218,14 @@
         default: boardTitle.textContent = "Remblyx Workspace"; boardSubtitle.textContent = "Overview of your monitoring items, owners, and status.";
       }
     }
-    if (sidebarPlanEl) { sidebarPlanEl.classList.remove("locked"); sidebarPlanEl.title = "Click to change plan"; }
+    // Replace this block in applyPlanUi(plan)
+if (sidebarPlanEl) {
+  sidebarPlanEl.classList.remove("locked");
+  sidebarPlanEl.title = (plan === "Developers")
+    ? "Edit plan (developer)"
+    : "Change subscription plan";
+}
+
     if (deleteAccountLink) { deleteAccountLink.style.display = "block"; }
     if (plan === "Developers") showDevelopersView(); else showRegularView();
   }
@@ -390,8 +398,11 @@
   }
 
   // User changes own plan from the sidebar chip
-  if (sidebarPlanEl) {
-    sidebarPlanEl.addEventListener("click", async () => {
+  // Plan chip behavior: normal users → selection.html; developers → prompt
+if (sidebarPlanEl) {
+  sidebarPlanEl.addEventListener("click", async () => {
+    if (currentPlan === "Developers") {
+      // Keep developer quick-edit
       const newPlan = prompt("Enter new plan (e.g., Basic, Premium, Enterprise):");
       if (!newPlan) return;
       try {
@@ -401,8 +412,14 @@
       } catch (error) {
         console.error("Error updating plan:", error);
       }
-    });
-  }
+    } else {
+      // Normal users go to the selection screen
+      try { sessionStorage.setItem("rbx_last_nav", "from_dashboard"); } catch {}
+      window.location.replace(SELECTION_URL); // or .href if you want Back to work
+    }
+  });
+}
+
 </script>
 </body>
 </html>
