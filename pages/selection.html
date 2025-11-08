@@ -26,14 +26,18 @@
       --shadow-md: 0 6px 18px rgba(102,126,234,.15);
     }
 
-    html, body { height: 100%; }
+    /* Lock viewport + disable scroll */
+    html, body {
+      height: 100dvh;
+      overflow: hidden; /* no page scroll */
+    }
+
     body{
       margin:0; padding:16px;
       background:#f5f5f5; color:var(--text);
-      min-height:100dvh; /* small viewport units for mobile chrome/safari */
+      min-height:100dvh; /* keep for older browsers */
       display:flex; justify-content:center; align-items:center;
       position:relative;
-      overflow-x:hidden; /* allow vertical scroll on small screens */
     }
 
     /* Subtle background */
@@ -54,6 +58,9 @@
       padding:10px;
       display:flex; flex-direction:column; gap:8px;
       margin: calc(12px + env(safe-area-inset-top)) auto calc(12px + env(safe-area-inset-bottom));
+      /* fit content in the visible viewport (no inner scroll) */
+      max-height: calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+      overflow: hidden;
     }
 
     /* Close (top-right X inside the box) */
@@ -128,7 +135,13 @@
 
     /* Mobile-specific tweaks */
     @media (max-width:600px){
-      .logo{ position: relative; left: 8px;height:56px; opacity:.95; }
+      .logo{
+        position: relative;
+        left: 8px;   /* nudge right */
+        top: -5px;   /* nudge up */
+        height:56px; 
+        opacity:.95;
+      }
       .container{ padding:8px; border-radius:16px; }
       .bg-image{ filter:blur(2px); }
       .title-wrap{ padding-right:48px; margin-top:50px; }
