@@ -108,10 +108,11 @@
       display:none;border:1px solid #e5e7eb;background:#fff;border-radius:8px;
       padding:8px 10px;font-size:16px;line-height:1;cursor:pointer;
     }
+    /* Backdrop below sidebar but above content */
     .backdrop{
       position:fixed;inset:0;background:rgba(0,0,0,.35);
       opacity:0;pointer-events:none;transition:opacity .2s ease;
-      z-index:1000; /* above header/logo */
+      z-index:1100;
     }
     .backdrop.show{opacity:1;pointer-events:auto}
 
@@ -127,7 +128,8 @@
       .mobile-menu-btn{display:inline-block}
       .sidebar{
         position:fixed;left:-100%;top:0;bottom:0;width:82vw;max-width:320px;
-        transform:translateX(0);transition:left .25s ease;box-shadow:8px 0 20px rgba(0,0,0,.25)
+        transform:translateX(0);transition:left .25s ease;box-shadow:8px 0 20px rgba(0,0,0,.25);
+        z-index:1200; /* ABOVE backdrop so items are tappable */
       }
       .sidebar.open{left:0}
       .sidebar-title,.nav-item .label,.sidebar-plan-label .label-text{display:none}
@@ -135,24 +137,24 @@
       .top-actions{flex:1;justify-content:flex-end}
       .top-left{flex:1}
 
-      /* When drawer is open: lock scroll and disable/hide header/logo */
+      /* When drawer is open: lock scroll and fully hide/disable header/logo & home tap */
       html.drawer-open body{ overflow:hidden; }
-      .drawer-open .header-row{
-        opacity:0;
-        pointer-events:none;
+      .drawer-open .header-row,
+      .drawer-open #home-tap,
+      .drawer-open .logo{
+        opacity:0; visibility:hidden; pointer-events:none;
         transition: opacity .15s ease;
       }
     }
 
     /* Phone + small tablets */
     @media (max-width:640px){
-      /* Position header safely; no padding here so tap box is controlled by the button */
+      /* Header position; larger logo; small fixed home box */
       .header-row{
         top: max(0px, env(safe-area-inset-top));
         left: max(6px, env(safe-area-inset-left));
       }
 
-      /* The tiny, fixed tap box for going home */
       .home-tap{
         position:absolute;
         top: 6px; left: 6px;
@@ -161,14 +163,9 @@
         background: transparent; border: none;
         cursor: pointer;
       }
-      .home-tap:focus-visible{
-        outline:2px solid #60a5fa; outline-offset:2px;
-      }
+      .home-tap:focus-visible{ outline:2px solid #60a5fa; outline-offset:2px; }
 
-      /* Bigger logo on phones, but not clickable */
-      .logo{ height:72px; pointer-events:none }
-
-      /* Space for header (logo height + a bit) */
+      .logo{ height:72px; pointer-events:none } /* bigger, not clickable */
       .wrapper{ margin-top:86px }
 
       .board-title{font-size:clamp(14px, 4vw, 18px)}
@@ -211,10 +208,11 @@
 <body>
   <div class="overlay"><img src="../images/background.png" class="bg-image" alt=""></div>
 
-  <div class="header-row">
+  <div class="header-row" id="header-row">
     <!-- Small fixed home button (phones) -->
     <button id="home-tap" class="home-tap" aria-label="Go to home" title="Home"></button>
-    <img src="../images/remblyxlogo.png" alt="Remblyx" class="logo" onclick="window.location.href='../index.html'">
+    <img src="../images/remblyxlogo.png" alt="Remblyx" class="logo" id="logo"
+         onclick="window.location.href='../index.html'">
   </div>
 
   <div class="wrapper">
@@ -321,7 +319,13 @@
   const sidebarEl = document.getElementById("sidebar");
   const openSidebarBtn = document.getElementById("open-sidebar");
   const backdropEl = document.getElementById("backdrop");
-  const root = document.documentElement; // for toggling drawer-open class
+  const root = document.documentElement; // toggle drawer-open class
+
+  // Header controls
+  const headerRow = document.getElementById('header-row');
+  const logoEl = document.getElementById('logo');
+  const homeTapBtn = document.getElementById('home-tap');
+  let savedLogoOnclick = null;
 
   let currentUser = null;
   let currentPlan = null;
@@ -332,13 +336,27 @@
     if (!sidebarEl || !backdropEl) return;
     sidebarEl.classList.add("open");
     backdropEl.classList.add("show");
-    root.classList.add("drawer-open"); // lock scroll & hide header/logo via CSS
+    root.classList.add("drawer-open"); // CSS hides header/logo/home-tap
+
+    // Extra safety: disable logo/home on open
+    if (headerRow) { headerRow.setAttribute('aria-hidden', 'true'); headerRow.style.pointerEvents = 'none'; }
+    if (homeTapBtn) { homeTapBtn.disabled = true; homeTapBtn.style.pointerEvents = 'none'; }
+    if (logoEl) {
+      savedLogoOnclick = logoEl.onclick;
+      logoEl.onclick = null;
+      logoEl.style.pointerEvents = 'none';
+    }
   };
   const closeDrawer = () => {
     if (!sidebarEl || !backdropEl) return;
     sidebarEl.classList.remove("open");
     backdropEl.classList.remove("show");
     root.classList.remove("drawer-open");
+
+    // Re-enable header/logo/home
+    if (headerRow) { headerRow.removeAttribute('aria-hidden'); headerRow.style.pointerEvents = ''; }
+    if (homeTapBtn) { homeTapBtn.disabled = false; homeTapBtn.style.pointerEvents = ''; }
+    if (logoEl) { logoEl.onclick = savedLogoOnclick; logoEl.style.pointerEvents = ''; }
   };
 
   if (openSidebarBtn) openSidebarBtn.addEventListener("click", openDrawer);
@@ -435,44 +453,43 @@
     </div>`;
   }
 
+  // Search: supports email or plan + tokens plan:/email:
   function renderList(filter = "") {
-  if (!devUsersContainer) return;
+    if (!devUsersContainer) return;
 
-  const q = (filter || "").trim().toLowerCase();
+    const q = (filter || "").trim().toLowerCase();
 
-  const filtered = !q ? allUsers : allUsers.filter(u => {
-    const email = (u.email || "").toLowerCase();
-    const plan  = (u.plan  || "").toLowerCase();
+    const filtered = !q ? allUsers : allUsers.filter(u => {
+      const email = (u.email || "").toLowerCase();
+      const plan  = (u.plan  || "").toLowerCase();
 
-    // split on whitespace; treat each token as a required condition (AND)
-    const tokens = q.split(/\s+/);
+      // split on whitespace; treat each token as a required condition (AND)
+      const tokens = q.split(/\s+/);
 
-    return tokens.every(tok => {
-      // plan: token (supports p: too)
-      if (/^(plan|p):/.test(tok)) {
-        const val = tok.replace(/^(plan|p):/, "");
-        // support "plan:basic,dev|enterprise"
-        const wants = val.split(/[|,]/).map(s => s.trim()).filter(Boolean);
-        if (!wants.length) return true;
-        return wants.some(w => plan.includes(w));
-      }
+      return tokens.every(tok => {
+        // plan: token (supports p: too)
+        if (/^(plan|p):/.test(tok)) {
+          const val = tok.replace(/^(plan|p):/, "");
+          const wants = val.split(/[|,]/).map(s => s.trim()).filter(Boolean);
+          if (!wants.length) return true;
+          return wants.some(w => plan.includes(w));
+        }
 
-      // email: token (supports e: too)
-      if (/^(email|e):/.test(tok)) {
-        const val = tok.replace(/^(email|e):/, "");
-        return email.includes(val);
-      }
+        // email: token (supports e: too)
+        if (/^(email|e):/.test(tok)) {
+          const val = tok.replace(/^(email|e):/, "");
+          return email.includes(val);
+        }
 
-      // default token: match either field
-      return email.includes(tok) || plan.includes(tok);
+        // default token: match either field
+        return email.includes(tok) || plan.includes(tok);
+      });
     });
-  });
 
-  devUsersContainer.innerHTML = filtered.length
-    ? filtered.map(userRow).join("")
-    : `<div class="dev-grid-row"><div>No users found</div><div>—</div></div>`;
-}
-
+    devUsersContainer.innerHTML = filtered.length
+      ? filtered.map(userRow).join("")
+      : `<div class="dev-grid-row"><div>No users found</div><div>—</div></div>`;
+  }
 
   async function fetchAllUsers() {
     const snap = await getDocs(collection(db, "users"));
@@ -583,9 +600,9 @@
     });
   }
 
-  /* Phones only: small fixed home box; logo is not clickable */
+  /* Phones only: small fixed home box */
   if (window.matchMedia('(max-width: 640px)').matches) {
-    document.getElementById('home-tap')?.addEventListener('click', () => {
+    homeTapBtn?.addEventListener('click', () => {
       window.location.href = '../index.html';
     });
   }
