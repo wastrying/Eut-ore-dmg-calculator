@@ -135,7 +135,18 @@
 
     /* Phone + small tablets */
     @media (max-width:640px){
-      .wrapper{margin-top:48px}
+      /* move header higher and make it a larger tap target ONLY on phones */
+      .header-row{
+        top: max(0px, env(safe-area-inset-top));
+        left: max(6px, env(safe-area-inset-left));
+        padding: 12px 14px;   /* bigger tap box */
+        border-radius: 12px;
+        cursor: pointer;
+      }
+
+      /* keep content clear of the fixed header (logo + padding ≈ 74px) */
+      .wrapper{ margin-top:76px }
+
       .logo{height:50px}
       .board-title{font-size:clamp(14px, 4vw, 18px)}
       .board-subtitle{display:none}
@@ -166,6 +177,11 @@
     /* Safe area padding for iOS notch */
     @supports(padding:max(0px)){
       body{padding-left:max(16px, env(safe-area-inset-left));padding-right:max(16px, env(safe-area-inset-right));padding-top:max(16px, env(safe-area-inset-top));padding-bottom:max(16px, env(safe-area-inset-bottom));}
+    }
+
+    /* Optional: disable hover zoom on touch devices */
+    @media (hover:none) and (pointer:coarse){
+      .logo:hover{ transform:none }
     }
   </style>
 </head>
@@ -518,6 +534,13 @@
         try { sessionStorage.setItem("rbx_last_nav", "from_dashboard"); } catch {}
         window.location.replace(SELECTION_URL);
       }
+    });
+  }
+
+  /* Make the padded header clickable ONLY on phones */
+  if (window.matchMedia('(max-width: 640px)').matches) {
+    document.querySelector('.header-row')?.addEventListener('click', () => {
+      window.location.href = '../index.html';
     });
   }
 </script>
