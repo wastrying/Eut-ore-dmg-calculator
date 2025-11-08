@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="../images/medisignal.png" />
   <link rel="apple-touch-icon" href="../images/medisignal.png" />
   <style>
-    /* When plan is Developers, make the plan chip look locked */
+    /* When plan is Developers, make the plan chip look locked (we keep unlocked now) */
     .sidebar-plan-label.locked{
       opacity: 0.7;
       cursor: not-allowed;
@@ -127,7 +127,7 @@
           </div>
         </div>
 
-        <!-- Developers Command Center (moved here) -->
+        <!-- Developers Command Center -->
         <div id="dev-tools" class="board-wrapper" style="display:none;">
           <div class="dev-grid-header">
             <div>Email</div>
@@ -136,7 +136,7 @@
           <div id="dev-users"></div>
         </div>
 
-        <!-- Standard board (hidden for Developers plan) -->
+        <!-- Standard board (shown for non-Developers) -->
         <div id="standard-board" class="board-wrapper">
           <div class="board-header-row">
             <div>Item</div><div>Owner</div><div>Status</div><div>Due Date</div><div>Priority</div>
@@ -170,9 +170,8 @@
   const db = getFirestore(app);
 
   // Config / DOM
-  const DEV_EMAILS = ["medisignal.remblyx@gmail.com"]; // List of dev emails for restricted access to "Developer" plan
+  const DEV_EMAILS = ["medisignal.remblyx@gmail.com"]; // dev emails → force Developers
   const LOGIN_URL = "./login.html";
-  const SELECTION_URL = "./selection.html";
 
   const mainDashboard = document.getElementById("main-dashboard");
   const sidebarPlanEl = document.getElementById("sidebar-plan");
@@ -253,7 +252,7 @@
 
     // Show delete account option for all users
     if (deleteAccountLink) {
-      deleteAccountLink.style.display = "block"; // Always show delete account option
+      deleteAccountLink.style.display = "block";
     }
 
     if (plan === "Developers") showDevelopersView();
@@ -295,11 +294,18 @@
     }
   }
 
+  // Default to Basic if missing
   async function loadUserPlan(user) {
     try {
       const ref = doc(db, "users", user.uid);
       const snap = await getDoc(ref);
-      let plan = snap.exists() ? (snap.data().plan || null) : null;
+
+      if (!snap.exists() || !snap.data().plan) {
+        await setDoc(ref, { email: user.email || null, plan: "Basic" }, { merge: true });
+        return "Basic";
+      }
+
+      let plan = snap.data().plan;
       if (plan === "Dev") {
         await setDoc(ref, { plan: "Developers" }, { merge: true });
         plan = "Developers";
@@ -307,7 +313,7 @@
       return plan;
     } catch (e) {
       console.warn("loadUserPlan failed:", e);
-      return null;
+      return "Basic";
     }
   }
 
@@ -323,78 +329,70 @@
     setDashboardVisibility(true);
 
     try {
-      // Force Developers for dev email
+      // Force Developers for dev email (overrides Basic)
       const forced = await ensureDevelopersPlanIfAllowed(user);
       if (forced) {
         applyPlanUi(forced);
-        sessionStorage.removeItem("rbx_last_nav");
         return;
       }
 
       const plan = await loadUserPlan(user);
-
-      if (!plan) {
-        if (!(FROM === "selection" || LAST_NAV === "from_selection")) {
-          window.location.href = SELECTION_URL;
-          return;
-        }
-        applyPlanUi(null);
-        sessionStorage.removeItem("rbx_last_nav");
-        return;
-      }
-
       applyPlanUi(plan);
-      sessionStorage.removeItem("rbx_last_nav");
     } catch (e) {
       console.error("Dashboard init error:", e);
-      applyPlanUi(null);
+      applyPlanUi("Basic");
     }
   });
 
   // LOGOUT
-  logoutLink.addEventListener("click", async () => {
-    try {
-      await signOut(auth);
-      window.location.href = LOGIN_URL;
-    } catch (error) {
-      console.error("Error during logout: ", error);
-    }
-  });
+  if (logoutLink) {
+    logoutLink.addEventListener("click", async () => {
+      try {
+        await signOut(auth);
+        window.location.href = LOGIN_URL;
+      } catch (error) {
+        console.error("Error during logout: ", error);
+      }
+    });
+  }
 
   // DELETE ACCOUNT & DATA (Available for all users)
-  deleteAccountLink.addEventListener("click", async () => {
-    if (confirm("Are you sure you want to delete your account and data? This action cannot be undone.")) {
-      try {
-        // 1. Delete user data from Firestore
-        const userRef = doc(db, "users", currentUser.uid);
-        await deleteDoc(userRef);  // Delete the user's document
+  if (deleteAccountLink) {
+    deleteAccountLink.addEventListener("click", async () => {
+      if (confirm("Are you sure you want to delete your account and data? This action cannot be undone.")) {
+        try {
+          // 1. Delete user data from Firestore
+          const userRef = doc(db, "users", currentUser.uid);
+          await deleteDoc(userRef);
 
-        // 2. Delete the Firebase Authentication user
-        await deleteUser(auth.currentUser);
+          // 2. Delete the Firebase Authentication user
+          await deleteUser(auth.currentUser);
 
-        alert("Your account and data have been deleted.");
-        window.location.href = LOGIN_URL; // Redirect to login page
-      } catch (error) {
-        console.error("Error deleting account:", error);
+          alert("Your account and data have been deleted.");
+          window.location.href = LOGIN_URL;
+        } catch (error) {
+          console.error("Error deleting account:", error);
+        }
       }
-    }
-  });
+    });
+  }
 
-  // Allow user to click to upgrade subscription plan
-  sidebarPlanEl.addEventListener("click", async () => {
-    const newPlan = prompt("Enter new plan (e.g., Basic, Premium, Enterprise):");
-    if (newPlan) {
-      // Update user's plan in Firestore
-      try {
-        const userRef = doc(db, "users", currentUser.uid);
-        await setDoc(userRef, { plan: newPlan }, { merge: true });
-        alert("Your plan has been updated to " + newPlan);
-        applyPlanUi(newPlan);
-      } catch (error) {
-        console.error("Error updating plan:", error);
+  // Allow user to click to change subscription plan
+  if (sidebarPlanEl) {
+    sidebarPlanEl.addEventListener("click", async () => {
+      const newPlan = prompt("Enter new plan (e.g., Basic, Premium, Enterprise):");
+      if (newPlan) {
+        try {
+          const userRef = doc(db, "users", currentUser.uid);
+          await setDoc(userRef, { plan: newPlan }, { merge: true });
+          alert("Your plan has been updated to " + newPlan);
+          applyPlanUi(newPlan);
+        } catch (error) {
+          console.error("Error updating plan:", error);
+        }
       }
-    }
-  });
+    });
+  }
 </script>
 </body>
 </html>
