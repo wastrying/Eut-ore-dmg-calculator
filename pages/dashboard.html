@@ -258,18 +258,25 @@
   }
 
   // ----- Developer user list (with editable plan) -----
-  function userRow({uid,email,plan}) {
-    const selectHtml = `<select class="plan-select" data-uid="${uid}">
-      ${PLAN_OPTIONS.map(p => `<option value="${p}" ${p===plan?'selected':''}>${p}</option>`).join('')}
-    </select>`;
-    // Only devs get the dropdown; others see plain text (defense-in-depth at UI layer)
-    const planCell = IS_DEV ? `${selectHtml} <span class="inline-status" id="status-${uid}"></span>` 
-                            : `<span>${plan || '-'}</span>`;
-    return `<div class="dev-grid-row" data-uid="${uid}">
-      <div>${email}</div>
-      <div>${planCell}</div>
-    </div>`;
-  }
+ function userRow({uid,email,plan}) {
+  const selectHtml = `<select class="plan-select" data-uid="${uid}">
+    ${PLAN_OPTIONS.map(p => `<option value="${p}" ${p===plan?'selected':''}>${p}</option>`).join('')}
+  </select>`;
+
+  // BEFORE:
+  // const planCell = IS_DEV ? `${selectHtml} <span class="inline-status" id="status-${uid}"></span>`
+  //                         : `<span>${plan || '-'}</span>`;
+
+  // AFTER: allow anyone whose *current* plan is Developers to edit
+  const planCell = (currentPlan === "Developers")
+    ? `${selectHtml} <span class="inline-status" id="status-${uid}"></span>`
+    : `<span>${plan || '-'}</span>`;
+
+  return `<div class="dev-grid-row" data-uid="${uid}">
+    <div>${email}</div>
+    <div>${planCell}</div>
+  </div>`;
+}
 
   function renderList(filter="") {
     if (!devUsersContainer) return;
@@ -346,7 +353,6 @@
       return;
     }
     currentUser = user;
-    IS_DEV = DEV_EMAILS.includes((user.email || "").toLowerCase());
 
     setDashboardVisibility(true);
 
@@ -354,9 +360,6 @@
       const forced = await ensureDevelopersPlanIfAllowed(user);
       const plan = forced || await loadUserPlan(user);
       applyPlanUi(plan);
-      // Only devs can see editor
-      if (plan === "Developers" && IS_DEV) showDevelopersView();
-      else showRegularView();
     } catch (e) {
       console.error("Dashboard init error:", e);
       applyPlanUi("Basic");
