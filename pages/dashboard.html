@@ -255,7 +255,7 @@
         <!-- Developers Command Center -->
         <div id="dev-tools" class="board-wrapper" style="display:none;">
           <div class="top-actions" style="margin-bottom:8px;gap:8px;flex-wrap:wrap">
-            <input id="user-search" class="search-box" placeholder="Search users (email)..." style="flex:1;min-width:220px" />
+            <input id="user-search" class="search-box" placeholder="Search users (email or plan)..." style="flex:1;min-width:220px" />
           </div>
           <div class="dev-grid-header">
             <div>Email</div>
@@ -435,16 +435,44 @@
     </div>`;
   }
 
-  function renderList(filter="") {
-    if (!devUsersContainer) return;
-    const q = filter.trim().toLowerCase();
-    const filtered = q ? allUsers.filter(u => (u.email||"").toLowerCase().includes(q)) : allUsers;
-    if (!filtered.length) {
-      devUsersContainer.innerHTML = `<div class="dev-grid-row"><div>No users found</div><div>—</div></div>`;
-      return;
-    }
-    devUsersContainer.innerHTML = filtered.map(userRow).join("");
-  }
+  function renderList(filter = "") {
+  if (!devUsersContainer) return;
+
+  const q = (filter || "").trim().toLowerCase();
+
+  const filtered = !q ? allUsers : allUsers.filter(u => {
+    const email = (u.email || "").toLowerCase();
+    const plan  = (u.plan  || "").toLowerCase();
+
+    // split on whitespace; treat each token as a required condition (AND)
+    const tokens = q.split(/\s+/);
+
+    return tokens.every(tok => {
+      // plan: token (supports p: too)
+      if (/^(plan|p):/.test(tok)) {
+        const val = tok.replace(/^(plan|p):/, "");
+        // support "plan:basic,dev|enterprise"
+        const wants = val.split(/[|,]/).map(s => s.trim()).filter(Boolean);
+        if (!wants.length) return true;
+        return wants.some(w => plan.includes(w));
+      }
+
+      // email: token (supports e: too)
+      if (/^(email|e):/.test(tok)) {
+        const val = tok.replace(/^(email|e):/, "");
+        return email.includes(val);
+      }
+
+      // default token: match either field
+      return email.includes(tok) || plan.includes(tok);
+    });
+  });
+
+  devUsersContainer.innerHTML = filtered.length
+    ? filtered.map(userRow).join("")
+    : `<div class="dev-grid-row"><div>No users found</div><div>—</div></div>`;
+}
+
 
   async function fetchAllUsers() {
     const snap = await getDocs(collection(db, "users"));
