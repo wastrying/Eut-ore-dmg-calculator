@@ -107,7 +107,9 @@
       padding:8px 10px;font-size:16px;line-height:1;cursor:pointer;
     }
     .backdrop{
-      position:fixed;inset:0;background:rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:50;
+      position:fixed;inset:0;background:rgba(0,0,0,.35);
+      opacity:0;pointer-events:none;transition:opacity .2s ease;
+      z-index:1000; /* raised so it's above header/logo */
     }
     .backdrop.show{opacity:1;pointer-events:auto}
 
@@ -131,6 +133,14 @@
       .search-box{min-width:0;width:100%}
       .top-actions{flex:1;justify-content:flex-end}
       .top-left{flex:1}
+
+      /* When drawer is open: lock scroll and disable/hide header/logo */
+      html.drawer-open body{ overflow:hidden; }
+      .drawer-open .header-row{
+        opacity:0;
+        pointer-events:none;
+        transition: opacity .15s ease;
+      }
     }
 
     /* Phone + small tablets */
@@ -147,7 +157,7 @@
       /* keep content clear of the fixed header (logo + padding ≈ 74px) */
       .wrapper{ margin-top:76px }
 
-      .logo{height:100px}
+      .logo{height:50px}
       .board-title{font-size:clamp(14px, 4vw, 18px)}
       .board-subtitle{display:none}
 
@@ -296,6 +306,7 @@
   const sidebarEl = document.getElementById("sidebar");
   const openSidebarBtn = document.getElementById("open-sidebar");
   const backdropEl = document.getElementById("backdrop");
+  const root = document.documentElement; // for toggling drawer-open class
 
   let currentUser = null;
   let currentPlan = null;
@@ -306,11 +317,13 @@
     if (!sidebarEl || !backdropEl) return;
     sidebarEl.classList.add("open");
     backdropEl.classList.add("show");
+    root.classList.add("drawer-open"); // lock scroll & hide header/logo via CSS
   };
   const closeDrawer = () => {
     if (!sidebarEl || !backdropEl) return;
     sidebarEl.classList.remove("open");
     backdropEl.classList.remove("show");
+    root.classList.remove("drawer-open");
   };
 
   if (openSidebarBtn) openSidebarBtn.addEventListener("click", openDrawer);
