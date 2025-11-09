@@ -157,7 +157,47 @@
       body{padding-left:max(16px, env(safe-area-inset-left));padding-right:max(16px, env(safe-area-inset-right));padding-top:max(16px, env(safe-area-inset-top));padding-bottom:max(16px, env(safe-area-inset-bottom));}
     }
     @media (hover:none) and (pointer:coarse){ .logo:hover{ transform:none } }
-  </style>
+    
+  /* === Mobile-only: compact Email board (From | Subject | Status | Open) === */
+  @media (max-width:640px){
+    /* Show a small header for email board and hide Received */
+    #email-board .board-header-row{
+      display:grid; /* override global mobile rule */
+      grid-template-columns: 1.2fr 2fr 0.9fr 0.7fr;
+      gap:6px;
+    }
+    #email-board .board-header-row > div:nth-child(4){ display:none; }
+
+    /* Four-column compact rows; hide Received cell */
+    #email-board .board-row{
+      display:grid; /* override global mobile stacked card */
+      grid-template-columns: 1.2fr 2fr 0.9fr 0.7fr; /* From | Subject | Status | Open */
+      align-items:center;
+      gap:6px;
+      padding:8px 10px;
+      border-radius: var(--radius-sm);
+    }
+    #email-board .board-row > div:nth-child(4){ display:none; } /* Received */
+
+    /* Remove stacked labels for email board on mobile */
+    #email-board .board-row > div::before{ content:none !important; }
+
+    /* Truncate From & Subject nicely */
+    #email-board .board-row > div:nth-child(1),
+    #email-board .board-row > div:nth-child(2){
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+
+    /* Keep Status and Open centered */
+    #email-board .board-row > div:nth-child(3),
+    #email-board .board-header-row > div:nth-child(3){ text-align:center; }
+    #email-board .board-row > div:nth-child(5),
+    #email-board .board-header-row > div:nth-child(5){ text-align:center; }
+
+    /* Slightly smaller Open button */
+    #email-board .open-link{ font-size: var(--text-xs); }
+  }
+</style>
 </head>
 <body>
   <div class="overlay"><img src="../images/background.png" class="bg-image" alt=""></div>
