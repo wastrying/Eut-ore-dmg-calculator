@@ -85,6 +85,7 @@
     .board-row{background:#fff;margin-top:4px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
     .status-pill{padding:3px 7px;border-radius:999px;font-size:10px;display:inline-block;text-align:center;white-space:nowrap}
     .status-green{background:#bbf7d0;color:#166534}.status-yellow{background:#fef9c3;color:#854d0e}.status-red{background:#fee2e2;color:#991b1b}.status-blue{background:#dbeafe;color:#1d4ed8}
+    .status-purple{ background:#ede9fe; color:#5b21b6; } /* Replied */
 
     .dev-grid-header,.dev-grid-row{ display:grid;grid-template-columns:2fr 1fr;gap:6px;align-items:center;font-size:var(--text-sm);padding:6px;border-radius:8px }
     .dev-grid-header{font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;background:#f3f4f6;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:5}
@@ -452,6 +453,27 @@ function ensureReplyUi(){
         inReplyToEmailId: window.__CURRENT_EMAIL_ID__ || null,
         status: 'pending'
       });
+// Optimistic mark on the original email doc
+try {
+  await setDoc(doc(db, "emails", currentOpenedEmailId), {
+    hasReplied: true,
+    lastRepliedAt: serverTimestamp(),
+    lastRepliedBy: (currentUser?.email || "unknown"),
+    isUnread: false
+  }, { merge: true });
+
+  // Update local cache so pill flips right away
+  const idx = cachedEmails.findIndex(e => e.id === currentOpenedEmailId);
+  if (idx >= 0) {
+    cachedEmails[idx].hasReplied = true;
+    cachedEmails[idx].isUnread = false;
+    cachedEmails[idx].lastRepliedBy = currentUser?.email || "you";
+    cachedEmails[idx].lastRepliedAt = new Date().toISOString();
+    renderEmails(cachedEmails, emailSearch?.value || "");
+  }
+} catch (e) {
+  console.warn("Could not mark replied from client (rules may block) — backend will mark after send:", e);
+}
 
       alert('Reply queued to send.');
       box.style.display = 'none';
@@ -728,26 +750,22 @@ if (replyUI.box)     replyUI.box.style.display = 'none';
   function renderEmails(list, filter = "") {
   const q = (filter || "").toLowerCase().trim();
 
-  // Match function: supports from:, subject:, is:, status:, or free text
   const matches = (e, query) => {
     if (!query) return true;
-
-    const from    = (e.from || "").toLowerCase();
-    const subject = (e.subject || "").toLowerCase();
-    const statusText = e.isUnread ? "unread" : "read";
+    const from = (e.from||"").toLowerCase();
+    const subject = (e.subject||"").toLowerCase();
+    // derive a status keyword for filtering
+    const statusText = e.hasReplied ? "replied" : (e.isUnread ? "unread" : "read");
 
     const tokens = query.split(/\s+/).filter(Boolean);
-
     return tokens.every(tok => {
-      // Explicit field tokens
       if (tok.startsWith("from:"))    return from.includes(tok.slice(5));
       if (tok.startsWith("subject:")) return subject.includes(tok.slice(8));
 
-      // Status tokens
-      if (tok === "unread" || tok === "is:unread" || tok === "status:unread") return statusText === "unread";
-      if (tok === "read"   || tok === "is:read"   || tok === "status:read")   return statusText === "read";
+      if (tok === "replied" || tok === "is:replied" || tok === "status:replied") return statusText === "replied";
+      if (tok === "unread"  || tok === "is:unread"  || tok === "status:unread")  return statusText === "unread";
+      if (tok === "read"    || tok === "is:read"    || tok === "status:read")    return statusText === "read";
 
-      // Fallback: free text hits from/subject/status
       return from.includes(tok) || subject.includes(tok) || statusText.includes(tok);
     });
   };
@@ -756,19 +774,24 @@ if (replyUI.box)     replyUI.box.style.display = 'none';
 
   emailList.innerHTML = filtered.length
     ? filtered.map(e => {
-        const pill  = e.isUnread ? "status-blue" : "status-green";
-        const label = e.isUnread ? "Unread"      : "Read";
+        // pick pill: Replied beats Read/Unread
+        let pillClass, label;
+        if (e.hasReplied)     { pillClass = "status-purple"; label = "Replied"; }
+        else if (e.isUnread)  { pillClass = "status-blue";   label = "Unread";  }
+        else                  { pillClass = "status-green";  label = "Read";    }
+
         return `
           <div class="board-row" data-id="${e.id}">
             <div>${e.from || "-"}</div>
             <div>${e.subject || "(no subject)"}</div>
-            <div><span class="status-pill ${pill}">${label}</span></div>
+            <div><span class="status-pill ${pillClass}">${label}</span></div>
             <div>${e.receivedAt ? timeAgo(e.receivedAt) : "-"}</div>
             <div><button class="open-link" data-id="${e.id}">Open</button></div>
           </div>`;
       }).join("")
     : `<div class="board-row"><div>No emails found</div><div>—</div><div>—</div><div>—</div><div>—</div></div>`;
 }
+
 
 
   function startEmailsListener() {
@@ -779,15 +802,20 @@ if (replyUI.box)     replyUI.box.style.display = 'none';
         const d = docu.data() || {};
         const ts = d.receivedAt?.toDate ? d.receivedAt.toDate().toISOString() : (d.receivedAt || "");
         rows.push({
-          id: docu.id,
-          from: d.from || "",
-          subject: d.subject || "",
-          receivedAt: ts,
-          gmailLink: d.gmailLink || "",
-          isUnread: d.isUnread === true,
-          bodyHtml: d.bodyHtml || d.html || "",
-          bodyText: d.bodyText || d.body || d.snippet || ""
-        });
+  id: docu.id,
+  from: d.from || "",
+  subject: d.subject || "",
+  receivedAt: ts,
+  gmailLink: d.gmailLink || "",
+  isUnread: d.isUnread === true,
+  bodyHtml: d.bodyHtml || d.html || "",
+  bodyText: d.bodyText || d.body || d.snippet || "",
+  // NEW:
+  hasReplied: d.hasReplied === true,
+  lastRepliedAt: d.lastRepliedAt?.toDate ? d.lastRepliedAt.toDate().toISOString() : (d.lastRepliedAt || ""),
+  lastRepliedBy: d.lastRepliedBy || ""
+});
+
       });
       cachedEmails = rows;
       renderEmails(cachedEmails, emailSearch?.value || "");
