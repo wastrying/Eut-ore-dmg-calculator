@@ -255,7 +255,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, query, orderBy, limit, onSnapshot, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
@@ -370,7 +370,12 @@
     // Mark as read
     if (item.isUnread) {
       try {
-        await setDoc(doc(db, "emails", id), { isUnread: false }, { merge: true });
+        const ref = doc(db, "emails", id);
+      await updateDoc(ref, {
+        isUnread: false,
+        lastOpenedAt: serverTimestamp(),
+        lastOpenedBy: currentUser?.email || null
+      });
         item.isUnread = false;
         renderEmails(cachedEmails, emailSearch?.value || "");
       } catch (e) { console.warn("Couldn't mark as read:", e); }
