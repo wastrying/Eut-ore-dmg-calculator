@@ -8,56 +8,26 @@
   <link rel="apple-touch-icon" href="../images/medisignal.png" />
   <style>
     /* Email modal */
-.email-modal{
-  position:fixed; inset:0; display:none; z-index:2000;
-}
-.email-modal.show{ display:block; }
-
-.email-modal-backdrop{
-  position:absolute; inset:0; background:rgba(0,0,0,.45);
-}
-
-.email-modal-content{
-  position:absolute; inset:6% 8%;
-  background:#fff; border-radius:14px; box-shadow:0 18px 48px rgba(0,0,0,.35);
-  display:flex; flex-direction:column; overflow:hidden;
-  border:1px solid #e5e7eb;
-}
-
-.email-modal-header{
-  display:flex; align-items:center; justify-content:space-between; gap:12px;
-  padding:12px 14px; border-bottom:1px solid #e5e7eb; background:#f9fafb;
-}
-.email-modal-subject{ font-size:var(--text-lg); font-weight:600; color:#111827; }
-.email-modal-meta{ font-size:var(--text-xs); color:#6b7280; margin-top:2px; }
-
-.email-modal-close{
-  border:1px solid #e5e7eb; background:#fff; border-radius:10px;
-  padding:6px 10px; font-size:16px; cursor:pointer;
-}
-
-.email-iframe{
-  width:100%; height:100%; border:0; flex:1; background:#fff;
-}
-.email-plain{
-  margin:0; padding:12px 14px; white-space:pre-wrap; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  overflow:auto; flex:1; background:#fff;
-}
-
-/* Make the "Open" look like a link but it's a button */
-#email-board .open-link{
-  background:none; border:none; text-decoration:underline; cursor:pointer;
-  font: inherit; padding:0;
-}
+    .email-modal{ position:fixed; inset:0; display:none; z-index:2000; }
+    .email-modal.show{ display:block; }
+    .email-modal-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.45); }
+    .email-modal-content{
+      position:absolute; inset:6% 8%;
+      background:#fff; border-radius:14px; box-shadow:0 18px 48px rgba(0,0,0,.35);
+      display:flex; flex-direction:column; overflow:hidden; border:1px solid #e5e7eb;
+    }
+    .email-modal-header{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border-bottom:1px solid #e5e7eb; background:#f9fafb; }
+    .email-modal-subject{ font-size:var(--text-lg); font-weight:600; color:#111827; }
+    .email-modal-meta{ font-size:var(--text-xs); color:#6b7280; margin-top:2px; }
+    .email-modal-close{ border:1px solid #e5e7eb; background:#fff; border-radius:10px; padding:6px 10px; font-size:16px; cursor:pointer; }
+    .email-iframe{ width:100%; height:100%; border:0; flex:1; background:#fff; }
+    .email-plain{ margin:0; padding:12px 14px; white-space:pre-wrap; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow:auto; flex:1; background:#fff; }
+    /* Make the "Open" look like a link but it's a button */
+    #email-board .open-link{ background:none; border:none; text-decoration:underline; cursor:pointer; font: inherit; padding:0; }
 
     :root{
-      --radius-lg:18px;
-      --radius-md:12px;
-      --radius-sm:8px;
-      --space-1:6px;
-      --space-2:8px;
-      --space-3:12px;
-      --space-4:16px;
+      --radius-lg:18px; --radius-md:12px; --radius-sm:8px;
+      --space-1:6px; --space-2:8px; --space-3:12px; --space-4:16px;
       --text-xs: clamp(10px, 2.5vw, 12px);
       --text-sm: clamp(11px, 2.6vw, 13px);
       --text-base: clamp(12px, 3vw, 14px);
@@ -65,11 +35,7 @@
     }
 
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
-    body{
-      background:#f5f5f5;min-height:100vh;color:#222;
-      display:flex;justify-content:center;align-items:flex-start;
-      position:relative;overflow:hidden;padding:16px;
-    }
+    body{ background:#f5f5f5;min-height:100vh;color:#222; display:flex;justify-content:center;align-items:flex-start; position:relative;overflow:hidden;padding:16px; }
     .overlay{position:fixed;inset:0;z-index:-1}
     .bg-image{width:100%;height:100%;object-fit:cover;filter:blur(4px);opacity:.8}
 
@@ -91,10 +57,7 @@
       display:grid;
     }
 
-    .sidebar{
-      background:#111827;color:#e5e7eb;display:flex;flex-direction:column;
-      padding:14px 10px 10px;gap:10px;position:relative;z-index:60;
-    }
+    .sidebar{ background:#111827;color:#e5e7eb;display:flex;flex-direction:column; padding:14px 10px 10px;gap:10px;position:relative;z-index:60; }
     .sidebar-title{font-size:var(--text-sm);font-weight:600;margin-bottom:4px;padding:0 4px;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em}
     .nav-item{display:flex;align-items:center;gap:8px;padding:10px;border-radius:8px;font-size:var(--text-base);cursor:pointer;color:#d1d5db;transition:.2s}
     .nav-item:hover{background:rgba(249,250,251,.06)}
@@ -115,141 +78,77 @@
     .top-actions{display:flex;align-items:center;gap:6px;font-size:var(--text-xs)}
     .search-box{padding:8px 12px;border-radius:999px;border:1px solid #e5e7eb;font-size:var(--text-sm);min-width:200px}
 
-    .board-wrapper{
-      flex:1;border-radius:12px;background:#f9fafb;padding:8px;overflow:auto;border:1px solid #e5e7eb;
-      -webkit-overflow-scrolling:touch;
-    }
+    .board-wrapper{ flex:1;border-radius:12px;background:#f9fafb;padding:8px;overflow:auto;border:1px solid #e5e7eb; -webkit-overflow-scrolling:touch; }
 
-    .board-header-row,.board-row{
-      display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1.2fr;
-      gap:6px;align-items:center;font-size:var(--text-sm);padding:6px;border-radius:8px
-    }
-    .board-header-row{
-      font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;background:#f3f4f6;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:5
-    }
+    .board-header-row,.board-row{ display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1.2fr; gap:6px;align-items:center;font-size:var(--text-sm);padding:6px;border-radius:8px }
+    .board-header-row{ font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;background:#f3f4f6;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:5 }
     .board-row{background:#fff;margin-top:4px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
     .status-pill{padding:3px 7px;border-radius:999px;font-size:10px;display:inline-block;text-align:center;white-space:nowrap}
     .status-green{background:#bbf7d0;color:#166534}.status-yellow{background:#fef9c3;color:#854d0e}.status-red{background:#fee2e2;color:#991b1b}.status-blue{background:#dbeafe;color:#1d4ed8}
 
-    .dev-grid-header,.dev-grid-row{
-      display:grid;grid-template-columns:2fr 1fr;gap:6px;align-items:center;font-size:var(--text-sm);padding:6px;border-radius:8px
-    }
+    .dev-grid-header,.dev-grid-row{ display:grid;grid-template-columns:2fr 1fr;gap:6px;align-items:center;font-size:var(--text-sm);padding:6px;border-radius:8px }
     .dev-grid-header{font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;background:#f3f4f6;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:5}
     .dev-grid-row{background:#ffffff;margin-top:4px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
     .plan-select{width:100%;padding:8px 10px;border-radius:6px;border:1px solid #e5e7eb;background:#fff;font-size:var(--text-sm)}
     .inline-status{margin-left:6px;font-size:10px;color:#6b7280}
     .inline-status.ok{color:#059669}.inline-status.err{color:#b91c1c}
 
-    .mobile-menu-btn{
-      display:none;border:1px solid #e5e7eb;background:#fff;border-radius:8px;
-      padding:8px 10px;font-size:16px;line-height:1;cursor:pointer;
-    }
-    .backdrop{
-      position:fixed;inset:0;background:rgba(0,0,0,.35);
-      opacity:0;pointer-events:none;transition:opacity .2s ease;
-      z-index:1100;
-    }
+    .mobile-menu-btn{ display:none;border:1px solid #e5e7eb;background:#fff;border-radius:8px; padding:8px 10px;font-size:16px;line-height:1;cursor:pointer; }
+    .backdrop{ position:fixed;inset:0;background:rgba(0,0,0,.35); opacity:0;pointer-events:none;transition:opacity .2s ease; z-index:1100; }
     .backdrop.show{opacity:1;pointer-events:auto}
 
     /* Email board grid */
-    /* Email board grid — keep header and rows identical */
-#email-board .board-header-row,
-#email-board .board-row{
-  grid-template-columns: 2fr 3fr 1fr 1.4fr 0.8fr; /* From | Subject | Status | Received | Open */
-}
-
-/* Alignments */
-#email-board .board-header-row > div:nth-child(3),
-#email-board .board-row        > div:nth-child(3){ /* Status */
-  text-align: center;
-}
-
-#email-board .board-header-row > div:nth-child(4),
-#email-board .board-row        > div:nth-child(4){ /* Received */
-  text-align: right;
-  white-space: nowrap;
-}
-
-#email-board .board-header-row > div:nth-child(5),
-#email-board .board-row        > div:nth-child(5){ /* Open */
-  text-align: center;
-}
-
-/* Keep subject on one line with ellipsis to prevent wrapping */
-#email-board .board-row > div:nth-child(2){
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Link styling */
-#email-board .open-link{
-  text-decoration: underline;
-  cursor: pointer;
-  display: inline-block;
-}
-
-
-    @media (max-width:1024px){
-      #main-dashboard{grid-template-columns:200px 1fr}
-      .logo{height:140px}
+    #email-board .board-header-row,
+    #email-board .board-row{
+      grid-template-columns: 2fr 3fr 1fr 1.4fr 0.8fr; /* From | Subject | Status | Received | Open */
     }
+    #email-board .board-header-row > div:nth-child(3),
+    #email-board .board-row        > div:nth-child(3){ text-align: center; }
+    #email-board .board-header-row > div:nth-child(4),
+    #email-board .board-row        > div:nth-child(4){ text-align: right; white-space: nowrap; }
+    #email-board .board-header-row > div:nth-child(5),
+    #email-board .board-row        > div:nth-child(5){ text-align: center; }
+    #email-board .board-row > div:nth-child(2){ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    @media (max-width:1024px){ #main-dashboard{grid-template-columns:200px 1fr} .logo{height:140px} }
 
     @media (max-width:900px){
       #main-dashboard{grid-template-columns:1fr}
       .mobile-menu-btn{display:inline-block}
-      .sidebar{
-        position:fixed;left:-100%;top:0;bottom:0;width:82vw;max-width:320px;
-        transform:translateX(0);transition:left .25s ease;box-shadow:8px 0 20px rgba(0,0,0,.25);
-        z-index:1200;
-      }
+      .sidebar{ position:fixed;left:-100%;top:0;bottom:0;width:82vw;max-width:320px; transform:translateX(0);transition:left .25s ease;box-shadow:8px 0 20px rgba(0,0,0,.25); z-index:1200; }
       .sidebar.open{left:0}
       .sidebar-title,.nav-item .label,.sidebar-plan-label .label-text{display:none}
       .search-box{min-width:0;width:100%}
       .top-actions{flex:1;justify-content:flex-end}
       .top-left{flex:1}
-
       html.drawer-open body{ overflow:hidden; }
       .drawer-open .header-row,
       .drawer-open #home-tap,
-      .drawer-open .logo{
-        opacity:0; visibility:hidden; pointer-events:none;
-        transition: opacity .15s ease;
-      }
+      .drawer-open .logo{ opacity:0; visibility:hidden; pointer-events:none; transition: opacity .15s ease; }
     }
 
     @media (max-width:640px){
       .header-row{ top: max(0px, env(safe-area-inset-top)); left: max(6px, env(safe-area-inset-left)); }
-      .home-tap{
-        position:absolute; top: 6px; left: 6px;
-        width: 44px; height: 44px; border-radius: 10px;
-        background: transparent; border: none; cursor: pointer;
-      }
+      .home-tap{ position:absolute; top: 6px; left: 6px; width: 44px; height: 44px; border-radius: 10px; background: transparent; border: none; cursor: pointer; }
       .home-tap:focus-visible{ outline:2px solid #60a5fa; outline-offset:2px; }
       .logo{ height:72px; pointer-events:none }
       .wrapper{ margin-top:86px }
-
       .board-title{font-size:clamp(14px, 4vw, 18px)}
       .board-subtitle{display:none}
-
       .board-header-row{display:none}
-      .board-row{
-        grid-template-columns:1fr;gap:8px;padding:10px;border-radius:var(--radius-md)
-      }
+      .board-row{ grid-template-columns:1fr;gap:8px;padding:10px;border-radius:var(--radius-md) }
       .board-row > div{display:flex;justify-content:space-between;gap:8px;align-items:center}
       .board-row > div:nth-child(1)::before{content:"Item";font-weight:600;color:#6b7280;margin-right:8px}
       .board-row > div:nth-child(2)::before{content:"Owner";font-weight:600;color:#6b7280;margin-right:8px}
       .board-row > div:nth-child(3)::before{content:"Status";font-weight:600;color:#6b7280;margin-right:8px}
       .board-row > div:nth-child(4)::before{content:"Due";font-weight:600;color:#6b7280;margin-right:8px}
       .board-row > div:nth-child(5)::before{content:"Priority";font-weight:600;color:#6b7280;margin-right:8px}
-
       /* Email stacked cards */
       #email-board .board-row > div:nth-child(1)::before{content:"From"}
       #email-board .board-row > div:nth-child(2)::before{content:"Subject"}
       #email-board .board-row > div:nth-child(3)::before{content:"Status"}
       #email-board .board-row > div:nth-child(4)::before{content:"Received"}
       #email-board .board-row > div:nth-child(5)::before{content:"Open"}
-
       .nav-item{padding:12px}
       .sidebar-plan-label{padding:10px}
     }
@@ -265,30 +164,24 @@
 
   <div class="header-row" id="header-row">
     <button id="home-tap" class="home-tap" aria-label="Go to home" title="Home"></button>
-    <img src="../images/remblyxlogo.png" alt="Remblyx" class="logo" id="logo"
-         onclick="window.location.href='../index.html'">
+    <img src="../images/remblyxlogo.png" alt="Remblyx" class="logo" id="logo" onclick="window.location.href='../index.html'">
   </div>
 
   <div class="wrapper">
     <div id="main-dashboard">
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-title">Workspace</div>
-
         <div class="nav-item active" data-nav="board"><span class="icon-dot"></span><span class="label">Main Board</span></div>
         <div class="nav-item" data-nav="alerts"><span class="icon-dot"></span><span class="label">Alerts</span></div>
         <div class="nav-item" data-nav="reports"><span class="icon-dot"></span><span class="label">Reports</span></div>
         <div class="nav-item" data-nav="integrations"><span class="icon-dot"></span><span class="label">Integrations</span></div>
-
         <!-- Email tab (hidden for non-developers via JS) -->
         <div class="nav-item" data-nav="email" style="display:none;"><span class="icon-dot"></span><span class="label">Email</span></div>
-
         <div class="sidebar-spacer"></div>
-
         <div id="sidebar-plan" class="sidebar-plan-label" title="Click to change plan">
           <span class="label-text">Current Plan</span>
           <strong id="plan-name">-</strong>
         </div>
-
         <div id="logout" class="logout-link">Log out</div>
         <div id="delete-account" class="logout-link" style="color:#f87171;">Delete account &amp; data</div>
       </aside>
@@ -312,10 +205,7 @@
           <div class="top-actions" style="margin-bottom:8px;gap:8px;flex-wrap:wrap">
             <input id="user-search" class="search-box" placeholder="Search users (email or plan)..." style="flex:1;min-width:220px" />
           </div>
-          <div class="dev-grid-header">
-            <div>Email</div>
-            <div>Plan</div>
-          </div>
+          <div class="dev-grid-header"><div>Email</div><div>Plan</div></div>
           <div id="dev-users"></div>
         </div>
 
@@ -341,22 +231,22 @@
           </div>
           <div id="email-list"></div>
         </div>
-<!-- In-app Email Viewer -->
-<div id="email-modal" class="email-modal" aria-hidden="true">
-  <div id="email-modal-backdrop" class="email-modal-backdrop"></div>
-  <div class="email-modal-content" role="dialog" aria-modal="true" aria-labelledby="email-modal-subject">
-    <div class="email-modal-header">
-      <div>
-        <div id="email-modal-subject" class="email-modal-subject"></div>
-        <div id="email-modal-meta" class="email-modal-meta"></div>
-      </div>
-      <button id="email-modal-close" class="email-modal-close" aria-label="Close">✕</button>
-    </div>
-    <!-- Prefer HTML in an isolated sandbox; fall back to plain text -->
-    <iframe id="email-iframe" class="email-iframe" sandbox=""></iframe>
-    <pre id="email-plain" class="email-plain" style="display:none"></pre>
-  </div>
-</div>
+
+        <!-- In-app Email Viewer -->
+        <div id="email-modal" class="email-modal" aria-hidden="true">
+          <div id="email-modal-backdrop" class="email-modal-backdrop"></div>
+          <div class="email-modal-content" role="dialog" aria-modal="true" aria-labelledby="email-modal-subject">
+            <div class="email-modal-header">
+              <div>
+                <div id="email-modal-subject" class="email-modal-subject"></div>
+                <div id="email-modal-meta" class="email-modal-meta"></div>
+              </div>
+              <button id="email-modal-close" class="email-modal-close" aria-label="Close">✕</button>
+            </div>
+            <iframe id="email-iframe" class="email-iframe" sandbox=""></iframe>
+            <pre id="email-plain" class="email-plain" style="display:none"></pre>
+          </div>
+        </div>
 
       </div>
     </div>
@@ -364,13 +254,8 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import {
-    getAuth, onAuthStateChanged, signOut, deleteUser
-  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-  import {
-    getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs,
-    query, orderBy, limit, onSnapshot
-  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
@@ -427,88 +312,72 @@
   let allUsers = []; // [{uid,email,plan}]
   let unsubscribeEmails = null;
   let cachedEmails = [];
+
   // Email modal elements
-const emailModal = document.getElementById("email-modal");
-const emailModalBackdrop = document.getElementById("email-modal-backdrop");
-const emailModalClose = document.getElementById("email-modal-close");
-const emailIframe = document.getElementById("email-iframe");
-const emailPlain = document.getElementById("email-plain");
-const emailModalSubject = document.getElementById("email-modal-subject");
-const emailModalMeta = document.getElementById("email-modal-meta");
+  const emailModal = document.getElementById("email-modal");
+  const emailModalBackdrop = document.getElementById("email-modal-backdrop");
+  const emailModalClose = document.getElementById("email-modal-close");
+  const emailIframe = document.getElementById("email-iframe");
+  const emailPlain = document.getElementById("email-plain");
+  const emailModalSubject = document.getElementById("email-modal-subject");
+  const emailModalMeta = document.getElementById("email-modal-meta");
 
-function openEmailModal() {
-  emailModal.classList.add("show");
-  emailModal.setAttribute("aria-hidden", "false");
-  document.addEventListener("keydown", escToClose, { once: true });
-}
-function closeEmailModal() {
-  emailModal.classList.remove("show");
-  emailModal.setAttribute("aria-hidden", "true");
-  // Clear content for safety
-  emailIframe.srcdoc = "";
-  emailPlain.textContent = "";
-  emailPlain.style.display = "none";
-  emailIframe.style.display = "block";
-}
-
-function escToClose(e){ if (e.key === "Escape") closeEmailModal(); }
-emailModalBackdrop?.addEventListener("click", closeEmailModal);
-emailModalClose?.addEventListener("click", closeEmailModal);
-
-// Delegate click on "Open"
-emailList?.addEventListener("click", async (ev) => {
-  const btn = ev.target.closest(".open-link");
-  if (!btn) return;
-  const id = btn.getAttribute("data-id");
-  const item = cachedEmails.find(x => x.id === id);
-  if (!item) return;
-
-  // Header info
-  emailModalSubject.textContent = item.subject || "(no subject)";
-  const when = item.receivedAt ? new Date(item.receivedAt) : null;
-  emailModalMeta.textContent = `${item.from || "Unknown sender"}${when ? ` • ${when.toLocaleString()}` : ""}`;
-
-  // Prefer HTML body in an isolated iframe; otherwise show text
-  if (item.bodyHtml && item.bodyHtml.trim()) {
-    // Wrap with a tiny HTML document; ensure links open in new tab
-    emailIframe.srcdoc = `
-      <!doctype html><html><head>
-        <meta charset="utf-8">
-        <base target="_blank">
-        <style>
-          body{font: 14px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color:#111827; padding:16px;}
-          img{max-width:100%; height:auto}
-          a{word-break:break-word}
-          blockquote{border-left:3px solid #e5e7eb; padding-left:10px; margin-left:0; color:#374151}
-          pre, code{white-space:pre-wrap}
-        </style>
-      </head><body>${item.bodyHtml}</body></html>`;
-    emailIframe.style.display = "block";
+  function openEmailModal() {
+    emailModal.classList.add("show");
+    emailModal.setAttribute("aria-hidden", "false");
+    document.addEventListener("keydown", escToClose, { once: true });
+  }
+  function closeEmailModal() {
+    emailModal.classList.remove("show");
+    emailModal.setAttribute("aria-hidden", "true");
+    emailIframe.srcdoc = ""; // clear
+    emailPlain.textContent = "";
     emailPlain.style.display = "none";
-  } else if (item.bodyText && item.bodyText.trim()) {
-    emailPlain.textContent = item.bodyText;
-    emailPlain.style.display = "block";
-    emailIframe.style.display = "none";
-  } else {
-    emailPlain.textContent = "This email's body isn't stored. Ask the admin to save `bodyHtml` or `bodyText` in Firestore for full in-app viewing.";
-    emailPlain.style.display = "block";
-    emailIframe.style.display = "none";
+    emailIframe.style.display = "block";
   }
+  function escToClose(e){ if (e.key === "Escape") closeEmailModal(); }
+  emailModalBackdrop?.addEventListener("click", closeEmailModal);
+  emailModalClose?.addEventListener("click", closeEmailModal);
 
-  // Mark as read locally + in Firestore
-  if (item.isUnread) {
-    try {
-      await setDoc(doc(db, "emails", id), { isUnread: false }, { merge: true });
-      item.isUnread = false;
-      renderEmails(cachedEmails, emailSearch?.value || "");
-    } catch (e) {
-      console.warn("Couldn't mark as read:", e);
+  // Delegate click on "Open"
+  emailList?.addEventListener("click", async (ev) => {
+    const btn = ev.target.closest(".open-link");
+    if (!btn) return;
+    const id = btn.getAttribute("data-id");
+    const item = cachedEmails.find(x => x.id === id);
+    if (!item) return;
+
+    // Header info
+    emailModalSubject.textContent = item.subject || "(no subject)";
+    const when = item.receivedAt ? new Date(item.receivedAt) : null;
+    emailModalMeta.textContent = `${item.from || "Unknown sender"}${when ? ` • ${when.toLocaleString()}` : ""}`;
+
+    // Prefer HTML body; otherwise text
+    if (item.bodyHtml && item.bodyHtml.trim()) {
+      emailIframe.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><base target="_blank"><style>body{font:14px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111827;padding:16px}img{max-width:100%;height:auto}a{word-break:break-word}blockquote{border-left:3px solid #e5e7eb;padding-left:10px;margin-left:0;color:#374151}pre,code{white-space:pre-wrap}</style></head><body>${item.bodyHtml}</body></html>`;
+      emailIframe.style.display = "block";
+      emailPlain.style.display = "none";
+    } else if (item.bodyText && item.bodyText.trim()) {
+      emailPlain.textContent = item.bodyText;
+      emailPlain.style.display = "block";
+      emailIframe.style.display = "none";
+    } else {
+      emailPlain.textContent = "This email's body isn't stored. Ask the admin to save `bodyHtml` or `bodyText` in Firestore for full in-app viewing.";
+      emailPlain.style.display = "block";
+      emailIframe.style.display = "none";
     }
-  }
 
-  openEmailModal();
-});
+    // Mark as read
+    if (item.isUnread) {
+      try {
+        await setDoc(doc(db, "emails", id), { isUnread: false }, { merge: true });
+        item.isUnread = false;
+        renderEmails(cachedEmails, emailSearch?.value || "");
+      } catch (e) { console.warn("Couldn't mark as read:", e); }
+    }
 
+    openEmailModal();
+  });
 
   /* ---------- Mobile drawer helpers ---------- */
   const openDrawer = () => {
@@ -529,37 +398,28 @@ emailList?.addEventListener("click", async (ev) => {
     if (homeTapBtn) { homeTapBtn.disabled = false; homeTapBtn.style.pointerEvents = ''; }
     if (logoEl) { logoEl.onclick = savedLogoOnclick; logoEl.style.pointerEvents = ''; }
   };
-
   openSidebarBtn?.addEventListener("click", openDrawer);
   backdropEl?.addEventListener("click", closeDrawer);
   window.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDrawer(); });
+  sidebarEl?.addEventListener("click", (e) => { const nav = e.target.closest(".nav-item"); if (nav) closeDrawer(); });
 
-  // Only close on nav item clicks; not for plan/logout/delete
-  sidebarEl?.addEventListener("click", (e) => {
-    const nav = e.target.closest(".nav-item");
-    if (nav) closeDrawer();
-  });
-function gateComposer() {
-  const composer = document.getElementById("email-composer");
-  const sendBtn  = document.getElementById("compose-send");
-  if (!composer) return;
-  const dev = currentPlan === "Developers";
-  composer.style.display = dev ? "" : "none";
-  if (sendBtn) sendBtn.disabled = !dev;
-}
-
-  function setDashboardVisibility(show) {
-    if (mainDashboard) mainDashboard.style.display = show ? "grid" : "none";
+  function gateComposer() {
+    const composer = document.getElementById("email-composer");
+    const sendBtn  = document.getElementById("compose-send");
+    if (!composer) return;
+    const dev = currentPlan === "Developers";
+    composer.style.display = dev ? "" : "none";
+    if (sendBtn) sendBtn.disabled = !dev;
   }
+
+  function setDashboardVisibility(show) { if (mainDashboard) mainDashboard.style.display = show ? "grid" : "none"; }
   function safeTxt(el, txt) { if (el) el.textContent = txt; }
   function setNavLabelForPlan(plan) {
     if (!firstNavLabelEl) return;
     firstNavLabelEl.textContent = (plan === "Developers") ? "Command Center" : "Main Board";
   }
-
   function showDevelopersView() {
     setNavLabelForPlan("Developers");
-    // Show Email nav
     const emailNav = sidebarEl?.querySelector('[data-nav="email"]');
     if (emailNav) emailNav.style.display = '';
     devTools.style.display = "block";
@@ -570,7 +430,6 @@ function gateComposer() {
   }
   function showRegularView() {
     setNavLabelForPlan(currentPlan);
-    // Hide Email nav
     const emailNav = sidebarEl?.querySelector('[data-nav="email"]');
     if (emailNav) emailNav.style.display = 'none';
     devTools.style.display = "none";
@@ -578,7 +437,6 @@ function gateComposer() {
     emailBoard.style.display = "none";
     stopEmailsListener();
   }
-
   function applyPlanUi(plan) {
     currentPlan = plan || null;
     safeTxt(planNameEl, currentPlan || "-");
@@ -607,10 +465,7 @@ function gateComposer() {
       if (existing === "Developers") return "Developers";
       await setDoc(ref, { email: user.email || null, plan: "Developers" }, { merge: true });
       return "Developers";
-    } catch (e) {
-      console.warn("ensureDevelopersPlanIfAllowed:", e);
-      return null;
-    }
+    } catch (e) { console.warn("ensureDevelopersPlanIfAllowed:", e); return null; }
   }
   async function loadUserPlan(user) {
     try {
@@ -623,72 +478,50 @@ function gateComposer() {
       let plan = snap.data().plan;
       if (plan === "Dev") { await setDoc(ref, { plan: "Developers" }, { merge: true }); plan = "Developers"; }
       return plan;
-    } catch (e) {
-      console.warn("loadUserPlan failed:", e);
-      return "Basic";
-    }
+    } catch (e) { console.warn("loadUserPlan failed:", e); return "Basic"; }
   }
 
   // ----- Developer user list (with editable plan) -----
   function userRow({uid,email,plan}) {
     const selectHtml = `<select class="plan-select" data-uid="${uid}">${["Basic","Premium","Enterprise","Developers"].map(p => `<option value="${p}" ${p===plan?'selected':''}>${p}</option>`).join('')}</select>`;
-    const planCell = (currentPlan === "Developers")
-      ? `${selectHtml} <span class="inline-status" id="status-${uid}"></span>`
-      : `<span>${plan || '-'}</span>`;
-    return `<div class="dev-grid-row" data-uid="${uid}">
-      <div>${email}</div>
-      <div>${planCell}</div>
-    </div>`;
+    const planCell = (currentPlan === "Developers") ? `${selectHtml} <span class="inline-status" id="status-${uid}"></span>` : `<span>${plan || '-'}</span>`;
+    return `<div class="dev-grid-row" data-uid="${uid}"><div>${email}</div><div>${planCell}</div></div>`;
   }
-
-  function renderEmails(list, filter = "") {
-  const q = (filter || "").toLowerCase().trim();
-  const filtered = q
-    ? list.filter(e =>
-        (e.from||"").toLowerCase().includes(q) ||
-        (e.subject||"").toLowerCase().includes(q)
-      )
-    : list;
-
-  emailList.innerHTML = filtered.length
-    ? filtered.map(e => {
-        const pill = e.isUnread ? 'status-blue' : 'status-green';
-        const label = e.isUnread ? 'Unread' : 'Read';
-        return `
-        <div class="board-row" data-id="${e.id}">
-          <div>${e.from || '-'}</div>
-          <div>${e.subject || '(no subject)'}</div>
-          <div><span class="status-pill ${pill}">${label}</span></div>
-          <div>${e.receivedAt ? timeAgo(e.receivedAt) : '-'}</div>
-          <div><button class="open-link" data-id="${e.id}">Open</button></div>
-        </div>`;
-      }).join("")
-    : `<div class="board-row"><div>No emails found</div><div>—</div><div>—</div><div>—</div><div>—</div></div>`;
-}
-
-
+  function renderList(filter = "") {
+    if (!devUsersContainer) return;
+    const q = (filter || "").trim().toLowerCase();
+    const filtered = !q ? allUsers : allUsers.filter(u => {
+      const email = (u.email || "").toLowerCase();
+      const plan  = (u.plan  || "").toLowerCase();
+      const tokens = q.split(/\s+/);
+      return tokens.every(tok => {
+        if (/^(plan|p):/.test(tok)) {
+          const val = tok.replace(/^(plan|p):/, "");
+          const wants = val.split(/[|,]/).map(s => s.trim()).filter(Boolean);
+          if (!wants.length) return true;
+          return wants.some(w => plan.includes(w));
+        }
+        if (/^(email|e):/.test(tok)) {
+          const val = tok.replace(/^(email|e):/, "");
+          return email.includes(val);
+        }
+        return email.includes(tok) || plan.includes(tok);
+      });
+    });
+    devUsersContainer.innerHTML = filtered.length ? filtered.map(userRow).join("") : `<div class="dev-grid-row"><div>No users found</div><div>—</div></div>`;
+  }
   async function fetchAllUsers() {
     const snap = await getDocs(collection(db, "users"));
     const arr = [];
-    snap.forEach(d => {
-      const data = d.data() || {};
-      arr.push({ uid: d.id, email: data.email || "(no email)", plan: data.plan || "-" });
-    });
+    snap.forEach(d => { const data = d.data() || {}; arr.push({ uid: d.id, email: data.email || "(no email)", plan: data.plan || "-" }); });
     allUsers = arr.sort((a,b) => (a.email||"").localeCompare(b.email||""));
   }
-
   async function renderAllUsers() {
     if (!devUsersContainer) return;
     devUsersContainer.innerHTML = `<div class="dev-grid-row"><div>Loading users…</div><div>—</div></div>`;
-    try {
-      await fetchAllUsers();
-      renderList(searchInput?.value || "");
-    } catch (e) {
-      console.error("renderAllUsers error:", e);
-      devUsersContainer.innerHTML = `<div class="dev-grid-row"><div>Permission denied or error</div><div>—</div></div>`;
-    }
+    try { await fetchAllUsers(); renderList(searchInput?.value || ""); }
+    catch (e) { console.error("renderAllUsers error:", e); devUsersContainer.innerHTML = `<div class="dev-grid-row"><div>Permission denied or error</div><div>—</div></div>`; }
   }
-
   async function updatePlanForUser(uid, newPlan) {
     const status = document.getElementById(`status-${uid}`);
     if (status) { status.className = "inline-status"; status.textContent = "Saving…"; }
@@ -698,10 +531,7 @@ function gateComposer() {
       const idx = allUsers.findIndex(u => u.uid === uid);
       if (idx >= 0) allUsers[idx].plan = newPlan;
       if (currentUser && uid === currentUser.uid) applyPlanUi(newPlan);
-    } catch (e) {
-      console.error("updatePlanForUser error:", e);
-      if (status) { status.className = "inline-status err"; status.textContent = "Error"; }
-    }
+    } catch (e) { console.error("updatePlanForUser error:", e); if (status) { status.className = "inline-status err"; status.textContent = "Error"; } }
   }
 
   // ---------- EMAIL TAB ----------
@@ -718,104 +548,86 @@ function gateComposer() {
     return `${days}d ago`;
   }
 
+  // SINGLE, CORRECT renderEmails (button + data-id)
   function renderEmails(list, filter = "") {
     const q = (filter || "").toLowerCase().trim();
-    const filtered = q
-      ? list.filter(e =>
-          (e.from||"").toLowerCase().includes(q) ||
-          (e.subject||"").toLowerCase().includes(q)
-        )
-      : list;
-
-    emailList.innerHTML = filtered.length
-      ? filtered.map(e => {
-          const statusHtml = `<span class="status-pill ${e.isUnread ? 'status-blue' : 'status-green'}">${e.isUnread ? 'Unread' : 'Read'}</span>`;
-          return `
-          <div class="board-row">
-            <div>${e.from || '-'}</div>
-            <div>${e.subject || '(no subject)'}</div>
-            <div>${statusHtml}</div>
-            <div>${e.receivedAt ? timeAgo(e.receivedAt) : '-'}</div>
-            <div><a class="open-link" target="_blank" rel="noopener" href="${e.gmailLink || '#'}">Open</a></div>
-          </div>`;
-        }).join("")
-      : `<div class="board-row"><div>No emails found</div><div>—</div><div>—</div><div>—</div><div>—</div></div>`;
+    const filtered = q ? list.filter(e => (e.from||"").toLowerCase().includes(q) || (e.subject||"").toLowerCase().includes(q)) : list;
+    emailList.innerHTML = filtered.length ? filtered.map(e => {
+      const pill = e.isUnread ? 'status-blue' : 'status-green';
+      const label = e.isUnread ? 'Unread' : 'Read';
+      return `<div class="board-row" data-id="${e.id}">
+        <div>${e.from || '-'}</div>
+        <div>${e.subject || '(no subject)'}</div>
+        <div><span class="status-pill ${pill}">${label}</span></div>
+        <div>${e.receivedAt ? timeAgo(e.receivedAt) : '-'}</div>
+        <div><button class="open-link" data-id="${e.id}">Open</button></div>
+      </div>`;
+    }).join("") : `<div class="board-row"><div>No emails found</div><div>—</div><div>—</div><div>—</div><div>—</div></div>`;
   }
 
   function startEmailsListener() {
-  const qEmails = query(
-    collection(db, "emails"),
-    orderBy("receivedAt", "desc"),
-    limit(200)
-  );
-  unsubscribeEmails = onSnapshot(qEmails, (snap) => {
-    const rows = [];
-    snap.forEach(docu => {
-      const d = docu.data() || {};
-      const ts = d.receivedAt?.toDate ? d.receivedAt.toDate().toISOString() : (d.receivedAt || "");
-      rows.push({
-        id: docu.id,
-        from: d.from || "",
-        subject: d.subject || "",
-        receivedAt: ts,
-        gmailLink: d.gmailLink || "",
-        isUnread: d.isUnread === true,
-        // Try common field names for body content
-        bodyHtml: d.bodyHtml || d.html || "",
-        bodyText: d.bodyText || d.body || d.snippet || ""
+    const qEmails = query(collection(db, "emails"), orderBy("receivedAt", "desc"), limit(200));
+    unsubscribeEmails = onSnapshot(qEmails, (snap) => {
+      const rows = [];
+      snap.forEach(docu => {
+        const d = docu.data() || {};
+        const ts = d.receivedAt?.toDate ? d.receivedAt.toDate().toISOString() : (d.receivedAt || "");
+        rows.push({
+          id: docu.id,
+          from: d.from || "",
+          subject: d.subject || "",
+          receivedAt: ts,
+          gmailLink: d.gmailLink || "",
+          isUnread: d.isUnread === true,
+          bodyHtml: d.bodyHtml || d.html || "",
+          bodyText: d.bodyText || d.body || d.snippet || ""
+        });
       });
+      cachedEmails = rows;
+      renderEmails(cachedEmails, emailSearch?.value || "");
+    }, (err) => {
+      console.error("emails onSnapshot error:", err);
+      emailList.innerHTML = `<div class="board-row"><div>Error loading emails</div><div>—</div><div>—</div><div>—</div><div>—</div></div>`;
     });
-    cachedEmails = rows;
-    renderEmails(cachedEmails, emailSearch?.value || "");
-  }, (err) => {
-    console.error("emails onSnapshot error:", err);
-    emailList.innerHTML = `<div class="board-row"><div>Error loading emails</div><div>—</div><div>—</div><div>—</div></div>`;
-  });
-}
-  function stopEmailsListener() {
-    if (unsubscribeEmails) { unsubscribeEmails(); unsubscribeEmails = null; }
   }
+  function stopEmailsListener() { if (unsubscribeEmails) { unsubscribeEmails(); unsubscribeEmails = null; } }
 
   emailSearch?.addEventListener("input", () => renderEmails(cachedEmails, emailSearch.value));
   emailRefreshBtn?.addEventListener("click", () => renderEmails(cachedEmails, emailSearch?.value || ""));
 
   // Switch boards on nav click
-  // Switch boards on nav click
-sidebarEl?.addEventListener("click", (e) => {
-  const nav = e.target.closest(".nav-item");
-  if (!nav) return;
+  sidebarEl?.addEventListener("click", (e) => {
+    const nav = e.target.closest(".nav-item");
+    if (!nav) return;
 
-  [...sidebarEl.querySelectorAll('.nav-item')].forEach(n => n.classList.remove('active'));
-  nav.classList.add('active');
+    [...sidebarEl.querySelectorAll('.nav-item')].forEach(n => n.classList.remove('active'));
+    nav.classList.add('active');
 
-  const dest = nav.getAttribute('data-nav');
+    const dest = nav.getAttribute('data-nav');
 
-  // Hide all
-  devTools.style.display      = "none";
-  standardBoard.style.display = "none";
-  emailBoard.style.display    = "none";
-  stopEmailsListener();
+    // Hide all
+    devTools.style.display      = "none";
+    standardBoard.style.display = "none";
+    emailBoard.style.display    = "none";
+    stopEmailsListener();
 
-  if (dest === 'email') {
-    emailBoard.style.display = "block";
-    startEmailsListener();
-    return;
-  }
-
-  if (dest === 'board') {
-    if (currentPlan === "Developers") {
-      devTools.style.display = "block";
-      renderAllUsers(); // ensure the grid repopulates after returning from Email
-    } else {
-      standardBoard.style.display = "block";
+    if (dest === 'email') {
+      emailBoard.style.display = "block";
+      startEmailsListener();
+      return;
     }
-    return;
-  }
-
-  // Fallback for Alerts/Reports/Integrations (reuse standard board for now)
-  standardBoard.style.display = "block";
-});
-
+    if (dest === 'board') {
+      if (currentPlan === "Developers") {
+        devTools.style.display = "block";
+        renderAllUsers();
+      } else {
+        standardBoard.style.display = "block";
+      }
+      return;
+    }
+    // Alerts/Reports/Integrations fallback
+    standardBoard.style.display = "block";
+  });
 
   // Auth flow
   onAuthStateChanged(auth, async (user) => {
@@ -846,9 +658,7 @@ sidebarEl?.addEventListener("click", (e) => {
       await deleteUser(auth.currentUser);
       alert("Your account and data have been deleted.");
       window.location.href = LOGIN_URL;
-    } catch (error) {
-      console.error("Error deleting account:", error);
-    }
+    } catch (error) { console.error("Error deleting account:", error); }
   });
 
   // Plan chip behavior
@@ -860,9 +670,7 @@ sidebarEl?.addEventListener("click", (e) => {
         await setDoc(doc(db, "users", currentUser.uid), { plan: newPlan }, { merge: true });
         alert("Your plan has been updated to " + newPlan);
         applyPlanUi(newPlan);
-      } catch (error) {
-        console.error("Error updating plan:", error);
-      }
+      } catch (error) { console.error("Error updating plan:", error); }
     } else {
       try { sessionStorage.setItem("rbx_last_nav", "from_dashboard"); } catch {}
       window.location.replace(SELECTION_URL);
@@ -871,9 +679,7 @@ sidebarEl?.addEventListener("click", (e) => {
 
   // Phones: tiny fixed home button
   if (window.matchMedia('(max-width: 640px)').matches) {
-    document.getElementById('home-tap')?.addEventListener('click', () => {
-      window.location.href = '../index.html';
-    });
+    document.getElementById('home-tap')?.addEventListener('click', () => { window.location.href = '../index.html'; });
   }
 </script>
 </body>
