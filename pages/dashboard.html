@@ -263,7 +263,7 @@
         <!-- Email board (Developers) -->
         <div id="email-board" class="board-wrapper" style="display:none;">
           <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap">
-            <input id="email-search" class="search-box" placeholder="Search email (from / subject)..." style="flex:1; min-width:220px" />
+            <input id="email-search" class="search-box" placeholder="Search email (from / subject / status)..." style="flex:1; min-width:220px" />
             <button id="email-refresh" class="mobile-menu-btn" aria-label="Refresh">⟳</button>
           </div>
           <div class="board-header-row">
@@ -726,20 +726,50 @@ if (replyUI.box)     replyUI.box.style.display = 'none';
 
   // SINGLE, CORRECT renderEmails (button + data-id)
   function renderEmails(list, filter = "") {
-    const q = (filter || "").toLowerCase().trim();
-    const filtered = q ? list.filter(e => (e.from||"").toLowerCase().includes(q) || (e.subject||"").toLowerCase().includes(q)) : list;
-    emailList.innerHTML = filtered.length ? filtered.map(e => {
-      const pill = e.isUnread ? 'status-blue' : 'status-green';
-      const label = e.isUnread ? 'Unread' : 'Read';
-      return `<div class="board-row" data-id="${e.id}">
-        <div>${e.from || '-'}</div>
-        <div>${e.subject || '(no subject)'}</div>
-        <div><span class="status-pill ${pill}">${label}</span></div>
-        <div>${e.receivedAt ? timeAgo(e.receivedAt) : '-'}</div>
-        <div><button class="open-link" data-id="${e.id}">Open</button></div>
-      </div>`;
-    }).join("") : `<div class="board-row"><div>No emails found</div><div>—</div><div>—</div><div>—</div><div>—</div></div>`;
-  }
+  const q = (filter || "").toLowerCase().trim();
+
+  // Match function: supports from:, subject:, is:, status:, or free text
+  const matches = (e, query) => {
+    if (!query) return true;
+
+    const from    = (e.from || "").toLowerCase();
+    const subject = (e.subject || "").toLowerCase();
+    const statusText = e.isUnread ? "unread" : "read";
+
+    const tokens = query.split(/\s+/).filter(Boolean);
+
+    return tokens.every(tok => {
+      // Explicit field tokens
+      if (tok.startsWith("from:"))    return from.includes(tok.slice(5));
+      if (tok.startsWith("subject:")) return subject.includes(tok.slice(8));
+
+      // Status tokens
+      if (tok === "unread" || tok === "is:unread" || tok === "status:unread") return statusText === "unread";
+      if (tok === "read"   || tok === "is:read"   || tok === "status:read")   return statusText === "read";
+
+      // Fallback: free text hits from/subject/status
+      return from.includes(tok) || subject.includes(tok) || statusText.includes(tok);
+    });
+  };
+
+  const filtered = q ? list.filter(e => matches(e, q)) : list;
+
+  emailList.innerHTML = filtered.length
+    ? filtered.map(e => {
+        const pill  = e.isUnread ? "status-blue" : "status-green";
+        const label = e.isUnread ? "Unread"      : "Read";
+        return `
+          <div class="board-row" data-id="${e.id}">
+            <div>${e.from || "-"}</div>
+            <div>${e.subject || "(no subject)"}</div>
+            <div><span class="status-pill ${pill}">${label}</span></div>
+            <div>${e.receivedAt ? timeAgo(e.receivedAt) : "-"}</div>
+            <div><button class="open-link" data-id="${e.id}">Open</button></div>
+          </div>`;
+      }).join("")
+    : `<div class="board-row"><div>No emails found</div><div>—</div><div>—</div><div>—</div><div>—</div></div>`;
+}
+
 
   function startEmailsListener() {
     const qEmails = query(collection(db, "emails"), orderBy("receivedAt", "desc"), limit(200));
