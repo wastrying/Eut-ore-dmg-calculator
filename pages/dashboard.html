@@ -21,7 +21,6 @@
       --text-lg: clamp(14px, 3.5vw, 18px);
     }
 
-    /* ---------- Base ---------- */
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
     body{
       background:#f5f5f5;min-height:100vh;color:#222;
@@ -37,7 +36,6 @@
 
     .wrapper{width:100%;max-width:1200px;margin-top:58px;display:flex;flex-direction:column;gap:16px;z-index:10}
 
-    /* ---------- Main Grid ---------- */
     #main-dashboard{
       display:none;
       height:calc(100dvh - 110px);
@@ -50,7 +48,6 @@
       display:grid;
     }
 
-    /* ---------- Sidebar ---------- */
     .sidebar{
       background:#111827;color:#e5e7eb;display:flex;flex-direction:column;
       padding:14px 10px 10px;gap:10px;position:relative;z-index:60;
@@ -67,7 +64,6 @@
     .logout-link{font-size:var(--text-xs);color:#9ca3af;text-align:left;padding:6px 6px;cursor:pointer;text-decoration:underline}
     .logout-link:hover{color:#fff}
 
-    /* ---------- Top / Main ---------- */
     .main-area{display:flex;flex-direction:column;padding:10px 12px 10px;gap:8px;min-width:0}
     .top-bar{display:flex;align-items:center;justify-content:space-between;gap:10px}
     .top-left{display:flex;align-items:center;gap:8px;min-width:0}
@@ -81,7 +77,6 @@
       -webkit-overflow-scrolling:touch;
     }
 
-    /* ---------- Standard board grid ---------- */
     .board-header-row,.board-row{
       display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1.2fr;
       gap:6px;align-items:center;font-size:var(--text-sm);padding:6px;border-radius:8px
@@ -93,7 +88,6 @@
     .status-pill{padding:3px 7px;border-radius:999px;font-size:10px;display:inline-block;text-align:center;white-space:nowrap}
     .status-green{background:#bbf7d0;color:#166534}.status-yellow{background:#fef9c3;color:#854d0e}.status-red{background:#fee2e2;color:#991b1b}.status-blue{background:#dbeafe;color:#1d4ed8}
 
-    /* ---------- Dev list grid ---------- */
     .dev-grid-header,.dev-grid-row{
       display:grid;grid-template-columns:2fr 1fr;gap:6px;align-items:center;font-size:var(--text-sm);padding:6px;border-radius:8px
     }
@@ -103,12 +97,10 @@
     .inline-status{margin-left:6px;font-size:10px;color:#6b7280}
     .inline-status.ok{color:#059669}.inline-status.err{color:#b91c1c}
 
-    /* ---------- Mobile Drawer & Controls ---------- */
     .mobile-menu-btn{
       display:none;border:1px solid #e5e7eb;background:#fff;border-radius:8px;
       padding:8px 10px;font-size:16px;line-height:1;cursor:pointer;
     }
-    /* Backdrop below sidebar but above content */
     .backdrop{
       position:fixed;inset:0;background:rgba(0,0,0,.35);
       opacity:0;pointer-events:none;transition:opacity .2s ease;
@@ -116,20 +108,24 @@
     }
     .backdrop.show{opacity:1;pointer-events:auto}
 
-    /* ---------- Responsiveness ---------- */
+    /* Email board grid */
+    #email-board .board-row{
+      grid-template-columns: 2fr 3fr 1fr 1.4fr 0.8fr;
+    }
+    #email-board .open-link{ text-decoration:underline; cursor:pointer; }
+
     @media (max-width:1024px){
       #main-dashboard{grid-template-columns:200px 1fr}
       .logo{height:140px}
     }
 
     @media (max-width:900px){
-      /* Off-canvas sidebar */
       #main-dashboard{grid-template-columns:1fr}
       .mobile-menu-btn{display:inline-block}
       .sidebar{
         position:fixed;left:-100%;top:0;bottom:0;width:82vw;max-width:320px;
         transform:translateX(0);transition:left .25s ease;box-shadow:8px 0 20px rgba(0,0,0,.25);
-        z-index:1200; /* ABOVE backdrop so items are tappable */
+        z-index:1200;
       }
       .sidebar.open{left:0}
       .sidebar-title,.nav-item .label,.sidebar-plan-label .label-text{display:none}
@@ -137,7 +133,6 @@
       .top-actions{flex:1;justify-content:flex-end}
       .top-left{flex:1}
 
-      /* When drawer is open: lock scroll and fully hide/disable header/logo & home tap */
       html.drawer-open body{ overflow:hidden; }
       .drawer-open .header-row,
       .drawer-open #home-tap,
@@ -147,25 +142,20 @@
       }
     }
 
-    /* Phone + small tablets */
     @media (max-width:640px){
-      /* Header position; larger logo; small fixed home box */
       .header-row{ top: max(0px, env(safe-area-inset-top)); left: max(6px, env(safe-area-inset-left)); }
-
       .home-tap{
         position:absolute; top: 6px; left: 6px;
         width: 44px; height: 44px; border-radius: 10px;
         background: transparent; border: none; cursor: pointer;
       }
       .home-tap:focus-visible{ outline:2px solid #60a5fa; outline-offset:2px; }
-
-      .logo{ height:72px; pointer-events:none } /* bigger, not clickable */
+      .logo{ height:72px; pointer-events:none }
       .wrapper{ margin-top:86px }
 
       .board-title{font-size:clamp(14px, 4vw, 18px)}
       .board-subtitle{display:none}
 
-      /* Board becomes stacked cards */
       .board-header-row{display:none}
       .board-row{
         grid-template-columns:1fr;gap:8px;padding:10px;border-radius:var(--radius-md)
@@ -177,33 +167,27 @@
       .board-row > div:nth-child(4)::before{content:"Due";font-weight:600;color:#6b7280;margin-right:8px}
       .board-row > div:nth-child(5)::before{content:"Priority";font-weight:600;color:#6b7280;margin-right:8px}
 
-      /* Dev list becomes stacked cards */
-      .dev-grid-header{display:none}
-      .dev-grid-row{grid-template-columns:1fr;gap:10px;padding:10px}
-      .dev-grid-row > div:first-child{font-weight:600}
-      .dev-grid-row > div:last-child{display:flex;align-items:center;gap:8px}
+      /* Email stacked cards */
+      #email-board .board-row > div:nth-child(1)::before{content:"From"}
+      #email-board .board-row > div:nth-child(2)::before{content:"Subject"}
+      #email-board .board-row > div:nth-child(3)::before{content:"Status"}
+      #email-board .board-row > div:nth-child(4)::before{content:"Received"}
+      #email-board .board-row > div:nth-child(5)::before{content:"Open"}
 
-      /* Improve touch targets */
       .nav-item{padding:12px}
       .sidebar-plan-label{padding:10px}
     }
 
-    /* Safe area padding for iOS notch */
     @supports(padding:max(0px)){
       body{padding-left:max(16px, env(safe-area-inset-left));padding-right:max(16px, env(safe-area-inset-right));padding-top:max(16px, env(safe-area-inset-top));padding-bottom:max(16px, env(safe-area-inset-bottom));}
     }
-
-    /* Optional: disable hover zoom on touch devices */
-    @media (hover:none) and (pointer:coarse){
-      .logo:hover{ transform:none }
-    }
+    @media (hover:none) and (pointer:coarse){ .logo:hover{ transform:none } }
   </style>
 </head>
 <body>
   <div class="overlay"><img src="../images/background.png" class="bg-image" alt=""></div>
 
   <div class="header-row" id="header-row">
-    <!-- Small fixed home button (phones) -->
     <button id="home-tap" class="home-tap" aria-label="Go to home" title="Home"></button>
     <img src="../images/remblyxlogo.png" alt="Remblyx" class="logo" id="logo"
          onclick="window.location.href='../index.html'">
@@ -214,10 +198,13 @@
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-title">Workspace</div>
 
-        <div class="nav-item active"><span class="icon-dot"></span><span class="label">Main Board</span></div>
-        <div class="nav-item"><span class="icon-dot"></span><span class="label">Alerts</span></div>
-        <div class="nav-item"><span class="icon-dot"></span><span class="label">Reports</span></div>
-        <div class="nav-item"><span class="icon-dot"></span><span class="label">Integrations</span></div>
+        <div class="nav-item active" data-nav="board"><span class="icon-dot"></span><span class="label">Main Board</span></div>
+        <div class="nav-item" data-nav="alerts"><span class="icon-dot"></span><span class="label">Alerts</span></div>
+        <div class="nav-item" data-nav="reports"><span class="icon-dot"></span><span class="label">Reports</span></div>
+        <div class="nav-item" data-nav="integrations"><span class="icon-dot"></span><span class="label">Integrations</span></div>
+
+        <!-- Email tab (hidden for non-developers via JS) -->
+        <div class="nav-item" data-nav="email" style="display:none;"><span class="icon-dot"></span><span class="label">Email</span></div>
 
         <div class="sidebar-spacer"></div>
 
@@ -266,14 +253,32 @@
           <div class="board-row"><div>Critical event pipeline</div><div>Engineering</div><div><span class="status-pill status-red">Stuck</span></div><div>Overdue</div><div>High</div></div>
           <div class="board-row"><div>Integration testing</div><div>DevOps</div><div><span class="status-pill status-blue">Planned</span></div><div>Next week</div><div>Medium</div></div>
         </div>
+
+        <!-- Email board (Developers) -->
+        <div id="email-board" class="board-wrapper" style="display:none;">
+          <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap">
+            <input id="email-search" class="search-box" placeholder="Search email (from / subject)..." style="flex:1; min-width:220px" />
+            <button id="email-refresh" class="mobile-menu-btn" aria-label="Refresh">⟳</button>
+          </div>
+          <div class="board-header-row">
+            <div>From</div><div>Subject</div><div>Status</div><div>Received</div><div>Open</div>
+          </div>
+          <div id="email-list"></div>
+        </div>
+
       </div>
     </div>
   </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import {
+    getAuth, onAuthStateChanged, signOut, deleteUser
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs,
+    query, orderBy, limit, onSnapshot
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
@@ -309,13 +314,17 @@
   const standardBoard = document.getElementById("standard-board");
   const searchInput = document.getElementById("user-search");
 
+  const emailBoard = document.getElementById("email-board");
+  const emailList  = document.getElementById("email-list");
+  const emailSearch = document.getElementById("email-search");
+  const emailRefreshBtn = document.getElementById("email-refresh");
+
   // Mobile drawer elements
   const sidebarEl = document.getElementById("sidebar");
   const openSidebarBtn = document.getElementById("open-sidebar");
   const backdropEl = document.getElementById("backdrop");
-  const root = document.documentElement; // toggle drawer-open class
+  const root = document.documentElement;
 
-  // Header controls
   const headerRow = document.getElementById('header-row');
   const logoEl = document.getElementById('logo');
   const homeTapBtn = document.getElementById('home-tap');
@@ -324,46 +333,38 @@
   let currentUser = null;
   let currentPlan = null;
   let allUsers = []; // [{uid,email,plan}]
+  let unsubscribeEmails = null;
+  let cachedEmails = [];
 
   /* ---------- Mobile drawer helpers ---------- */
   const openDrawer = () => {
     if (!sidebarEl || !backdropEl) return;
     sidebarEl.classList.add("open");
     backdropEl.classList.add("show");
-    root.classList.add("drawer-open"); // CSS hides header/logo/home-tap
-
-    // Extra safety: disable logo/home on open
+    root.classList.add("drawer-open");
     if (headerRow) { headerRow.setAttribute('aria-hidden', 'true'); headerRow.style.pointerEvents = 'none'; }
     if (homeTapBtn) { homeTapBtn.disabled = true; homeTapBtn.style.pointerEvents = 'none'; }
-    if (logoEl) {
-      savedLogoOnclick = logoEl.onclick;
-      logoEl.onclick = null;
-      logoEl.style.pointerEvents = 'none';
-    }
+    if (logoEl) { savedLogoOnclick = logoEl.onclick; logoEl.onclick = null; logoEl.style.pointerEvents = 'none'; }
   };
   const closeDrawer = () => {
     if (!sidebarEl || !backdropEl) return;
     sidebarEl.classList.remove("open");
     backdropEl.classList.remove("show");
     root.classList.remove("drawer-open");
-
-    // Re-enable header/logo/home
     if (headerRow) { headerRow.removeAttribute('aria-hidden'); headerRow.style.pointerEvents = ''; }
     if (homeTapBtn) { homeTapBtn.disabled = false; homeTapBtn.style.pointerEvents = ''; }
     if (logoEl) { logoEl.onclick = savedLogoOnclick; logoEl.style.pointerEvents = ''; }
   };
 
-  if (openSidebarBtn) openSidebarBtn.addEventListener("click", openDrawer);
-  if (backdropEl) backdropEl.addEventListener("click", closeDrawer);
+  openSidebarBtn?.addEventListener("click", openDrawer);
+  backdropEl?.addEventListener("click", closeDrawer);
   window.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDrawer(); });
 
-  // ✅ Only close on nav item clicks; DO NOT close for plan/logout/delete
-  if (sidebarEl) {
-    sidebarEl.addEventListener("click", (e) => {
-      const nav = e.target.closest(".nav-item");
-      if (nav) closeDrawer();
-    });
-  }
+  // Only close on nav item clicks; not for plan/logout/delete
+  sidebarEl?.addEventListener("click", (e) => {
+    const nav = e.target.closest(".nav-item");
+    if (nav) closeDrawer();
+  });
 
   function setDashboardVisibility(show) {
     if (mainDashboard) mainDashboard.style.display = show ? "grid" : "none";
@@ -373,17 +374,29 @@
     if (!firstNavLabelEl) return;
     firstNavLabelEl.textContent = (plan === "Developers") ? "Command Center" : "Main Board";
   }
+
   function showDevelopersView() {
     setNavLabelForPlan("Developers");
-    if (devTools) devTools.style.display = "block";
-    if (standardBoard) standardBoard.style.display = "none";
+    // Show Email nav
+    const emailNav = sidebarEl?.querySelector('[data-nav="email"]');
+    if (emailNav) emailNav.style.display = '';
+    devTools.style.display = "block";
+    standardBoard.style.display = "none";
+    emailBoard.style.display = "none";
+    stopEmailsListener();
     renderAllUsers();
   }
   function showRegularView() {
     setNavLabelForPlan(currentPlan);
-    if (devTools) devTools.style.display = "none";
-    if (standardBoard) standardBoard.style.display = "block";
+    // Hide Email nav
+    const emailNav = sidebarEl?.querySelector('[data-nav="email"]');
+    if (emailNav) emailNav.style.display = 'none';
+    devTools.style.display = "none";
+    standardBoard.style.display = "block";
+    emailBoard.style.display = "none";
+    stopEmailsListener();
   }
+
   function applyPlanUi(plan) {
     currentPlan = plan || null;
     safeTxt(planNameEl, currentPlan || "-");
@@ -396,16 +409,14 @@
         default: boardTitle.textContent = "Remblyx Workspace"; boardSubtitle.textContent = "Overview of your monitoring items, owners, and status.";
       }
     }
-    if (sidebarPlanEl) {
-      sidebarPlanEl.classList.remove("locked");
-      sidebarPlanEl.title = (plan === "Developers") ? "Edit plan (developer)" : "Change subscription plan";
-    }
-    if (deleteAccountLink) { deleteAccountLink.style.display = "block"; }
-    if (plan === "Developers") showDevelopersView(); else showRegularView();
+    sidebarPlanEl?.classList.remove("locked");
+    if (sidebarPlanEl) sidebarPlanEl.title = (plan === "Developers") ? "Edit plan (developer)" : "Change subscription plan";
+    deleteAccountLink && (deleteAccountLink.style.display = "block");
+    (plan === "Developers") ? showDevelopersView() : showRegularView();
   }
 
   async function ensureDevelopersPlanIfAllowed(user) {
-    const isDev = ["medisignal.remblyx@gmail.com"].includes((user.email || "").toLowerCase());
+    const isDev = DEV_EMAILS.includes((user.email || "").toLowerCase());
     if (!isDev) return null;
     try {
       const ref = doc(db, "users", user.uid);
@@ -449,39 +460,27 @@
     </div>`;
   }
 
-  // Search: supports email or plan + tokens plan:/email:
   function renderList(filter = "") {
     if (!devUsersContainer) return;
-
     const q = (filter || "").trim().toLowerCase();
-
     const filtered = !q ? allUsers : allUsers.filter(u => {
       const email = (u.email || "").toLowerCase();
       const plan  = (u.plan  || "").toLowerCase();
-
-      // split on whitespace; treat each token as a required condition (AND)
       const tokens = q.split(/\s+/);
-
       return tokens.every(tok => {
-        // plan: token (supports p: too)
         if (/^(plan|p):/.test(tok)) {
           const val = tok.replace(/^(plan|p):/, "");
           const wants = val.split(/[|,]/).map(s => s.trim()).filter(Boolean);
           if (!wants.length) return true;
           return wants.some(w => plan.includes(w));
         }
-
-        // email: token (supports e: too)
         if (/^(email|e):/.test(tok)) {
           const val = tok.replace(/^(email|e):/, "");
           return email.includes(val);
         }
-
-        // default token: match either field
         return email.includes(tok) || plan.includes(tok);
       });
     });
-
     devUsersContainer.innerHTML = filtered.length
       ? filtered.map(userRow).join("")
       : `<div class="dev-grid-row"><div>No users found</div><div>—</div></div>`;
@@ -524,26 +523,111 @@
     }
   }
 
-  if (devUsersContainer) {
-    devUsersContainer.addEventListener("change", (e) => {
-      const el = e.target;
-      if (!el.classList?.contains("plan-select")) return;
-      const uid = el.getAttribute("data-uid");
-      const newPlan = el.value;
-      if (!uid || !newPlan) return;
-      updatePlanForUser(uid, newPlan);
+  // ---------- EMAIL TAB ----------
+  function timeAgo(iso) {
+    if (!iso) return '-';
+    const d = new Date(iso);
+    const ms = Date.now() - d.getTime();
+    const m = Math.floor(ms/60000);
+    if (m < 1) return "now";
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m/60);
+    if (h < 24) return `${h}h ago`;
+    const days = Math.floor(h/24);
+    return `${days}d ago`;
+  }
+
+  function renderEmails(list, filter = "") {
+    const q = (filter || "").toLowerCase().trim();
+    const filtered = q
+      ? list.filter(e =>
+          (e.from||"").toLowerCase().includes(q) ||
+          (e.subject||"").toLowerCase().includes(q)
+        )
+      : list;
+
+    emailList.innerHTML = filtered.length
+      ? filtered.map(e => {
+          const statusHtml = `<span class="status-pill ${e.isUnread ? 'status-blue' : 'status-green'}">${e.isUnread ? 'Unread' : 'Read'}</span>`;
+          return `
+          <div class="board-row">
+            <div>${e.from || '-'}</div>
+            <div>${e.subject || '(no subject)'}</div>
+            <div>${statusHtml}</div>
+            <div>${e.receivedAt ? timeAgo(e.receivedAt) : '-'}</div>
+            <div><a class="open-link" target="_blank" rel="noopener" href="${e.gmailLink || '#'}">Open</a></div>
+          </div>`;
+        }).join("")
+      : `<div class="board-row"><div>No emails found</div><div>—</div><div>—</div><div>—</div><div>—</div></div>`;
+  }
+
+  function startEmailsListener() {
+    const qEmails = query(
+      collection(db, "emails"),
+      orderBy("receivedAt", "desc"),
+      limit(200)
+    );
+    unsubscribeEmails = onSnapshot(qEmails, (snap) => {
+      const rows = [];
+      snap.forEach(docu => {
+        const d = docu.data() || {};
+        const ts = d.receivedAt?.toDate ? d.receivedAt.toDate().toISOString() : (d.receivedAt || "");
+        rows.push({
+          id: docu.id,
+          from: d.from || "",
+          subject: d.subject || "",
+          receivedAt: ts,
+          gmailLink: d.gmailLink || "",
+          isUnread: d.isUnread === true
+        });
+      });
+      cachedEmails = rows;
+      renderEmails(cachedEmails, emailSearch?.value || "");
+    }, (err) => {
+      console.error("emails onSnapshot error:", err);
+      emailList.innerHTML = `<div class="board-row"><div>Error loading emails</div><div>—</div><div>—</div><div>—</div><div>—</div></div>`;
     });
   }
-
-  if (searchInput) {
-    searchInput.addEventListener("input", () => renderList(searchInput.value));
+  function stopEmailsListener() {
+    if (unsubscribeEmails) { unsubscribeEmails(); unsubscribeEmails = null; }
   }
 
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      window.location.href = LOGIN_URL;
-      return;
+  emailSearch?.addEventListener("input", () => renderEmails(cachedEmails, emailSearch.value));
+  emailRefreshBtn?.addEventListener("click", () => renderEmails(cachedEmails, emailSearch?.value || ""));
+
+  // Switch boards on nav click
+  sidebarEl?.addEventListener("click", (e) => {
+    const nav = e.target.closest(".nav-item");
+    if (!nav) return;
+
+    [...sidebarEl.querySelectorAll('.nav-item')].forEach(n => n.classList.remove('active'));
+    nav.classList.add('active');
+
+    const dest = nav.getAttribute('data-nav');
+
+    // Hide all
+    devTools.style.display      = "none";
+    standardBoard.style.display = "none";
+    emailBoard.style.display    = "none";
+    stopEmailsListener();
+
+    if (dest === 'email') {
+      emailBoard.style.display = "block";
+      startEmailsListener();
+    } else if (dest === 'board' || dest === 'alerts' || dest === 'reports' || dest === 'integrations') {
+      // For now, reuse standard board for non-implemented tabs
+      if (dest === 'board' && currentPlan === "Developers") {
+        // devs land on devTools if they want; but we keep standardBoard the default here
+        standardBoard.style.display = "block";
+      } else {
+        standardBoard.style.display = "block";
+      }
     }
+  });
+
+  // Auth flow
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { window.location.href = LOGIN_URL; return; }
     currentUser = user;
     setDashboardVisibility(true);
     try {
@@ -556,49 +640,46 @@
     }
   });
 
-  if (logoutLink) {
-    logoutLink.addEventListener("click", async () => {
-      try { await signOut(auth); window.location.href = LOGIN_URL; }
-      catch (error) { console.error("Error during logout: ", error); }
-    });
-  }
+  // LOGOUT
+  logoutLink?.addEventListener("click", async () => {
+    try { await signOut(auth); window.location.href = LOGIN_URL; }
+    catch (error) { console.error("Error during logout: ", error); }
+  });
 
-  if (deleteAccountLink) {
-    deleteAccountLink.addEventListener("click", async () => {
-      if (!confirm("Are you sure you want to delete your account and data? This action cannot be undone.")) return;
+  // DELETE ACCOUNT & DATA
+  deleteAccountLink?.addEventListener("click", async () => {
+    if (!confirm("Are you sure you want to delete your account and data? This action cannot be undone.")) return;
+    try {
+      await deleteDoc(doc(db, "users", currentUser.uid));
+      await deleteUser(auth.currentUser);
+      alert("Your account and data have been deleted.");
+      window.location.href = LOGIN_URL;
+    } catch (error) {
+      console.error("Error deleting account:", error);
+    }
+  });
+
+  // Plan chip behavior
+  sidebarPlanEl?.addEventListener("click", async () => {
+    if (currentPlan === "Developers") {
+      const newPlan = prompt("Enter new plan (e.g., Basic, Premium, Enterprise):");
+      if (!newPlan) return;
       try {
-        await deleteDoc(doc(db, "users", currentUser.uid));
-        await deleteUser(auth.currentUser);
-        alert("Your account and data have been deleted.");
-        window.location.href = LOGIN_URL;
+        await setDoc(doc(db, "users", currentUser.uid), { plan: newPlan }, { merge: true });
+        alert("Your plan has been updated to " + newPlan);
+        applyPlanUi(newPlan);
       } catch (error) {
-        console.error("Error deleting account:", error);
+        console.error("Error updating plan:", error);
       }
-    });
-  }
+    } else {
+      try { sessionStorage.setItem("rbx_last_nav", "from_dashboard"); } catch {}
+      window.location.replace(SELECTION_URL);
+    }
+  });
 
-  if (sidebarPlanEl) {
-    sidebarPlanEl.addEventListener("click", async () => {
-      if (currentPlan === "Developers") {
-        const newPlan = prompt("Enter new plan (e.g., Basic, Premium, Enterprise):");
-        if (!newPlan) return;
-        try {
-          await setDoc(doc(db, "users", currentUser.uid), { plan: newPlan }, { merge: true });
-          alert("Your plan has been updated to " + newPlan);
-          applyPlanUi(newPlan);
-        } catch (error) {
-          console.error("Error updating plan:", error);
-        }
-      } else {
-        try { sessionStorage.setItem("rbx_last_nav", "from_dashboard"); } catch {}
-        window.location.replace(SELECTION_URL);
-      }
-    });
-  }
-
-  /* Phones only: small fixed home box */
+  // Phones: tiny fixed home button
   if (window.matchMedia('(max-width: 640px)').matches) {
-    homeTapBtn?.addEventListener('click', () => {
+    document.getElementById('home-tap')?.addEventListener('click', () => {
       window.location.href = '../index.html';
     });
   }
