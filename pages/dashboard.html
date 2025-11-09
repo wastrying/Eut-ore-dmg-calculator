@@ -454,7 +454,6 @@ function gateComposer() {
     if (sidebarPlanEl) sidebarPlanEl.title = (plan === "Developers") ? "Edit plan (developer)" : "Change subscription plan";
     deleteAccountLink && (deleteAccountLink.style.display = "block");
     (plan === "Developers") ? showDevelopersView() : showRegularView();
-    gateComposer();
   }
 
   async function ensureDevelopersPlanIfAllowed(user) {
@@ -471,12 +470,6 @@ function gateComposer() {
       console.warn("ensureDevelopersPlanIfAllowed:", e);
       return null;
     }
-  }
-async function sendEmailFromUI() {
-  if (currentPlan !== "Developers") {
-    composeStatusEl.textContent = "Only Developers can send emails.";
-    composeStatusEl.style.color = "#b91c1c";
-    return;
   }
   async function loadUserPlan(user) {
     try {
