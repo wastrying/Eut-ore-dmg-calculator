@@ -398,6 +398,14 @@
     const nav = e.target.closest(".nav-item");
     if (nav) closeDrawer();
   });
+function gateComposer() {
+  const composer = document.getElementById("email-composer");
+  const sendBtn  = document.getElementById("compose-send");
+  if (!composer) return;
+  const dev = currentPlan === "Developers";
+  composer.style.display = dev ? "" : "none";
+  if (sendBtn) sendBtn.disabled = !dev;
+}
 
   function setDashboardVisibility(show) {
     if (mainDashboard) mainDashboard.style.display = show ? "grid" : "none";
@@ -446,6 +454,7 @@
     if (sidebarPlanEl) sidebarPlanEl.title = (plan === "Developers") ? "Edit plan (developer)" : "Change subscription plan";
     deleteAccountLink && (deleteAccountLink.style.display = "block");
     (plan === "Developers") ? showDevelopersView() : showRegularView();
+    gateComposer();
   }
 
   async function ensureDevelopersPlanIfAllowed(user) {
@@ -463,7 +472,12 @@
       return null;
     }
   }
-
+async function sendEmailFromUI() {
+  if (currentPlan !== "Developers") {
+    composeStatusEl.textContent = "Only Developers can send emails.";
+    composeStatusEl.style.color = "#b91c1c";
+    return;
+  }
   async function loadUserPlan(user) {
     try {
       const ref = doc(db, "users", user.uid);
