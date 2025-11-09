@@ -636,34 +636,42 @@ function gateComposer() {
   emailRefreshBtn?.addEventListener("click", () => renderEmails(cachedEmails, emailSearch?.value || ""));
 
   // Switch boards on nav click
-  sidebarEl?.addEventListener("click", (e) => {
-    const nav = e.target.closest(".nav-item");
-    if (!nav) return;
+  // Switch boards on nav click
+sidebarEl?.addEventListener("click", (e) => {
+  const nav = e.target.closest(".nav-item");
+  if (!nav) return;
 
-    [...sidebarEl.querySelectorAll('.nav-item')].forEach(n => n.classList.remove('active'));
-    nav.classList.add('active');
+  [...sidebarEl.querySelectorAll('.nav-item')].forEach(n => n.classList.remove('active'));
+  nav.classList.add('active');
 
-    const dest = nav.getAttribute('data-nav');
+  const dest = nav.getAttribute('data-nav');
 
-    // Hide all
-    devTools.style.display      = "none";
-    standardBoard.style.display = "none";
-    emailBoard.style.display    = "none";
-    stopEmailsListener();
+  // Hide all
+  devTools.style.display      = "none";
+  standardBoard.style.display = "none";
+  emailBoard.style.display    = "none";
+  stopEmailsListener();
 
-    if (dest === 'email') {
-      emailBoard.style.display = "block";
-      startEmailsListener();
-    } else if (dest === 'board' || dest === 'alerts' || dest === 'reports' || dest === 'integrations') {
-      // For now, reuse standard board for non-implemented tabs
-      if (dest === 'board' && currentPlan === "Developers") {
-        // devs land on devTools if they want; but we keep standardBoard the default here
-        standardBoard.style.display = "block";
-      } else {
-        standardBoard.style.display = "block";
-      }
+  if (dest === 'email') {
+    emailBoard.style.display = "block";
+    startEmailsListener();
+    return;
+  }
+
+  if (dest === 'board') {
+    if (currentPlan === "Developers") {
+      devTools.style.display = "block";
+      renderAllUsers(); // ensure the grid repopulates after returning from Email
+    } else {
+      standardBoard.style.display = "block";
     }
-  });
+    return;
+  }
+
+  // Fallback for Alerts/Reports/Integrations (reuse standard board for now)
+  standardBoard.style.display = "block";
+});
+
 
   // Auth flow
   onAuthStateChanged(auth, async (user) => {
