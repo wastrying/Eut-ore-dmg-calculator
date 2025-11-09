@@ -7,6 +7,49 @@
   <link rel="icon" type="image/png" sizes="32x32" href="../images/medisignal.png" />
   <link rel="apple-touch-icon" href="../images/medisignal.png" />
   <style>
+    /* Email modal */
+.email-modal{
+  position:fixed; inset:0; display:none; z-index:2000;
+}
+.email-modal.show{ display:block; }
+
+.email-modal-backdrop{
+  position:absolute; inset:0; background:rgba(0,0,0,.45);
+}
+
+.email-modal-content{
+  position:absolute; inset:6% 8%;
+  background:#fff; border-radius:14px; box-shadow:0 18px 48px rgba(0,0,0,.35);
+  display:flex; flex-direction:column; overflow:hidden;
+  border:1px solid #e5e7eb;
+}
+
+.email-modal-header{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:12px 14px; border-bottom:1px solid #e5e7eb; background:#f9fafb;
+}
+.email-modal-subject{ font-size:var(--text-lg); font-weight:600; color:#111827; }
+.email-modal-meta{ font-size:var(--text-xs); color:#6b7280; margin-top:2px; }
+
+.email-modal-close{
+  border:1px solid #e5e7eb; background:#fff; border-radius:10px;
+  padding:6px 10px; font-size:16px; cursor:pointer;
+}
+
+.email-iframe{
+  width:100%; height:100%; border:0; flex:1; background:#fff;
+}
+.email-plain{
+  margin:0; padding:12px 14px; white-space:pre-wrap; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  overflow:auto; flex:1; background:#fff;
+}
+
+/* Make the "Open" look like a link but it's a button */
+#email-board .open-link{
+  background:none; border:none; text-decoration:underline; cursor:pointer;
+  font: inherit; padding:0;
+}
+
     :root{
       --radius-lg:18px;
       --radius-md:12px;
@@ -298,6 +341,22 @@
           </div>
           <div id="email-list"></div>
         </div>
+<!-- In-app Email Viewer -->
+<div id="email-modal" class="email-modal" aria-hidden="true">
+  <div id="email-modal-backdrop" class="email-modal-backdrop"></div>
+  <div class="email-modal-content" role="dialog" aria-modal="true" aria-labelledby="email-modal-subject">
+    <div class="email-modal-header">
+      <div>
+        <div id="email-modal-subject" class="email-modal-subject"></div>
+        <div id="email-modal-meta" class="email-modal-meta"></div>
+      </div>
+      <button id="email-modal-close" class="email-modal-close" aria-label="Close">✕</button>
+    </div>
+    <!-- Prefer HTML in an isolated sandbox; fall back to plain text -->
+    <iframe id="email-iframe" class="email-iframe" sandbox=""></iframe>
+    <pre id="email-plain" class="email-plain" style="display:none"></pre>
+  </div>
+</div>
 
       </div>
     </div>
@@ -368,6 +427,88 @@
   let allUsers = []; // [{uid,email,plan}]
   let unsubscribeEmails = null;
   let cachedEmails = [];
+  // Email modal elements
+const emailModal = document.getElementById("email-modal");
+const emailModalBackdrop = document.getElementById("email-modal-backdrop");
+const emailModalClose = document.getElementById("email-modal-close");
+const emailIframe = document.getElementById("email-iframe");
+const emailPlain = document.getElementById("email-plain");
+const emailModalSubject = document.getElementById("email-modal-subject");
+const emailModalMeta = document.getElementById("email-modal-meta");
+
+function openEmailModal() {
+  emailModal.classList.add("show");
+  emailModal.setAttribute("aria-hidden", "false");
+  document.addEventListener("keydown", escToClose, { once: true });
+}
+function closeEmailModal() {
+  emailModal.classList.remove("show");
+  emailModal.setAttribute("aria-hidden", "true");
+  // Clear content for safety
+  emailIframe.srcdoc = "";
+  emailPlain.textContent = "";
+  emailPlain.style.display = "none";
+  emailIframe.style.display = "block";
+}
+
+function escToClose(e){ if (e.key === "Escape") closeEmailModal(); }
+emailModalBackdrop?.addEventListener("click", closeEmailModal);
+emailModalClose?.addEventListener("click", closeEmailModal);
+
+// Delegate click on "Open"
+emailList?.addEventListener("click", async (ev) => {
+  const btn = ev.target.closest(".open-link");
+  if (!btn) return;
+  const id = btn.getAttribute("data-id");
+  const item = cachedEmails.find(x => x.id === id);
+  if (!item) return;
+
+  // Header info
+  emailModalSubject.textContent = item.subject || "(no subject)";
+  const when = item.receivedAt ? new Date(item.receivedAt) : null;
+  emailModalMeta.textContent = `${item.from || "Unknown sender"}${when ? ` • ${when.toLocaleString()}` : ""}`;
+
+  // Prefer HTML body in an isolated iframe; otherwise show text
+  if (item.bodyHtml && item.bodyHtml.trim()) {
+    // Wrap with a tiny HTML document; ensure links open in new tab
+    emailIframe.srcdoc = `
+      <!doctype html><html><head>
+        <meta charset="utf-8">
+        <base target="_blank">
+        <style>
+          body{font: 14px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color:#111827; padding:16px;}
+          img{max-width:100%; height:auto}
+          a{word-break:break-word}
+          blockquote{border-left:3px solid #e5e7eb; padding-left:10px; margin-left:0; color:#374151}
+          pre, code{white-space:pre-wrap}
+        </style>
+      </head><body>${item.bodyHtml}</body></html>`;
+    emailIframe.style.display = "block";
+    emailPlain.style.display = "none";
+  } else if (item.bodyText && item.bodyText.trim()) {
+    emailPlain.textContent = item.bodyText;
+    emailPlain.style.display = "block";
+    emailIframe.style.display = "none";
+  } else {
+    emailPlain.textContent = "This email's body isn't stored. Ask the admin to save `bodyHtml` or `bodyText` in Firestore for full in-app viewing.";
+    emailPlain.style.display = "block";
+    emailIframe.style.display = "none";
+  }
+
+  // Mark as read locally + in Firestore
+  if (item.isUnread) {
+    try {
+      await setDoc(doc(db, "emails", id), { isUnread: false }, { merge: true });
+      item.isUnread = false;
+      renderEmails(cachedEmails, emailSearch?.value || "");
+    } catch (e) {
+      console.warn("Couldn't mark as read:", e);
+    }
+  }
+
+  openEmailModal();
+});
+
 
   /* ---------- Mobile drawer helpers ---------- */
   const openDrawer = () => {
@@ -500,31 +641,31 @@ function gateComposer() {
     </div>`;
   }
 
-  function renderList(filter = "") {
-    if (!devUsersContainer) return;
-    const q = (filter || "").trim().toLowerCase();
-    const filtered = !q ? allUsers : allUsers.filter(u => {
-      const email = (u.email || "").toLowerCase();
-      const plan  = (u.plan  || "").toLowerCase();
-      const tokens = q.split(/\s+/);
-      return tokens.every(tok => {
-        if (/^(plan|p):/.test(tok)) {
-          const val = tok.replace(/^(plan|p):/, "");
-          const wants = val.split(/[|,]/).map(s => s.trim()).filter(Boolean);
-          if (!wants.length) return true;
-          return wants.some(w => plan.includes(w));
-        }
-        if (/^(email|e):/.test(tok)) {
-          const val = tok.replace(/^(email|e):/, "");
-          return email.includes(val);
-        }
-        return email.includes(tok) || plan.includes(tok);
-      });
-    });
-    devUsersContainer.innerHTML = filtered.length
-      ? filtered.map(userRow).join("")
-      : `<div class="dev-grid-row"><div>No users found</div><div>—</div></div>`;
-  }
+  function renderEmails(list, filter = "") {
+  const q = (filter || "").toLowerCase().trim();
+  const filtered = q
+    ? list.filter(e =>
+        (e.from||"").toLowerCase().includes(q) ||
+        (e.subject||"").toLowerCase().includes(q)
+      )
+    : list;
+
+  emailList.innerHTML = filtered.length
+    ? filtered.map(e => {
+        const pill = e.isUnread ? 'status-blue' : 'status-green';
+        const label = e.isUnread ? 'Unread' : 'Read';
+        return `
+        <div class="board-row" data-id="${e.id}">
+          <div>${e.from || '-'}</div>
+          <div>${e.subject || '(no subject)'}</div>
+          <div><span class="status-pill ${pill}">${label}</span></div>
+          <div>${e.receivedAt ? timeAgo(e.receivedAt) : '-'}</div>
+          <div><button class="open-link" data-id="${e.id}">Open</button></div>
+        </div>`;
+      }).join("")
+    : `<div class="board-row"><div>No emails found</div><div>—</div><div>—</div><div>—</div><div>—</div></div>`;
+}
+
 
   async function fetchAllUsers() {
     const snap = await getDocs(collection(db, "users"));
@@ -602,32 +743,35 @@ function gateComposer() {
   }
 
   function startEmailsListener() {
-    const qEmails = query(
-      collection(db, "emails"),
-      orderBy("receivedAt", "desc"),
-      limit(200)
-    );
-    unsubscribeEmails = onSnapshot(qEmails, (snap) => {
-      const rows = [];
-      snap.forEach(docu => {
-        const d = docu.data() || {};
-        const ts = d.receivedAt?.toDate ? d.receivedAt.toDate().toISOString() : (d.receivedAt || "");
-        rows.push({
-          id: docu.id,
-          from: d.from || "",
-          subject: d.subject || "",
-          receivedAt: ts,
-          gmailLink: d.gmailLink || "",
-          isUnread: d.isUnread === true
-        });
+  const qEmails = query(
+    collection(db, "emails"),
+    orderBy("receivedAt", "desc"),
+    limit(200)
+  );
+  unsubscribeEmails = onSnapshot(qEmails, (snap) => {
+    const rows = [];
+    snap.forEach(docu => {
+      const d = docu.data() || {};
+      const ts = d.receivedAt?.toDate ? d.receivedAt.toDate().toISOString() : (d.receivedAt || "");
+      rows.push({
+        id: docu.id,
+        from: d.from || "",
+        subject: d.subject || "",
+        receivedAt: ts,
+        gmailLink: d.gmailLink || "",
+        isUnread: d.isUnread === true,
+        // Try common field names for body content
+        bodyHtml: d.bodyHtml || d.html || "",
+        bodyText: d.bodyText || d.body || d.snippet || ""
       });
-      cachedEmails = rows;
-      renderEmails(cachedEmails, emailSearch?.value || "");
-    }, (err) => {
-      console.error("emails onSnapshot error:", err);
-      emailList.innerHTML = `<div class="board-row"><div>Error loading emails</div><div>—</div><div>—</div><div>—</div><div>—</div></div>`;
     });
-  }
+    cachedEmails = rows;
+    renderEmails(cachedEmails, emailSearch?.value || "");
+  }, (err) => {
+    console.error("emails onSnapshot error:", err);
+    emailList.innerHTML = `<div class="board-row"><div>Error loading emails</div><div>—</div><div>—</div><div>—</div></div>`;
+  });
+}
   function stopEmailsListener() {
     if (unsubscribeEmails) { unsubscribeEmails(); unsubscribeEmails = null; }
   }
