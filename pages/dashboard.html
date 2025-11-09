@@ -109,10 +109,43 @@
     .backdrop.show{opacity:1;pointer-events:auto}
 
     /* Email board grid */
-    #email-board .board-row{
-      grid-template-columns: 2fr 3fr 1fr 1.4fr 0.8fr;
-    }
-    #email-board .open-link{ text-decoration:underline; cursor:pointer; }
+    /* Email board grid — keep header and rows identical */
+#email-board .board-header-row,
+#email-board .board-row{
+  grid-template-columns: 2fr 3fr 1fr 1.4fr 0.8fr; /* From | Subject | Status | Received | Open */
+}
+
+/* Alignments */
+#email-board .board-header-row > div:nth-child(3),
+#email-board .board-row        > div:nth-child(3){ /* Status */
+  text-align: center;
+}
+
+#email-board .board-header-row > div:nth-child(4),
+#email-board .board-row        > div:nth-child(4){ /* Received */
+  text-align: right;
+  white-space: nowrap;
+}
+
+#email-board .board-header-row > div:nth-child(5),
+#email-board .board-row        > div:nth-child(5){ /* Open */
+  text-align: center;
+}
+
+/* Keep subject on one line with ellipsis to prevent wrapping */
+#email-board .board-row > div:nth-child(2){
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Link styling */
+#email-board .open-link{
+  text-decoration: underline;
+  cursor: pointer;
+  display: inline-block;
+}
+
 
     @media (max-width:1024px){
       #main-dashboard{grid-template-columns:200px 1fr}
