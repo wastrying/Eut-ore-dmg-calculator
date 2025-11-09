@@ -295,7 +295,11 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, query, orderBy, limit, onSnapshot, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import {
+  getFirestore, doc, getDoc, setDoc, deleteDoc, collection,
+  getDocs, query, orderBy, limit, onSnapshot, updateDoc,
+  serverTimestamp, addDoc
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
@@ -361,6 +365,106 @@
   const emailPlain = document.getElementById("email-plain");
   const emailModalSubject = document.getElementById("email-modal-subject");
   const emailModalMeta = document.getElementById("email-modal-meta");
+  // ---- Reply UI (script-only injection; no HTML edits needed) ----
+const emailModalContent = document.querySelector('.email-modal-content');
+const emailModalHeader  = document.querySelector('.email-modal-header');
+let replyUI = { built:false, box:null, to:null, subject:null, body:null, sendBtn:null, cancelBtn:null, toggleBtn:null };
+
+function extractAddress(str){
+  if(!str) return '';
+  const lt = str.indexOf('<'), gt = str.indexOf('>');
+  if (lt !== -1 && gt !== -1 && gt > lt) return str.slice(lt+1, gt).trim();
+  return str.trim();
+}
+function prefixRe(subj){
+  if(!subj) return 'Re:';
+  return /^\s*re:/i.test(subj) ? subj : `Re: ${subj}`;
+}
+
+function ensureReplyUi(){
+  if (replyUI.built) return;
+
+  // 1) “Reply” button next to Close
+  const toggle = document.createElement('button');
+  toggle.id = 'email-reply-toggle';
+  toggle.className = 'email-modal-close';
+  toggle.type = 'button';
+  toggle.textContent = '↩ Reply';
+  emailModalHeader?.insertBefore(toggle, emailModalClose);
+
+  // 2) Reply editor above the iframe
+  const box = document.createElement('div');
+  box.id = 'email-reply-box';
+  box.style.display = 'none';
+  box.style.borderTop = '1px solid #e5e7eb';
+  box.style.borderBottom = '1px solid #e5e7eb';
+  box.style.background = '#fafafa';
+  box.style.padding = '10px 12px';
+  box.innerHTML = `
+    <div style="display:grid;grid-template-columns:70px 1fr;gap:8px;align-items:center;margin-bottom:8px">
+      <label for="reply-to">To</label>
+      <input id="reply-to" type="text" style="width:100%;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px" />
+    </div>
+    <div style="display:grid;grid-template-columns:70px 1fr;gap:8px;align-items:center;margin-bottom:8px">
+      <label for="reply-subject">Subject</label>
+      <input id="reply-subject" type="text" style="width:100%;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px" />
+    </div>
+    <div style="margin-bottom:8px">
+      <textarea id="reply-body" rows="6" placeholder="Write your reply..." style="width:100%;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px"></textarea>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px">
+      <button id="reply-cancel" type="button" class="email-modal-close">Cancel</button>
+      <button id="reply-send"   type="button" class="email-modal-close" style="background:#111827;color:#fff;border-color:#111827">Send</button>
+    </div>`;
+  emailIframe?.parentNode?.insertBefore(box, emailIframe);
+
+  // Refs + listeners
+  replyUI = {
+    built:true,
+    box,
+    to:      box.querySelector('#reply-to'),
+    subject: box.querySelector('#reply-subject'),
+    body:    box.querySelector('#reply-body'),
+    sendBtn: box.querySelector('#reply-send'),
+    cancelBtn: box.querySelector('#reply-cancel'),
+    toggleBtn: toggle
+  };
+
+  toggle.addEventListener('click', ()=>{
+    box.style.display = (box.style.display === 'none') ? 'block' : 'none';
+  });
+  replyUI.cancelBtn.addEventListener('click', ()=>{ box.style.display = 'none'; });
+
+  replyUI.sendBtn.addEventListener('click', async ()=>{
+    try{
+      const to       = (replyUI.to?.value || '').trim();
+      const subject  = (replyUI.subject?.value || '').trim();
+      const bodyText = (replyUI.body?.value || '').trim();
+      if(!to || !subject || !bodyText){ alert('To, Subject, and Body are required.'); return; }
+
+      replyUI.sendBtn.disabled = true; replyUI.sendBtn.textContent = 'Sending…';
+
+      await addDoc(collection(db,'email_outbox'), {
+        createdAt:      serverTimestamp(),
+        createdByUid:   currentUser?.uid || null,
+        createdByEmail: currentUser?.email || null,
+        to, subject, bodyText,
+        inReplyToEmailId: window.__CURRENT_EMAIL_ID__ || null,
+        status: 'pending'
+      });
+
+      alert('Reply queued to send.');
+      box.style.display = 'none';
+      if (replyUI.body) replyUI.body.value = '';
+    }catch(err){
+      console.error('Failed to queue reply:', err);
+      alert('Could not queue your reply.');
+    } finally {
+      replyUI.sendBtn.disabled = false; replyUI.sendBtn.textContent = 'Send';
+    }
+  });
+}
+
 
   function openEmailModal() {
     emailModal.classList.add("show");
@@ -391,6 +495,13 @@
     emailModalSubject.textContent = item.subject || "(no subject)";
     const when = item.receivedAt ? new Date(item.receivedAt) : null;
     emailModalMeta.textContent = `${item.from || "Unknown sender"}${when ? ` • ${when.toLocaleString()}` : ""}`;
+// Build & prefill reply UI
+ensureReplyUi();
+window.__CURRENT_EMAIL_ID__ = id;
+if (replyUI.to)      replyUI.to.value = extractAddress(item.from || '');
+if (replyUI.subject) replyUI.subject.value = prefixRe(item.subject || '');
+if (replyUI.body)    replyUI.body.value = '';
+if (replyUI.box)     replyUI.box.style.display = 'none';
 
     // Prefer HTML body; otherwise text
     if (item.bodyHtml && item.bodyHtml.trim()) {
