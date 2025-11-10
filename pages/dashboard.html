@@ -317,7 +317,7 @@ import {
 import {
   getFirestore, doc, getDoc, setDoc, deleteDoc, collection,
   getDocs, query, orderBy, limit, onSnapshot, updateDoc,
-  serverTimestamp, addDoc, deleteField
+  serverTimestamp, addDoc, deleteField, where
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 /* ======================
@@ -363,16 +363,18 @@ const emailList          = document.getElementById("email-list");
 const emailSearch        = document.getElementById("email-search");
 const emailRefreshBtn    = document.getElementById("email-refresh");
 
+/* Roles UI present in your HTML */
 const rolesBoard         = document.getElementById("roles-board");
 const rolesList          = document.getElementById("roles-list");
 const rolesSearch        = document.getElementById("roles-search");
 
-/* Mobile drawer & header/logo */
+/* We will CREATE a Members tab/board dynamically */
 const sidebarEl   = document.getElementById("sidebar");
 const openSidebarBtn = document.getElementById("open-sidebar");
 const backdropEl  = document.getElementById("backdrop");
 const root        = document.documentElement;
 
+/* Header/logo for hiding while viewer open */
 const headerRow   = document.getElementById('header-row');
 const logoEl      = document.getElementById('logo');
 const homeTapBtn  = document.getElementById('home-tap');
@@ -387,15 +389,24 @@ const emailPlain          = document.getElementById("email-plain");
 const emailModalSubject   = document.getElementById("email-modal-subject");
 const emailModalMeta      = document.getElementById("email-modal-meta");
 const emailModalHeader    = document.querySelector('.email-modal-header');
-const emailModalContent   = document.querySelector('.email-modal-content');
 
+/* Global state */
 let currentUser = null;
 let currentPlan = null;
-let allUsers = [];
-let rolesUsers = [];
+let allUsers = [];     // [{uid,email,plan,roles}]
+let rolesUsers = [];   // mirror for roles panel
 let unsubscribeEmails = null;
 let cachedEmails = [];
 let currentOpenedEmailId = null;
+
+/* ===== Members feature state/refs (built dynamically) ===== */
+let membersNavEl = null;
+let membersBoard = null;
+let membersList = null;
+let membersInput = null;
+let membersAddBtn = null;
+let unsubscribeMembers = null;
+let cachedMembers = []; // [{id, memberEmail, plan, isActive, linkedUid, linkedPlan}]
 
 /* ======================
    Small utilities
@@ -418,6 +429,9 @@ function timeAgo(iso){
   const days = Math.floor(h/24);
   return `${days}d ago`;
 }
+const isEmail = (s)=>/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test((s||'').trim());
+const normalizeEmail = (s)=> (s||'').trim().toLowerCase();
+const linkDocId = (ownerUid, memberEmail)=> `${ownerUid}__${encodeURIComponent(normalizeEmail(memberEmail))}`;
 
 /* ======================
    Drawer helpers (mobile)
@@ -450,30 +464,40 @@ sidebarEl?.addEventListener("click", (e)=>{ if (e.target.closest(".nav-item")) c
    ====================== */
 function showDevelopersView(){
   setNavLabelForPlan("Developers");
-  // Show Email nav for Developers
   const emailNav = sidebarEl?.querySelector('[data-nav="email"]');
   if (emailNav) emailNav.style.display = '';
-  // Show Roles nav for Devs/Enterprise (here Dev)
+
+  // Roles tab is already in HTML → show
   const rolesNav = sidebarEl?.querySelector('[data-nav="roles"]');
   if (rolesNav) rolesNav.style.display = '';
+
+  ensureMembersUi(true); // show Members tab for Dev
   devTools.style.display = "block";
   standardBoard.style.display = "none";
   emailBoard.style.display = "none";
   rolesBoard.style.display = "none";
+  membersBoard && (membersBoard.style.display = "none");
   stopEmailsListener();
+  stopMembersListener();
   renderAllUsers();
 }
 function showRegularView(){
   setNavLabelForPlan(currentPlan);
   const emailNav = sidebarEl?.querySelector('[data-nav="email"]');
   if (emailNav) emailNav.style.display = 'none';
+
+  // Roles tab visible only for Enterprise
   const rolesNav = sidebarEl?.querySelector('[data-nav="roles"]');
   if (rolesNav) rolesNav.style.display = (currentPlan === 'Enterprise') ? '' : 'none';
+
+  ensureMembersUi(currentPlan === 'Enterprise'); // show Members only for Enterprise
   devTools.style.display = "none";
   standardBoard.style.display = "block";
   emailBoard.style.display = "none";
   rolesBoard.style.display = "none";
+  membersBoard && (membersBoard.style.display = "none");
   stopEmailsListener();
+  stopMembersListener();
 }
 function applyPlanUi(plan){
   currentPlan = plan || null;
@@ -482,20 +506,16 @@ function applyPlanUi(plan){
     switch (plan) {
       case "Basic":
         boardTitle.textContent = "Basic Monitoring Board";
-        boardSubtitle.textContent = "Lightweight overview for individual usage.";
-        break;
+        boardSubtitle.textContent = "Lightweight overview for individual usage."; break;
       case "Premium":
         boardTitle.textContent = "Premium Team Workspace";
-        boardSubtitle.textContent = "Collaborative overview for teams and advanced alerts.";
-        break;
+        boardSubtitle.textContent = "Collaborative overview for teams and advanced alerts."; break;
       case "Enterprise":
         boardTitle.textContent = "Enterprise Control Center";
-        boardSubtitle.textContent = "Full-scale visibility, integrations, and governance.";
-        break;
+        boardSubtitle.textContent = "Full-scale visibility, integrations, and governance."; break;
       case "Developers":
         boardTitle.textContent = "Developer Command Center";
-        boardSubtitle.textContent = "Internal tools, diagnostics, and elevated limits.";
-        break;
+        boardSubtitle.textContent = "Internal tools, diagnostics, and elevated limits."; break;
       default:
         boardTitle.textContent = "Remblyx Workspace";
         boardSubtitle.textContent = "Overview of your monitoring items, owners, and status.";
@@ -518,6 +538,34 @@ async function ensureDevelopersPlanIfAllowed(user){
     return "Developers";
   } catch { return null; }
 }
+
+/* If a user is a member of someone’s plan, auto-apply it on sign-in */
+async function maybeApplyInboundMembership(user, currentLoadedPlan){
+  try{
+    // Single-field equality → fine without composite index
+    const qLinks = query(collection(db,'plan_links'), where('memberEmail','==', (user.email||'').toLowerCase()));
+    const snap = await getDocs(qLinks);
+    if (snap.empty) return currentLoadedPlan;
+
+    // Find any active link
+    let applied = currentLoadedPlan;
+    snap.forEach(d=>{
+      const f = d.data()||{};
+      if (f.isActive !== false && f.plan){
+        applied = f.plan; // take first active
+      }
+    });
+    if (applied && applied !== currentLoadedPlan){
+      await setDoc(doc(db,'users', user.uid), { plan: applied }, { merge:true });
+      return applied;
+    }
+    return currentLoadedPlan;
+  } catch(e){
+    console.warn('inbound membership check failed', e);
+    return currentLoadedPlan;
+  }
+}
+
 async function loadUserPlan(user){
   try {
     const ref = doc(db,"users",user.uid);
@@ -526,9 +574,7 @@ async function loadUserPlan(user){
       await setDoc(ref, { email: user.email || null, plan: "Basic" }, { merge:true });
       return "Basic";
     }
-    let plan = snap.data().plan;
-    if (plan === "Dev"){ await setDoc(ref,{ plan: "Developers"},{ merge:true}); plan = "Developers"; }
-    return plan;
+    return snap.data().plan;
   } catch { return "Basic"; }
 }
 
@@ -687,11 +733,142 @@ rolesList?.addEventListener('click', async (e)=>{
     alert('Could not save roles. Check Firestore rules & permissions.');
   }
 });
-async function showRolesPanel(){
-  if (!canManageRoles()){ alert("Only Enterprise/Developers can access Roles."); return; }
-  await fetchAllUsers();
-  renderRoles(rolesSearch?.value || "");
+
+/* ======================
+   Members (Enterprise + Developers)
+   ====================== */
+function canManageMembers(){ return currentPlan === 'Developers' || currentPlan === 'Enterprise'; }
+function ensureMembersUi(show){
+  // Create sidebar nav if missing
+  if (!membersNavEl){
+    membersNavEl = document.createElement('div');
+    membersNavEl.className = 'nav-item';
+    membersNavEl.setAttribute('data-nav','members');
+    membersNavEl.style.display = 'none';
+    membersNavEl.innerHTML = `<span class="icon-dot"></span><span class="label">Members</span>`;
+    sidebarEl?.insertBefore(membersNavEl, sidebarEl.querySelector('.sidebar-spacer'));
+  }
+  // Create board if missing
+  if (!membersBoard){
+    membersBoard = document.createElement('div');
+    membersBoard.id = 'members-board';
+    membersBoard.className = 'board-wrapper';
+    membersBoard.style.display = 'none';
+    membersBoard.innerHTML = `
+      <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap">
+        <input id="member-email-input" class="search-box" placeholder="Add Gmail (member@example.com)..." style="flex:1; min-width:260px" />
+        <button id="member-add-btn" class="mobile-menu-btn" aria-label="Add">＋</button>
+      </div>
+      <div class="dev-grid-header">
+        <div>Email</div><div>Status</div>
+      </div>
+      <div id="members-list"></div>
+    `;
+    // Insert after existing boards
+    standardBoard.parentNode.insertBefore(membersBoard, emailBoard.nextSibling);
+    // Wire refs
+    membersList  = membersBoard.querySelector('#members-list');
+    membersInput = membersBoard.querySelector('#member-email-input');
+    membersAddBtn= membersBoard.querySelector('#member-add-btn');
+
+    membersAddBtn?.addEventListener('click', onAddMemberClick);
+  }
+  // Toggle visibility of nav
+  membersNavEl.style.display = show ? '' : 'none';
 }
+function onAddMemberClick(){
+  const raw = membersInput?.value || '';
+  const email = normalizeEmail(raw);
+  if (!isEmail(email)){ alert('Please enter a valid email.'); return; }
+  addMember(email).catch(e=>{
+    console.error('addMember failed', e);
+    alert('Could not add member. Check your permissions.');
+  });
+}
+function memberRow(item){
+  const status = item.linkedUid ? `Linked${item.linkedPlan ? ' ('+item.linkedPlan+')' : ''}` : 'Pending';
+  return `<div class="dev-grid-row" data-id="${item.id}">
+    <div>${item.memberEmail}</div>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <span class="inline-status">${status}</span>
+      <button class="mobile-menu-btn member-remove" title="Remove" aria-label="Remove">✕</button>
+    </div>
+  </div>`;
+}
+function renderMembers(){
+  if (!membersList) return;
+  membersList.innerHTML = cachedMembers.length
+    ? cachedMembers.map(memberRow).join('')
+    : `<div class="dev-grid-row"><div>No members yet</div><div>—</div></div>`;
+}
+function stopMembersListener(){ if (unsubscribeMembers){ unsubscribeMembers(); unsubscribeMembers=null; } }
+function startMembersListener(){
+  stopMembersListener();
+  if (!currentUser) return;
+  const qLinks = query(collection(db,'plan_links')/* where ownerUid == me: we’ll filter client-side to avoid extra index */);
+  unsubscribeMembers = onSnapshot(qLinks, async (snap)=>{
+    const rows = [];
+    snap.forEach(d=>{
+      const f = d.data()||{};
+      if (f.ownerUid === currentUser.uid && f.isActive !== false){
+        rows.push({
+          id: d.id,
+          memberEmail: f.memberEmail || '',
+          plan: f.plan || '',
+          isActive: f.isActive !== false
+        });
+      }
+    });
+    // Enrich with linkage to users list
+    if (!allUsers.length) await fetchAllUsers();
+    rows.forEach(r=>{
+      const u = allUsers.find(x => (x.email||'').toLowerCase() === r.memberEmail.toLowerCase());
+      if (u){ r.linkedUid = u.uid; r.linkedPlan = u.plan; }
+    });
+    cachedMembers = rows.sort((a,b)=> a.memberEmail.localeCompare(b.memberEmail));
+    renderMembers();
+  }, (err)=>{
+    console.error('members snapshot error', err);
+    cachedMembers = [];
+    renderMembers();
+  });
+}
+async function addMember(memberEmail){
+  if (!canManageMembers()) { alert('Only Enterprise/Developers can add members.'); return; }
+  const id = linkDocId(currentUser.uid, memberEmail);
+  await setDoc(doc(db,'plan_links', id), {
+    ownerUid: currentUser.uid,
+    ownerEmail: (currentUser.email||'').toLowerCase(),
+    memberEmail: memberEmail.toLowerCase(),
+    plan: currentPlan,            // same plan as owner
+    createdAt: serverTimestamp(),
+    isActive: true
+  }, { merge:true });
+
+  // If member already has an account, push the plan immediately
+  if (!allUsers.length) await fetchAllUsers();
+  const existing = allUsers.find(u => (u.email||'').toLowerCase() === memberEmail.toLowerCase());
+  if (existing){
+    await setDoc(doc(db,'users', existing.uid), { plan: currentPlan }, { merge:true });
+  }
+  membersInput && (membersInput.value = '');
+}
+async function removeMember(id){
+  // Soft delete (do not auto-downgrade user)
+  await setDoc(doc(db,'plan_links', id), { isActive:false }, { merge:true });
+}
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest('.member-remove');
+  if (!btn) return;
+  const row = btn.closest('.dev-grid-row');
+  const id  = row?.getAttribute('data-id');
+  if (!id) return;
+  if (!confirm('Remove this member from your plan?')) return;
+  removeMember(id).catch(err=>{
+    console.error('remove member error', err);
+    alert('Could not remove member.');
+  });
+});
 
 /* ======================
    Email board + viewer + reply
@@ -771,7 +948,6 @@ function ensureReplyUi(){
         status: 'pending'
       });
 
-      // Optimistic mark on the original email doc
       try {
         await setDoc(doc(db, "emails", currentOpenedEmailId), {
           hasReplied: true,
@@ -806,7 +982,6 @@ function openEmailModal(){
   emailModal.classList.add("show");
   emailModal.setAttribute("aria-hidden","false");
   document.addEventListener("keydown", e => { if (e.key==="Escape") closeEmailModal(); }, { once:true });
-  // Hide header/logo while open
   document.documentElement.classList.add('viewer-open');
   if (headerRow) headerRow.hidden = true;
 }
@@ -817,7 +992,6 @@ function closeEmailModal(){
   emailPlain.textContent = "";
   emailPlain.style.display = "none";
   emailIframe.style.display = "block";
-  // Restore header/logo
   document.documentElement.classList.remove('viewer-open');
   if (headerRow) headerRow.hidden = false;
 }
@@ -862,7 +1036,6 @@ function renderEmails(list, filter=""){
       }).join("")
     : `<div class="board-row"><div>No emails found</div><div>—</div><div>—</div><div>—</div><div>—</div></div>`;
 }
-
 function startEmailsListener(){
   const qEmails = query(collection(db,"emails"), orderBy("receivedAt","desc"), limit(200));
   unsubscribeEmails = onSnapshot(qEmails, (snap)=>{
@@ -892,10 +1065,8 @@ function startEmailsListener(){
   });
 }
 function stopEmailsListener(){ if (unsubscribeEmails){ unsubscribeEmails(); unsubscribeEmails=null; } }
-
 emailSearch?.addEventListener("input", ()=>renderEmails(cachedEmails, emailSearch.value));
 emailRefreshBtn?.addEventListener("click", ()=>renderEmails(cachedEmails, emailSearch?.value || ""));
-
 emailList?.addEventListener("click", async (ev)=>{
   const btn = ev.target.closest(".open-link");
   if (!btn) return;
@@ -910,10 +1081,13 @@ emailList?.addEventListener("click", async (ev)=>{
   emailModalMeta.textContent = `${item.from || "Unknown sender"}${when ? ` • ${when.toLocaleString()}` : ""}`;
 
   ensureReplyUi();
-  if (replyUI.to)      replyUI.to.value = extractAddress(item.from || '');
-  if (replyUI.subject) replyUI.subject.value = prefixRe(item.subject || '');
-  if (replyUI.body)    replyUI.body.value = '';
-  if (replyUI.box)     replyUI.box.style.display = 'none';
+  const toAddr = extractAddress(item.from||'');
+  const subj   = item.subject||'';
+  const bodyT  = '';
+  replyUI.to && (replyUI.to.value = toAddr);
+  replyUI.subject && (replyUI.subject.value = prefixRe(subj));
+  replyUI.body && (replyUI.body.value = bodyT);
+  replyUI.box && (replyUI.box.style.display = 'none');
 
   if (item.bodyHtml && item.bodyHtml.trim()){
     emailIframe.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><base target="_blank">
@@ -941,7 +1115,7 @@ emailList?.addEventListener("click", async (ev)=>{
       renderEmails(cachedEmails, emailSearch?.value || "");
     } catch (e){ console.warn("Couldn't mark as read:", e); }
   }
-
+  emailModal.classList.add("show");
   openEmailModal();
 });
 
@@ -960,8 +1134,10 @@ sidebarEl?.addEventListener("click", async (e)=>{
   devTools.style.display      = "none";
   standardBoard.style.display = "none";
   emailBoard.style.display    = "none";
-  rolesBoard.style.display    = "none";
+  rolesBoard && (rolesBoard.style.display = "none");
+  membersBoard && (membersBoard.style.display = "none");
   stopEmailsListener();
+  stopMembersListener();
 
   if (dest === 'roles'){
     if (!canManageRoles()){
@@ -972,6 +1148,17 @@ sidebarEl?.addEventListener("click", async (e)=>{
     rolesBoard.style.display = "block";
     await fetchAllUsers();
     renderRoles(rolesSearch?.value || "");
+    return;
+  }
+
+  if (dest === 'members'){
+    if (!canManageMembers()){
+      alert("Only Enterprise/Developers can access Members.");
+      standardBoard.style.display = "block";
+      return;
+    }
+    membersBoard.style.display = "block";
+    startMembersListener();
     return;
   }
 
@@ -991,7 +1178,6 @@ sidebarEl?.addEventListener("click", async (e)=>{
     return;
   }
 
-  // Alerts/Reports/Integrations → reuse standard board
   standardBoard.style.display = "block";
 });
 
@@ -1003,8 +1189,10 @@ onAuthStateChanged(auth, async (user)=>{
   currentUser = user;
   setDashboardVisibility(true);
   try {
-    const forced = await ensureDevelopersPlanIfAllowed(user);
-    const plan   = forced || await loadUserPlan(user);
+    const forced = await ensureDevelopersPlanIfAllowed(user);  // may auto-promote to Developers
+    let plan   = forced || await loadUserPlan(user);
+    // If not Developers (forced), allow inbound membership to set plan
+    if (!forced) plan = await maybeApplyInboundMembership(user, plan);
     applyPlanUi(plan);
   } catch (e){
     console.error("Dashboard init error:", e);
