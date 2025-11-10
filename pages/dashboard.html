@@ -363,32 +363,31 @@ const emailList          = document.getElementById("email-list");
 const emailSearch        = document.getElementById("email-search");
 const emailRefreshBtn    = document.getElementById("email-refresh");
 
-/* Roles UI present in your HTML */
 const rolesBoard         = document.getElementById("roles-board");
 const rolesList          = document.getElementById("roles-list");
 const rolesSearch        = document.getElementById("roles-search");
 
-/* We will CREATE a Members tab/board dynamically */
-const sidebarEl   = document.getElementById("sidebar");
-const openSidebarBtn = document.getElementById("open-sidebar");
-const backdropEl  = document.getElementById("backdrop");
-const root        = document.documentElement;
+/* Created dynamically for Members */
+const sidebarEl          = document.getElementById("sidebar");
+const openSidebarBtn     = document.getElementById("open-sidebar");
+const backdropEl         = document.getElementById("backdrop");
+const root               = document.documentElement;
 
-/* Header/logo for hiding while viewer open */
-const headerRow   = document.getElementById('header-row');
-const logoEl      = document.getElementById('logo');
-const homeTapBtn  = document.getElementById('home-tap');
-let savedLogoOnclick = null;
+/* Header/logo (hide while viewer open) */
+const headerRow          = document.getElementById('header-row');
+const logoEl             = document.getElementById('logo');
+const homeTapBtn         = document.getElementById('home-tap');
+let savedLogoOnclick     = null;
 
 /* Email modal */
-const emailModal          = document.getElementById("email-modal");
-const emailModalBackdrop  = document.getElementById("email-modal-backdrop");
-const emailModalClose     = document.getElementById("email-modal-close");
-const emailIframe         = document.getElementById("email-iframe");
-const emailPlain          = document.getElementById("email-plain");
-const emailModalSubject   = document.getElementById("email-modal-subject");
-const emailModalMeta      = document.getElementById("email-modal-meta");
-const emailModalHeader    = document.querySelector('.email-modal-header');
+const emailModal         = document.getElementById("email-modal");
+const emailModalBackdrop = document.getElementById("email-modal-backdrop");
+const emailModalClose    = document.getElementById("email-modal-close");
+const emailIframe        = document.getElementById("email-iframe");
+const emailPlain         = document.getElementById("email-plain");
+const emailModalSubject  = document.getElementById("email-modal-subject");
+const emailModalMeta     = document.getElementById("email-modal-meta");
+const emailModalHeader   = document.querySelector('.email-modal-header');
 
 /* Global state */
 let currentUser = null;
@@ -399,7 +398,7 @@ let unsubscribeEmails = null;
 let cachedEmails = [];
 let currentOpenedEmailId = null;
 
-/* ===== Members feature state/refs (built dynamically) ===== */
+/* Members feature refs/state (built dynamically) */
 let membersNavEl = null;
 let membersBoard = null;
 let membersList = null;
@@ -409,7 +408,7 @@ let unsubscribeMembers = null;
 let cachedMembers = []; // [{id, memberEmail, plan, isActive, linkedUid, linkedPlan}]
 
 /* ======================
-   Small utilities
+   Utilities
    ====================== */
 function setDashboardVisibility(show){ if (mainDashboard) mainDashboard.style.display = show ? "grid" : "none"; }
 function safeTxt(el, txt){ if (el) el.textContent = txt; }
@@ -460,18 +459,15 @@ window.addEventListener("keydown", (e)=>{ if (e.key === "Escape") closeDrawer();
 sidebarEl?.addEventListener("click", (e)=>{ if (e.target.closest(".nav-item")) closeDrawer(); });
 
 /* ======================
-   Plan gating
+   Plan gating & init
    ====================== */
 function showDevelopersView(){
   setNavLabelForPlan("Developers");
   const emailNav = sidebarEl?.querySelector('[data-nav="email"]');
   if (emailNav) emailNav.style.display = '';
-
-  // Roles tab is already in HTML → show
   const rolesNav = sidebarEl?.querySelector('[data-nav="roles"]');
   if (rolesNav) rolesNav.style.display = '';
-
-  ensureMembersUi(true); // show Members tab for Dev
+  ensureMembersUi(true);
   devTools.style.display = "block";
   standardBoard.style.display = "none";
   emailBoard.style.display = "none";
@@ -485,12 +481,9 @@ function showRegularView(){
   setNavLabelForPlan(currentPlan);
   const emailNav = sidebarEl?.querySelector('[data-nav="email"]');
   if (emailNav) emailNav.style.display = 'none';
-
-  // Roles tab visible only for Enterprise
   const rolesNav = sidebarEl?.querySelector('[data-nav="roles"]');
   if (rolesNav) rolesNav.style.display = (currentPlan === 'Enterprise') ? '' : 'none';
-
-  ensureMembersUi(currentPlan === 'Enterprise'); // show Members only for Enterprise
+  ensureMembersUi(currentPlan === 'Enterprise');
   devTools.style.display = "none";
   standardBoard.style.display = "block";
   emailBoard.style.display = "none";
@@ -500,10 +493,11 @@ function showRegularView(){
   stopMembersListener();
 }
 function applyPlanUi(plan){
-  currentPlan = plan || null;
+  currentPlan = (plan || '').trim();
   safeTxt(planNameEl, currentPlan || "-");
+
   if (boardTitle && boardSubtitle) {
-    switch (plan) {
+    switch (currentPlan) {
       case "Basic":
         boardTitle.textContent = "Basic Monitoring Board";
         boardSubtitle.textContent = "Lightweight overview for individual usage."; break;
@@ -521,10 +515,21 @@ function applyPlanUi(plan){
         boardSubtitle.textContent = "Overview of your monitoring items, owners, and status.";
     }
   }
+
+  const canMembers = ["Enterprise","Developers"].includes(currentPlan);
+  const emailNav = sidebarEl?.querySelector('[data-nav="email"]');
+  if (emailNav) emailNav.style.display = (currentPlan === "Developers") ? '' : 'none';
+  const rolesNav = sidebarEl?.querySelector('[data-nav="roles"]');
+  if (rolesNav) rolesNav.style.display = canMembers ? '' : 'none';
+  ensureMembersUi(canMembers);
+  if (membersAddBtn) membersAddBtn.disabled = !canMembers;
+
   sidebarPlanEl?.classList.remove("locked");
-  if (sidebarPlanEl) sidebarPlanEl.title = (plan === "Developers") ? "Edit plan (developer)" : "Change subscription plan";
-  deleteAccountLink && (deleteAccountLink.style.display = "block");
-  (plan === "Developers") ? showDevelopersView() : showRegularView();
+  if (sidebarPlanEl) sidebarPlanEl.title = (currentPlan === "Developers") ? "Edit plan (developer)" : "Change subscription plan";
+  if (deleteAccountLink) deleteAccountLink.style.display = "block";
+
+  (currentPlan === "Developers") ? showDevelopersView() : showRegularView();
+  console.log('[RBX] currentPlan =', currentPlan, 'members enabled =', canMembers);
 }
 async function ensureDevelopersPlanIfAllowed(user){
   const isDev = DEV_EMAILS.includes((user.email || "").toLowerCase());
@@ -538,22 +543,19 @@ async function ensureDevelopersPlanIfAllowed(user){
     return "Developers";
   } catch { return null; }
 }
-
-/* If a user is a member of someone’s plan, auto-apply it on sign-in */
 async function maybeApplyInboundMembership(user, currentLoadedPlan){
   try{
-    // Single-field equality → fine without composite index
-    const qLinks = query(collection(db,'plan_links'), where('memberEmail','==', (user.email||'').toLowerCase()));
+    const qLinks = query(
+      collection(db,'plan_links'),
+      where('memberEmail','==', (user.email||'').toLowerCase())
+    );
     const snap = await getDocs(qLinks);
     if (snap.empty) return currentLoadedPlan;
 
-    // Find any active link
     let applied = currentLoadedPlan;
     snap.forEach(d=>{
       const f = d.data()||{};
-      if (f.isActive !== false && f.plan){
-        applied = f.plan; // take first active
-      }
+      if (f.isActive !== false && f.plan){ applied = f.plan; }
     });
     if (applied && applied !== currentLoadedPlan){
       await setDoc(doc(db,'users', user.uid), { plan: applied }, { merge:true });
@@ -565,7 +567,6 @@ async function maybeApplyInboundMembership(user, currentLoadedPlan){
     return currentLoadedPlan;
   }
 }
-
 async function loadUserPlan(user){
   try {
     const ref = doc(db,"users",user.uid);
@@ -668,7 +669,7 @@ searchInput?.addEventListener('input', ()=>renderList(searchInput.value));
    Roles (Enterprise + Developers)
    ====================== */
 const ROLE_KEYS = ['admin','manager','support'];
-function canManageRoles(){ return currentPlan === 'Developers' || currentPlan === 'Enterprise'; }
+function canManageRoles(){ return ["Developers","Enterprise"].includes(currentPlan); }
 function roleChip(role, active){
   return `<button class="role-chip ${active?'active':''}" data-role="${role}" aria-pressed="${active?'true':'false'}">
     <span class="dot"></span>${role}
@@ -737,9 +738,8 @@ rolesList?.addEventListener('click', async (e)=>{
 /* ======================
    Members (Enterprise + Developers)
    ====================== */
-function canManageMembers(){ return currentPlan === 'Developers' || currentPlan === 'Enterprise'; }
+function canManageMembers(){ return ["Developers","Enterprise"].includes(currentPlan); }
 function ensureMembersUi(show){
-  // Create sidebar nav if missing
   if (!membersNavEl){
     membersNavEl = document.createElement('div');
     membersNavEl.className = 'nav-item';
@@ -748,7 +748,6 @@ function ensureMembersUi(show){
     membersNavEl.innerHTML = `<span class="icon-dot"></span><span class="label">Members</span>`;
     sidebarEl?.insertBefore(membersNavEl, sidebarEl.querySelector('.sidebar-spacer'));
   }
-  // Create board if missing
   if (!membersBoard){
     membersBoard = document.createElement('div');
     membersBoard.id = 'members-board';
@@ -759,31 +758,21 @@ function ensureMembersUi(show){
         <input id="member-email-input" class="search-box" placeholder="Add Gmail (member@example.com)..." style="flex:1; min-width:260px" />
         <button id="member-add-btn" class="mobile-menu-btn" aria-label="Add">＋</button>
       </div>
-      <div class="dev-grid-header">
-        <div>Email</div><div>Status</div>
-      </div>
+      <div class="dev-grid-header"><div>Email</div><div>Status</div></div>
       <div id="members-list"></div>
     `;
-    // Insert after existing boards
     standardBoard.parentNode.insertBefore(membersBoard, emailBoard.nextSibling);
-    // Wire refs
-    membersList  = membersBoard.querySelector('#members-list');
-    membersInput = membersBoard.querySelector('#member-email-input');
-    membersAddBtn= membersBoard.querySelector('#member-add-btn');
+    membersList   = membersBoard.querySelector('#members-list');
+    membersInput  = membersBoard.querySelector('#member-email-input');
+    membersAddBtn = membersBoard.querySelector('#member-add-btn');
 
     membersAddBtn?.addEventListener('click', onAddMemberClick);
+    membersInput?.addEventListener('keydown', (e)=>{
+      if (e.key === 'Enter') { e.preventDefault(); onAddMemberClick(); }
+    });
   }
-  // Toggle visibility of nav
   membersNavEl.style.display = show ? '' : 'none';
-}
-function onAddMemberClick(){
-  const raw = membersInput?.value || '';
-  const email = normalizeEmail(raw);
-  if (!isEmail(email)){ alert('Please enter a valid email.'); return; }
-  addMember(email).catch(e=>{
-    console.error('addMember failed', e);
-    alert('Could not add member. Check your permissions.');
-  });
+  if (membersAddBtn) membersAddBtn.disabled = !show;
 }
 function memberRow(item){
   const status = item.linkedUid ? `Linked${item.linkedPlan ? ' ('+item.linkedPlan+')' : ''}` : 'Pending';
@@ -805,12 +794,13 @@ function stopMembersListener(){ if (unsubscribeMembers){ unsubscribeMembers(); u
 function startMembersListener(){
   stopMembersListener();
   if (!currentUser) return;
-  const qLinks = query(collection(db,'plan_links')/* where ownerUid == me: we’ll filter client-side to avoid extra index */);
+  // Restrict by ownerUid to satisfy rules (no leakage)
+  const qLinks = query(collection(db,'plan_links'), where('ownerUid','==', currentUser.uid));
   unsubscribeMembers = onSnapshot(qLinks, async (snap)=>{
     const rows = [];
     snap.forEach(d=>{
       const f = d.data()||{};
-      if (f.ownerUid === currentUser.uid && f.isActive !== false){
+      if (f.isActive !== false){
         rows.push({
           id: d.id,
           memberEmail: f.memberEmail || '',
@@ -819,7 +809,6 @@ function startMembersListener(){
         });
       }
     });
-    // Enrich with linkage to users list
     if (!allUsers.length) await fetchAllUsers();
     rows.forEach(r=>{
       const u = allUsers.find(x => (x.email||'').toLowerCase() === r.memberEmail.toLowerCase());
@@ -833,28 +822,58 @@ function startMembersListener(){
     renderMembers();
   });
 }
+function onAddMemberClick(){
+  const raw = membersInput?.value || '';
+  const email = normalizeEmail(raw);
+  const can = canManageMembers();
+
+  if (!can){ alert('Only Enterprise/Developers can add members.'); return; }
+  if (!isEmail(email)){ alert('Please enter a valid email (e.g., user@gmail.com).'); return; }
+
+  membersAddBtn.disabled = true;
+  membersAddBtn.textContent = '…';
+  addMember(email).then(()=>{
+    membersInput.value = '';
+  }).catch((err)=>{
+    console.error('[RBX] addMember error', err);
+    const msg = (err && err.code) ? `${err.code}: ${err.message||''}` : String(err);
+    alert('Could not add member.\n' + msg);
+  }).finally(()=>{
+    membersAddBtn.disabled = false;
+    membersAddBtn.textContent = '＋';
+  });
+}
 async function addMember(memberEmail){
-  if (!canManageMembers()) { alert('Only Enterprise/Developers can add members.'); return; }
+  if (!currentUser) throw new Error('Not signed in');
+  const planNow = (currentPlan || '').trim();
+  if (!['Enterprise','Developers'].includes(planNow)) throw new Error('plan-not-eligible');
+
   const id = linkDocId(currentUser.uid, memberEmail);
   await setDoc(doc(db,'plan_links', id), {
     ownerUid: currentUser.uid,
     ownerEmail: (currentUser.email||'').toLowerCase(),
     memberEmail: memberEmail.toLowerCase(),
-    plan: currentPlan,            // same plan as owner
+    plan: planNow,
     createdAt: serverTimestamp(),
     isActive: true
   }, { merge:true });
 
-  // If member already has an account, push the plan immediately
-  if (!allUsers.length) await fetchAllUsers();
-  const existing = allUsers.find(u => (u.email||'').toLowerCase() === memberEmail.toLowerCase());
-  if (existing){
-    await setDoc(doc(db,'users', existing.uid), { plan: currentPlan }, { merge:true });
+  // If member already has an account, align plan immediately (best effort)
+  try {
+    const qUsers = await getDocs(collection(db,'users'));
+    let matched = null;
+    qUsers.forEach(d=>{
+      const data = d.data()||{};
+      if ((data.email||'').toLowerCase() === memberEmail.toLowerCase()) { matched = d.id; }
+    });
+    if (matched) {
+      await setDoc(doc(db,'users', matched), { plan: planNow }, { merge:true });
+    }
+  } catch (e) {
+    console.warn('[RBX] optional plan push failed', e);
   }
-  membersInput && (membersInput.value = '');
 }
 async function removeMember(id){
-  // Soft delete (do not auto-downgrade user)
   await setDoc(doc(db,'plan_links', id), { isActive:false }, { merge:true });
 }
 document.addEventListener('click', (e)=>{
@@ -1083,10 +1102,9 @@ emailList?.addEventListener("click", async (ev)=>{
   ensureReplyUi();
   const toAddr = extractAddress(item.from||'');
   const subj   = item.subject||'';
-  const bodyT  = '';
   replyUI.to && (replyUI.to.value = toAddr);
   replyUI.subject && (replyUI.subject.value = prefixRe(subj));
-  replyUI.body && (replyUI.body.value = bodyT);
+  replyUI.body && (replyUI.body.value = '');
   replyUI.box && (replyUI.box.style.display = 'none');
 
   if (item.bodyHtml && item.bodyHtml.trim()){
@@ -1100,7 +1118,7 @@ emailList?.addEventListener("click", async (ev)=>{
     emailPlain.textContent = item.bodyText;
     emailPlain.style.display = "block"; emailIframe.style.display = "none";
   } else {
-    emailPlain.textContent = "This email's body isn't stored. Ask the admin to save `bodyHtml` or `bodyText` in Firestore for full in-app viewing.";
+    emailPlain.textContent = "This email's body isn't stored.";
     emailPlain.style.display = "block"; emailIframe.style.display = "none";
   }
 
@@ -1115,7 +1133,6 @@ emailList?.addEventListener("click", async (ev)=>{
       renderEmails(cachedEmails, emailSearch?.value || "");
     } catch (e){ console.warn("Couldn't mark as read:", e); }
   }
-  emailModal.classList.add("show");
   openEmailModal();
 });
 
@@ -1189,9 +1206,8 @@ onAuthStateChanged(auth, async (user)=>{
   currentUser = user;
   setDashboardVisibility(true);
   try {
-    const forced = await ensureDevelopersPlanIfAllowed(user);  // may auto-promote to Developers
+    const forced = await ensureDevelopersPlanIfAllowed(user); // may auto-promote to Developers
     let plan   = forced || await loadUserPlan(user);
-    // If not Developers (forced), allow inbound membership to set plan
     if (!forced) plan = await maybeApplyInboundMembership(user, plan);
     applyPlanUi(plan);
   } catch (e){
@@ -1236,5 +1252,6 @@ if (window.matchMedia('(max-width: 640px)').matches){
   document.getElementById('home-tap')?.addEventListener('click', ()=>{ window.location.href = '../index.html'; });
 }
 </script>
+
 </body>
 </html>
