@@ -124,8 +124,16 @@
       .top-left{flex:1}
       html.drawer-open body{ overflow:hidden; }
       .drawer-open .header-row,
-      .drawer-open #home-tap,
-      .drawer-open .logo{ opacity:0; visibility:hidden; pointer-events:none; transition: opacity .15s ease; }
+.viewer-open .header-row,
+.drawer-open #home-tap,
+.viewer-open #home-tap,
+.drawer-open .logo,
+.viewer-open .logo{
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .15s ease;
+}
     }
 
     @media (max-width:640px){
@@ -489,18 +497,27 @@ try {
 
 
   function openEmailModal() {
-    emailModal.classList.add("show");
-    emailModal.setAttribute("aria-hidden", "false");
-    document.addEventListener("keydown", escToClose, { once: true });
-  }
-  function closeEmailModal() {
-    emailModal.classList.remove("show");
-    emailModal.setAttribute("aria-hidden", "true");
-    emailIframe.srcdoc = ""; // clear
-    emailPlain.textContent = "";
-    emailPlain.style.display = "none";
-    emailIframe.style.display = "block";
-  }
+  emailModal.classList.add("show");
+  emailModal.setAttribute("aria-hidden", "false");
+  document.addEventListener("keydown", escToClose, { once: true });
+
+  // HIDE HEADER/LOGO
+  root.classList.add("viewer-open");
+}
+
+function closeEmailModal() {
+  emailModal.classList.remove("show");
+  emailModal.setAttribute("aria-hidden", "true");
+  // Clear content for safety
+  emailIframe.srcdoc = "";
+  emailPlain.textContent = "";
+  emailPlain.style.display = "none";
+  emailIframe.style.display = "block";
+
+  // SHOW HEADER/LOGO BACK
+  root.classList.remove("viewer-open");
+}
+
   function escToClose(e){ if (e.key === "Escape") closeEmailModal(); }
   emailModalBackdrop?.addEventListener("click", closeEmailModal);
   emailModalClose?.addEventListener("click", closeEmailModal);
