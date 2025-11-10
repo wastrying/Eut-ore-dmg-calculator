@@ -307,759 +307,746 @@
 
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-  import {
-    getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs,
-    query, orderBy, limit, onSnapshot, updateDoc, addDoc, serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+/* ======================
+   Firebase imports
+   ====================== */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, signOut, deleteUser
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, setDoc, deleteDoc, collection,
+  getDocs, query, orderBy, limit, onSnapshot, updateDoc,
+  serverTimestamp, addDoc, deleteField
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-  /* =======================
-     Firebase Init + Config
-     ======================= */
-  const firebaseConfig = {
-    apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
-    authDomain: "remblyx-medisignal.firebaseapp.com",
-    projectId: "remblyx-medisignal",
-    storageBucket: "remblyx-medisignal.appspot.com",
-    messagingSenderId: "50711670199",
-    appId: "1:50711670199:web:0c9c2ff72cd77234ce0c32",
-    measurementId: "G-JQ3843RM4V"
-  };
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db   = getFirestore(app);
+/* ======================
+   Firebase init
+   ====================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
+  authDomain: "remblyx-medisignal.firebaseapp.com",
+  projectId: "remblyx-medisignal",
+  storageBucket: "remblyx-medisignal.appspot.com",
+  messagingSenderId: "50711670199",
+  appId: "1:50711670199:web:0c9c2ff72cd77234ce0c32",
+  measurementId: "G-JQ3843RM4V"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
 
-  /* =======================
-     DOM + Globals
-     ======================= */
-  const DEV_EMAILS    = ["medisignal.remblyx@gmail.com"];
-  const LOGIN_URL     = "./login.html";
-  const SELECTION_URL = "./selection.html";
-  const PLAN_OPTIONS  = ["Basic","Premium","Enterprise","Developers"];
+/* ======================
+   Config / DOM handles
+   ====================== */
+const DEV_EMAILS   = ["medisignal.remblyx@gmail.com"];
+const LOGIN_URL    = "./login.html";
+const SELECTION_URL= "./selection.html";
+const PLAN_OPTIONS = ["Basic","Premium","Enterprise","Developers"];
 
-  const mainDashboard     = document.getElementById("main-dashboard");
-  const sidebarEl         = document.getElementById("sidebar");
-  const sidebarPlanEl     = document.getElementById("sidebar-plan");
-  const planNameEl        = document.getElementById("plan-name");
-  const logoutLink        = document.getElementById("logout");
-  const deleteAccountLink = document.getElementById("delete-account");
-  const boardTitle        = document.getElementById("board-title");
-  const boardSubtitle     = document.getElementById("board-subtitle");
-  const firstNavLabelEl   = document.querySelector(".nav-item .label");
+const mainDashboard      = document.getElementById("main-dashboard");
+const sidebarPlanEl      = document.getElementById("sidebar-plan");
+const planNameEl         = document.getElementById("plan-name");
+const logoutLink         = document.getElementById("logout");
+const deleteAccountLink  = document.getElementById("delete-account");
+const boardTitle         = document.getElementById("board-title");
+const boardSubtitle      = document.getElementById("board-subtitle");
+const firstNavLabelEl    = document.querySelector(".nav-item .label");
 
-  const devTools          = document.getElementById("dev-tools");
-  const devUsersContainer = document.getElementById("dev-users");
-  const standardBoard     = document.getElementById("standard-board");
+const devTools           = document.getElementById("dev-tools");
+const devUsersContainer  = document.getElementById("dev-users");
+const standardBoard      = document.getElementById("standard-board");
+const searchInput        = document.getElementById("user-search");
 
-  const emailBoard    = document.getElementById("email-board");
-  const emailList     = document.getElementById("email-list");
-  const emailSearch   = document.getElementById("email-search");
-  const emailRefresh  = document.getElementById("email-refresh");
+const emailBoard         = document.getElementById("email-board");
+const emailList          = document.getElementById("email-list");
+const emailSearch        = document.getElementById("email-search");
+const emailRefreshBtn    = document.getElementById("email-refresh");
 
-  const rolesBoard    = document.getElementById("roles-board");
-  const rolesList     = document.getElementById("roles-list");
-  const rolesSearch   = document.getElementById("roles-search");
+const rolesBoard         = document.getElementById("roles-board");
+const rolesList          = document.getElementById("roles-list");
+const rolesSearch        = document.getElementById("roles-search");
 
-  // Mobile drawer + header/branding
-  const openSidebarBtn = document.getElementById("open-sidebar");
-  const backdropEl     = document.getElementById("backdrop");
-  const headerRow      = document.getElementById("header-row");
-  const logoEl         = document.getElementById("logo");
-  const homeTapBtn     = document.getElementById("home-tap");
-  const root           = document.documentElement;
-  let savedLogoOnclick = null;
+/* Mobile drawer & header/logo */
+const sidebarEl   = document.getElementById("sidebar");
+const openSidebarBtn = document.getElementById("open-sidebar");
+const backdropEl  = document.getElementById("backdrop");
+const root        = document.documentElement;
 
-  // Email modal
-  const emailModal          = document.getElementById("email-modal");
-  const emailModalBackdrop  = document.getElementById("email-modal-backdrop");
-  const emailModalClose     = document.getElementById("email-modal-close");
-  const emailIframe         = document.getElementById("email-iframe");
-  const emailPlain          = document.getElementById("email-plain");
-  const emailModalSubject   = document.getElementById("email-modal-subject");
-  const emailModalMeta      = document.getElementById("email-modal-meta");
-  const emailModalHeader    = document.querySelector(".email-modal-header");
+const headerRow   = document.getElementById('header-row');
+const logoEl      = document.getElementById('logo');
+const homeTapBtn  = document.getElementById('home-tap');
+let savedLogoOnclick = null;
 
-  // App State
-  let currentUser  = null;
-  let currentPlan  = null;
-  let allUsers     = []; // [{uid,email,plan,roles}]
-  let rolesUsers   = []; // mirror for Roles panel
-  let cachedEmails = [];
-  let unsubscribeEmails = null;
+/* Email modal */
+const emailModal          = document.getElementById("email-modal");
+const emailModalBackdrop  = document.getElementById("email-modal-backdrop");
+const emailModalClose     = document.getElementById("email-modal-close");
+const emailIframe         = document.getElementById("email-iframe");
+const emailPlain          = document.getElementById("email-plain");
+const emailModalSubject   = document.getElementById("email-modal-subject");
+const emailModalMeta      = document.getElementById("email-modal-meta");
+const emailModalHeader    = document.querySelector('.email-modal-header');
+const emailModalContent   = document.querySelector('.email-modal-content');
 
-  /* =======================
-     Utility helpers
-     ======================= */
-  const setDashboardVisibility = (show) => { if (mainDashboard) mainDashboard.style.display = show ? "grid" : "none"; };
-  const safeTxt = (el, txt) => { if (el) el.textContent = txt; };
+let currentUser = null;
+let currentPlan = null;
+let allUsers = [];
+let rolesUsers = [];
+let unsubscribeEmails = null;
+let cachedEmails = [];
+let currentOpenedEmailId = null;
 
-  function timeAgo(iso){
-    if (!iso) return "-";
-    const d  = new Date(iso);
-    const ms = Date.now() - d.getTime();
-    const m  = Math.floor(ms/60000);
-    if (m < 1)  return "now";
-    if (m < 60) return `${m}m ago`;
-    const h = Math.floor(m/60);
-    if (h < 24) return `${h}h ago`;
-    const days = Math.floor(h/24);
-    return `${days}d ago`;
-  }
+/* ======================
+   Small utilities
+   ====================== */
+function setDashboardVisibility(show){ if (mainDashboard) mainDashboard.style.display = show ? "grid" : "none"; }
+function safeTxt(el, txt){ if (el) el.textContent = txt; }
+function setNavLabelForPlan(plan){
+  if (!firstNavLabelEl) return;
+  firstNavLabelEl.textContent = (plan === "Developers") ? "Command Center" : "Main Board";
+}
+function timeAgo(iso){
+  if (!iso) return '-';
+  const d = new Date(iso);
+  const ms = Date.now() - d.getTime();
+  const m = Math.floor(ms/60000);
+  if (m < 1) return "now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m/60);
+  if (h < 24) return `${h}h ago`;
+  const days = Math.floor(h/24);
+  return `${days}d ago`;
+}
 
-  function extractAddress(str){
-    if(!str) return '';
-    const lt = str.indexOf('<'), gt = str.indexOf('>');
-    if (lt !== -1 && gt !== -1 && gt > lt) return str.slice(lt+1, gt).trim();
-    return str.trim();
-  }
-  function prefixRe(subj){ return !subj ? "Re:" : (/^\s*re:/i.test(subj) ? subj : `Re: ${subj}`); }
+/* ======================
+   Drawer helpers (mobile)
+   ====================== */
+const openDrawer = () => {
+  if (!sidebarEl || !backdropEl) return;
+  sidebarEl.classList.add("open");
+  backdropEl.classList.add("show");
+  root.classList.add("drawer-open");
+  if (headerRow) { headerRow.setAttribute('aria-hidden','true'); headerRow.style.pointerEvents = 'none'; }
+  if (homeTapBtn){ homeTapBtn.disabled = true; homeTapBtn.style.pointerEvents  = 'none'; }
+  if (logoEl){ savedLogoOnclick = logoEl.onclick; logoEl.onclick = null; logoEl.style.pointerEvents = 'none'; }
+};
+const closeDrawer = () => {
+  if (!sidebarEl || !backdropEl) return;
+  sidebarEl.classList.remove("open");
+  backdropEl.classList.remove("show");
+  root.classList.remove("drawer-open");
+  if (headerRow) { headerRow.removeAttribute('aria-hidden'); headerRow.style.pointerEvents = ''; }
+  if (homeTapBtn){ homeTapBtn.disabled = false; homeTapBtn.style.pointerEvents = ''; }
+  if (logoEl){ logoEl.onclick = savedLogoOnclick; logoEl.style.pointerEvents = ''; }
+};
+openSidebarBtn?.addEventListener("click", openDrawer);
+backdropEl?.addEventListener("click", closeDrawer);
+window.addEventListener("keydown", (e)=>{ if (e.key === "Escape") closeDrawer(); });
+sidebarEl?.addEventListener("click", (e)=>{ if (e.target.closest(".nav-item")) closeDrawer(); });
 
-  /* =======================
-     Plan/Role gating
-     ======================= */
-  function setNavLabelForPlan(plan) {
-    if (!firstNavLabelEl) return;
-    firstNavLabelEl.textContent = (plan === "Developers") ? "Command Center" : "Main Board";
-  }
-  function canManageRoles(){ return currentPlan === "Developers" || currentPlan === "Enterprise"; }
-
-  function showDevelopersView() {
-    setNavLabelForPlan("Developers");
-    const emailNav = sidebarEl?.querySelector('[data-nav="email"]');
-    if (emailNav) emailNav.style.display = '';
-    devTools.style.display   = "block";
-    standardBoard.style.display = "none";
-    emailBoard.style.display = "none";
-    rolesBoard.style.display = "none";
-    stopEmailsListener();
-    renderAllUsers();
-  }
-  function showRegularView() {
-    setNavLabelForPlan(currentPlan);
-    const emailNav = sidebarEl?.querySelector('[data-nav="email"]');
-    if (emailNav) emailNav.style.display = 'none';
-    devTools.style.display   = "none";
-    standardBoard.style.display = "block";
-    emailBoard.style.display = "none";
-    rolesBoard.style.display = "none";
-    stopEmailsListener();
-  }
-
-  function applyPlanUi(plan) {
-    currentPlan = plan || null;
-    safeTxt(planNameEl, currentPlan || "-");
-
-    if (boardTitle && boardSubtitle) {
-      switch (plan) {
-        case "Basic":      boardTitle.textContent = "Basic Monitoring Board";      boardSubtitle.textContent = "Lightweight overview for individual usage."; break;
-        case "Premium":    boardTitle.textContent = "Premium Team Workspace";      boardSubtitle.textContent = "Collaborative overview for teams and advanced alerts."; break;
-        case "Enterprise": boardTitle.textContent = "Enterprise Control Center";   boardSubtitle.textContent = "Full-scale visibility, integrations, and governance."; break;
-        case "Developers": boardTitle.textContent = "Developer Command Center";    boardSubtitle.textContent = "Internal tools, diagnostics, and elevated limits."; break;
-        default:           boardTitle.textContent = "Remblyx Workspace";           boardSubtitle.textContent = "Overview of your monitoring items, owners, and status.";
-      }
+/* ======================
+   Plan gating
+   ====================== */
+function showDevelopersView(){
+  setNavLabelForPlan("Developers");
+  // Show Email nav for Developers
+  const emailNav = sidebarEl?.querySelector('[data-nav="email"]');
+  if (emailNav) emailNav.style.display = '';
+  // Show Roles nav for Devs/Enterprise (here Dev)
+  const rolesNav = sidebarEl?.querySelector('[data-nav="roles"]');
+  if (rolesNav) rolesNav.style.display = '';
+  devTools.style.display = "block";
+  standardBoard.style.display = "none";
+  emailBoard.style.display = "none";
+  rolesBoard.style.display = "none";
+  stopEmailsListener();
+  renderAllUsers();
+}
+function showRegularView(){
+  setNavLabelForPlan(currentPlan);
+  const emailNav = sidebarEl?.querySelector('[data-nav="email"]');
+  if (emailNav) emailNav.style.display = 'none';
+  const rolesNav = sidebarEl?.querySelector('[data-nav="roles"]');
+  if (rolesNav) rolesNav.style.display = (currentPlan === 'Enterprise') ? '' : 'none';
+  devTools.style.display = "none";
+  standardBoard.style.display = "block";
+  emailBoard.style.display = "none";
+  rolesBoard.style.display = "none";
+  stopEmailsListener();
+}
+function applyPlanUi(plan){
+  currentPlan = plan || null;
+  safeTxt(planNameEl, currentPlan || "-");
+  if (boardTitle && boardSubtitle) {
+    switch (plan) {
+      case "Basic":
+        boardTitle.textContent = "Basic Monitoring Board";
+        boardSubtitle.textContent = "Lightweight overview for individual usage.";
+        break;
+      case "Premium":
+        boardTitle.textContent = "Premium Team Workspace";
+        boardSubtitle.textContent = "Collaborative overview for teams and advanced alerts.";
+        break;
+      case "Enterprise":
+        boardTitle.textContent = "Enterprise Control Center";
+        boardSubtitle.textContent = "Full-scale visibility, integrations, and governance.";
+        break;
+      case "Developers":
+        boardTitle.textContent = "Developer Command Center";
+        boardSubtitle.textContent = "Internal tools, diagnostics, and elevated limits.";
+        break;
+      default:
+        boardTitle.textContent = "Remblyx Workspace";
+        boardSubtitle.textContent = "Overview of your monitoring items, owners, and status.";
     }
+  }
+  sidebarPlanEl?.classList.remove("locked");
+  if (sidebarPlanEl) sidebarPlanEl.title = (plan === "Developers") ? "Edit plan (developer)" : "Change subscription plan";
+  deleteAccountLink && (deleteAccountLink.style.display = "block");
+  (plan === "Developers") ? showDevelopersView() : showRegularView();
+}
+async function ensureDevelopersPlanIfAllowed(user){
+  const isDev = DEV_EMAILS.includes((user.email || "").toLowerCase());
+  if (!isDev) return null;
+  try {
+    const ref = doc(db,"users",user.uid);
+    const snap = await getDoc(ref);
+    const existing = snap.exists() ? (snap.data().plan || null) : null;
+    if (existing === "Developers") return "Developers";
+    await setDoc(ref, { email: user.email || null, plan: "Developers" }, { merge:true });
+    return "Developers";
+  } catch { return null; }
+}
+async function loadUserPlan(user){
+  try {
+    const ref = doc(db,"users",user.uid);
+    const snap = await getDoc(ref);
+    if (!snap.exists() || !snap.data().plan){
+      await setDoc(ref, { email: user.email || null, plan: "Basic" }, { merge:true });
+      return "Basic";
+    }
+    let plan = snap.data().plan;
+    if (plan === "Dev"){ await setDoc(ref,{ plan: "Developers"},{ merge:true}); plan = "Developers"; }
+    return plan;
+  } catch { return "Basic"; }
+}
 
-    // Toggle Email tab (Developers only)
-    const emailNav = sidebarEl?.querySelector('[data-nav="email"]');
-    if (emailNav) emailNav.style.display = (plan === "Developers") ? "" : "none";
+/* ======================
+   Developer users panel
+   ====================== */
+function userRow({uid,email,plan}){
+  const selectHtml = `<select class="plan-select" data-uid="${uid}">
+    ${PLAN_OPTIONS.map(p => `<option value="${p}" ${p===plan?'selected':''}>${p}</option>`).join('')}
+  </select>`;
+  const planCell = (currentPlan === "Developers")
+    ? `${selectHtml} <span class="inline-status" id="status-${uid}"></span>`
+    : `<span>${plan || '-'}</span>`;
+  return `<div class="dev-grid-row" data-uid="${uid}">
+    <div>${email}</div>
+    <div>${planCell}</div>
+  </div>`;
+}
+function renderList(filter=""){
+  if (!devUsersContainer) return;
+  const q = (filter || "").trim().toLowerCase();
+  const filtered = !q ? allUsers : allUsers.filter(u => {
+    const email = (u.email || "").toLowerCase();
+    const plan  = (u.plan  || "").toLowerCase();
+    const tokens = q.split(/\s+/);
+    return tokens.every(tok => {
+      if (/^(plan|p):/.test(tok)) {
+        const val = tok.replace(/^(plan|p):/,"");
+        const wants = val.split(/[|,]/).map(s=>s.trim()).filter(Boolean);
+        if (!wants.length) return true;
+        return wants.some(w => plan.includes(w));
+      }
+      if (/^(email|e):/.test(tok)) {
+        const val = tok.replace(/^(email|e):/,"");
+        return email.includes(val);
+      }
+      return email.includes(tok) || plan.includes(tok);
+    });
+  });
+  devUsersContainer.innerHTML = filtered.length
+    ? filtered.map(userRow).join("")
+    : `<div class="dev-grid-row"><div>No users found</div><div>—</div></div>`;
+}
+async function fetchAllUsers(){
+  const snap = await getDocs(collection(db,"users"));
+  const arr = [];
+  snap.forEach(d=>{
+    const data = d.data() || {};
+    arr.push({
+      uid: d.id,
+      email: data.email || "(no email)",
+      plan:  data.plan  || "-",
+      roles: data.roles || {}
+    });
+  });
+  allUsers   = [...arr].sort((a,b)=>(a.email||"").localeCompare(b.email||""));
+  rolesUsers = [...arr].sort((a,b)=>(a.email||"").localeCompare(b.email||""));
+}
+async function renderAllUsers(){
+  if (!devUsersContainer) return;
+  devUsersContainer.innerHTML = `<div class="dev-grid-row"><div>Loading users…</div><div>—</div></div>`;
+  try { await fetchAllUsers(); renderList(searchInput?.value || ""); }
+  catch { devUsersContainer.innerHTML = `<div class="dev-grid-row"><div>Permission denied or error</div><div>—</div></div>`; }
+}
+async function updatePlanForUser(uid, newPlan){
+  const status = document.getElementById(`status-${uid}`);
+  if (status){ status.className="inline-status"; status.textContent="Saving…"; }
+  try{
+    await setDoc(doc(db,"users",uid), { plan:newPlan }, { merge:true });
+    if (status){ status.className="inline-status ok"; status.textContent="Saved"; }
+    const i = allUsers.findIndex(u=>u.uid===uid);
+    if (i>=0) allUsers[i].plan = newPlan;
+    if (currentUser && uid === currentUser.uid) applyPlanUi(newPlan);
+  }catch(e){
+    console.error(e);
+    if (status){ status.className="inline-status err"; status.textContent="Error"; }
+  }
+}
+devUsersContainer?.addEventListener('change',(e)=>{
+  const sel = e.target.closest('.plan-select');
+  if (!sel) return;
+  const uid = sel.getAttribute('data-uid');
+  const newPlan = sel.value;
+  if (currentPlan !== 'Developers'){ alert('Only Developers can change plans.'); renderAllUsers(); return; }
+  if (!PLAN_OPTIONS.includes(newPlan)){ alert('Invalid plan value.'); return; }
+  updatePlanForUser(uid,newPlan);
+});
+searchInput?.addEventListener('input', ()=>renderList(searchInput.value));
 
-    // Toggle Roles tab (Enterprise + Developers)
-    const rolesNav = sidebarEl?.querySelector('[data-nav="roles"]');
-    if (rolesNav) rolesNav.style.display = canManageRoles() ? "" : "none";
+/* ======================
+   Roles (Enterprise + Developers)
+   ====================== */
+const ROLE_KEYS = ['admin','manager','support'];
+function canManageRoles(){ return currentPlan === 'Developers' || currentPlan === 'Enterprise'; }
+function roleChip(role, active){
+  return `<button class="role-chip ${active?'active':''}" data-role="${role}" aria-pressed="${active?'true':'false'}">
+    <span class="dot"></span>${role}
+  </button>`;
+}
+function rolesRow({uid,email,roles}){
+  const map = roles || {};
+  const chips = ROLE_KEYS.map(r => roleChip(r, !!map[r])).join('');
+  return `<div class="dev-grid-row" data-uid="${uid}">
+    <div>${email}</div>
+    <div><div class="role-row">${chips}</div><span class="save-badge" id="save-${uid}"></span></div>
+  </div>`;
+}
+function renderRoles(filter=""){
+  if (!rolesList) return;
+  const q = (filter||"").trim().toLowerCase();
+  const filtered = !q ? rolesUsers : rolesUsers.filter(u => (u.email||"").toLowerCase().includes(q));
+  rolesList.innerHTML = filtered.length
+    ? filtered.map(rolesRow).join("")
+    : `<div class="dev-grid-row"><div>No users found</div><div>—</div></div>`;
+}
+async function saveRoles(uid, newMap){
+  const ref = doc(db,"users",uid);
+  const updates = {};
+  ROLE_KEYS.forEach(r=>{
+    updates[`roles.${r}`] = newMap[r] ? true : deleteField(); // remove when unchecked
+  });
+  await updateDoc(ref, updates);
+}
+rolesSearch?.addEventListener('input', ()=>renderRoles(rolesSearch.value));
+rolesList?.addEventListener('click', async (e)=>{
+  const chip = e.target.closest('.role-chip');
+  if (!chip) return;
+  if (!canManageRoles()) return alert("Only Enterprise/Developers can change roles.");
+  const row  = chip.closest('.dev-grid-row');
+  const uid  = row?.getAttribute('data-uid');
+  const role = chip.getAttribute('data-role');
+  if (!uid || !role) return;
 
-    deleteAccountLink && (deleteAccountLink.style.display = "block");
+  const newActive = !chip.classList.contains('active');
+  chip.classList.toggle('active', newActive);
+  chip.setAttribute('aria-pressed', newActive ? 'true':'false');
 
-    (plan === "Developers") ? showDevelopersView() : showRegularView();
+  const newMap = {};
+  row.querySelectorAll('.role-chip').forEach(c=>{
+    const r = c.getAttribute('data-role');
+    if (c.classList.contains('active')) newMap[r] = true;
+  });
 
-    // If Roles was open but user lost permission, bounce back
-    if (!canManageRoles() && rolesBoard?.style.display === "block") {
-      rolesBoard.style.display = "none";
+  const badge = document.getElementById(`save-${uid}`);
+  if (badge){ badge.className='save-badge'; badge.textContent='Saving…'; }
+  try{
+    await saveRoles(uid,newMap);
+    const i = rolesUsers.findIndex(u=>u.uid===uid);
+    if (i>=0) rolesUsers[i].roles = newMap;
+    if (badge){ badge.className='save-badge ok'; badge.textContent='Saved'; }
+  }catch(err){
+    console.error('roles save error', err);
+    chip.classList.toggle('active', !newActive); // revert
+    chip.setAttribute('aria-pressed', (!newActive) ? 'true':'false');
+    if (badge){ badge.className='save-badge err'; badge.textContent='Error'; }
+    alert('Could not save roles. Check Firestore rules & permissions.');
+  }
+});
+async function showRolesPanel(){
+  if (!canManageRoles()){ alert("Only Enterprise/Developers can access Roles."); return; }
+  await fetchAllUsers();
+  renderRoles(rolesSearch?.value || "");
+}
+
+/* ======================
+   Email board + viewer + reply
+   ====================== */
+function extractAddress(str){
+  if(!str) return '';
+  const lt = str.indexOf('<'), gt = str.indexOf('>');
+  if (lt !== -1 && gt !== -1 && gt > lt) return str.slice(lt+1, gt).trim();
+  return str.trim();
+}
+function prefixRe(subj){ return !subj ? 'Re:' : (/^\s*re:/i.test(subj) ? subj : `Re: ${subj}`); }
+
+let replyUI = { built:false, box:null, to:null, subject:null, body:null, sendBtn:null, cancelBtn:null, toggleBtn:null };
+function ensureReplyUi(){
+  if (replyUI.built) return;
+  const toggle = document.createElement('button');
+  toggle.id = 'email-reply-toggle';
+  toggle.className = 'email-modal-close';
+  toggle.type = 'button';
+  toggle.textContent = '↩ Reply';
+  emailModalHeader?.insertBefore(toggle, emailModalClose);
+
+  const box = document.createElement('div');
+  box.id = 'email-reply-box';
+  box.style.display = 'none';
+  box.style.borderTop = '1px solid #e5e7eb';
+  box.style.borderBottom = '1px solid #e5e7eb';
+  box.style.background = '#fafafa';
+  box.style.padding = '10px 12px';
+  box.innerHTML = `
+    <div style="display:grid;grid-template-columns:70px 1fr;gap:8px;align-items:center;margin-bottom:8px">
+      <label for="reply-to">To</label>
+      <input id="reply-to" type="text" style="width:100%;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px" />
+    </div>
+    <div style="display:grid;grid-template-columns:70px 1fr;gap:8px;align-items:center;margin-bottom:8px">
+      <label for="reply-subject">Subject</label>
+      <input id="reply-subject" type="text" style="width:100%;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px" />
+    </div>
+    <div style="margin-bottom:8px">
+      <textarea id="reply-body" rows="6" placeholder="Write your reply..." style="width:100%;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px"></textarea>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px">
+      <button id="reply-cancel" type="button" class="email-modal-close">Cancel</button>
+      <button id="reply-send"   type="button" class="email-modal-close" style="background:#111827;color:#fff;border-color:#111827">Send</button>
+    </div>`;
+  emailIframe?.parentNode?.insertBefore(box, emailIframe);
+
+  replyUI = {
+    built:true,
+    box,
+    to:      box.querySelector('#reply-to'),
+    subject: box.querySelector('#reply-subject'),
+    body:    box.querySelector('#reply-body'),
+    sendBtn: box.querySelector('#reply-send'),
+    cancelBtn: box.querySelector('#reply-cancel'),
+    toggleBtn: toggle
+  };
+
+  toggle.addEventListener('click', ()=>{ box.style.display = (box.style.display === 'none') ? 'block' : 'none'; });
+  replyUI.cancelBtn.addEventListener('click', ()=>{ box.style.display = 'none'; });
+
+  replyUI.sendBtn.addEventListener('click', async ()=>{
+    try{
+      const to       = (replyUI.to?.value || '').trim();
+      const subject  = (replyUI.subject?.value || '').trim();
+      const bodyText = (replyUI.body?.value || '').trim();
+      if(!to || !subject || !bodyText){ alert('To, Subject, and Body are required.'); return; }
+
+      replyUI.sendBtn.disabled = true; replyUI.sendBtn.textContent = 'Sending…';
+
+      await addDoc(collection(db,'email_outbox'), {
+        createdAt:      serverTimestamp(),
+        createdByUid:   currentUser?.uid || null,
+        createdByEmail: currentUser?.email || null,
+        to, subject, bodyText,
+        inReplyToEmailId: currentOpenedEmailId || null,
+        status: 'pending'
+      });
+
+      // Optimistic mark on the original email doc
+      try {
+        await setDoc(doc(db, "emails", currentOpenedEmailId), {
+          hasReplied: true,
+          lastRepliedAt: serverTimestamp(),
+          lastRepliedBy: (currentUser?.email || "unknown"),
+          isUnread: false
+        }, { merge: true });
+        const idx = cachedEmails.findIndex(e => e.id === currentOpenedEmailId);
+        if (idx >= 0) {
+          cachedEmails[idx].hasReplied = true;
+          cachedEmails[idx].isUnread = false;
+          cachedEmails[idx].lastRepliedBy = currentUser?.email || "you";
+          cachedEmails[idx].lastRepliedAt = new Date().toISOString();
+          renderEmails(cachedEmails, emailSearch?.value || "");
+        }
+      } catch (e) {
+        console.warn("Could not mark replied from client — backend will mark after send:", e);
+      }
+
+      alert('Reply queued to send.');
+      box.style.display = 'none';
+      if (replyUI.body) replyUI.body.value = '';
+    }catch(err){
+      console.error('Failed to queue reply:', err);
+      alert('Could not queue your reply.');
+    } finally {
+      replyUI.sendBtn.disabled = false; replyUI.sendBtn.textContent = 'Send';
+    }
+  });
+}
+function openEmailModal(){
+  emailModal.classList.add("show");
+  emailModal.setAttribute("aria-hidden","false");
+  document.addEventListener("keydown", e => { if (e.key==="Escape") closeEmailModal(); }, { once:true });
+  // Hide header/logo while open
+  document.documentElement.classList.add('viewer-open');
+  if (headerRow) headerRow.hidden = true;
+}
+function closeEmailModal(){
+  emailModal.classList.remove("show");
+  emailModal.setAttribute("aria-hidden","true");
+  emailIframe.srcdoc = "";
+  emailPlain.textContent = "";
+  emailPlain.style.display = "none";
+  emailIframe.style.display = "block";
+  // Restore header/logo
+  document.documentElement.classList.remove('viewer-open');
+  if (headerRow) headerRow.hidden = false;
+}
+emailModalBackdrop?.addEventListener("click", closeEmailModal);
+emailModalClose?.addEventListener("click", closeEmailModal);
+
+function renderEmails(list, filter=""){
+  const q = (filter || "").toLowerCase().trim();
+
+  const matches = (e, query) => {
+    if (!query) return true;
+    const from = (e.from||"").toLowerCase();
+    const subject = (e.subject||"").toLowerCase();
+    const statusText = e.hasReplied ? "replied" : (e.isUnread ? "unread" : "read");
+    const tokens = query.split(/\s+/).filter(Boolean);
+    return tokens.every(tok => {
+      if (tok.startsWith("from:"))    return from.includes(tok.slice(5));
+      if (tok.startsWith("subject:")) return subject.includes(tok.slice(8));
+      if (["replied","is:replied","status:replied"].includes(tok)) return statusText === "replied";
+      if (["unread","is:unread","status:unread"].includes(tok))    return statusText === "unread";
+      if (["read","is:read","status:read"].includes(tok))          return statusText === "read";
+      return from.includes(tok) || subject.includes(tok) || statusText.includes(tok);
+    });
+  };
+
+  const filtered = q ? list.filter(e => matches(e,q)) : list;
+
+  emailList.innerHTML = filtered.length
+    ? filtered.map(e=>{
+        let pillClass, label;
+        if (e.hasReplied)     { pillClass = "status-purple"; label = "Replied"; }
+        else if (e.isUnread)  { pillClass = "status-blue";   label = "Unread";  }
+        else                  { pillClass = "status-green";  label = "Read";    }
+
+        return `<div class="board-row" data-id="${e.id}">
+          <div>${e.from || '-'}</div>
+          <div>${e.subject || '(no subject)'}</div>
+          <div><span class="status-pill ${pillClass}">${label}</span></div>
+          <div>${e.receivedAt ? timeAgo(e.receivedAt) : '-'}</div>
+          <div><button class="open-link" data-id="${e.id}">Open</button></div>
+        </div>`;
+      }).join("")
+    : `<div class="board-row"><div>No emails found</div><div>—</div><div>—</div><div>—</div><div>—</div></div>`;
+}
+
+function startEmailsListener(){
+  const qEmails = query(collection(db,"emails"), orderBy("receivedAt","desc"), limit(200));
+  unsubscribeEmails = onSnapshot(qEmails, (snap)=>{
+    const rows = [];
+    snap.forEach(docu=>{
+      const d  = docu.data() || {};
+      const ts = d.receivedAt?.toDate ? d.receivedAt.toDate().toISOString() : (d.receivedAt || "");
+      rows.push({
+        id: docu.id,
+        from: d.from || "",
+        subject: d.subject || "",
+        receivedAt: ts,
+        gmailLink: d.gmailLink || "",
+        isUnread: d.isUnread === true,
+        bodyHtml: d.bodyHtml || d.html || "",
+        bodyText: d.bodyText || d.body || d.snippet || "",
+        hasReplied: d.hasReplied === true,
+        lastRepliedAt: d.lastRepliedAt?.toDate ? d.lastRepliedAt.toDate().toISOString() : (d.lastRepliedAt || ""),
+        lastRepliedBy: d.lastRepliedBy || ""
+      });
+    });
+    cachedEmails = rows;
+    renderEmails(cachedEmails, emailSearch?.value || "");
+  }, (err)=>{
+    console.error("emails onSnapshot error:", err);
+    emailList.innerHTML = `<div class="board-row"><div>Error loading emails</div><div>—</div><div>—</div><div>—</div></div>`;
+  });
+}
+function stopEmailsListener(){ if (unsubscribeEmails){ unsubscribeEmails(); unsubscribeEmails=null; } }
+
+emailSearch?.addEventListener("input", ()=>renderEmails(cachedEmails, emailSearch.value));
+emailRefreshBtn?.addEventListener("click", ()=>renderEmails(cachedEmails, emailSearch?.value || ""));
+
+emailList?.addEventListener("click", async (ev)=>{
+  const btn = ev.target.closest(".open-link");
+  if (!btn) return;
+  const id = btn.getAttribute("data-id");
+  const item = cachedEmails.find(x => x.id === id);
+  if (!item) return;
+
+  currentOpenedEmailId = id;
+
+  emailModalSubject.textContent = item.subject || "(no subject)";
+  const when = item.receivedAt ? new Date(item.receivedAt) : null;
+  emailModalMeta.textContent = `${item.from || "Unknown sender"}${when ? ` • ${when.toLocaleString()}` : ""}`;
+
+  ensureReplyUi();
+  if (replyUI.to)      replyUI.to.value = extractAddress(item.from || '');
+  if (replyUI.subject) replyUI.subject.value = prefixRe(item.subject || '');
+  if (replyUI.body)    replyUI.body.value = '';
+  if (replyUI.box)     replyUI.box.style.display = 'none';
+
+  if (item.bodyHtml && item.bodyHtml.trim()){
+    emailIframe.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><base target="_blank">
+      <style>body{font:14px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111827;padding:16px}
+      img{max-width:100%;height:auto}a{word-break:break-word}
+      blockquote{border-left:3px solid #e5e7eb;padding-left:10px;margin-left:0;color:#374151}
+      pre,code{white-space:pre-wrap}</style></head><body>${item.bodyHtml}</body></html>`;
+    emailIframe.style.display = "block"; emailPlain.style.display = "none";
+  } else if (item.bodyText && item.bodyText.trim()){
+    emailPlain.textContent = item.bodyText;
+    emailPlain.style.display = "block"; emailIframe.style.display = "none";
+  } else {
+    emailPlain.textContent = "This email's body isn't stored. Ask the admin to save `bodyHtml` or `bodyText` in Firestore for full in-app viewing.";
+    emailPlain.style.display = "block"; emailIframe.style.display = "none";
+  }
+
+  if (item.isUnread){
+    try {
+      await updateDoc(doc(db,"emails",id), {
+        isUnread: false,
+        lastOpenedAt: serverTimestamp(),
+        lastOpenedBy: currentUser?.email || null
+      });
+      item.isUnread = false;
+      renderEmails(cachedEmails, emailSearch?.value || "");
+    } catch (e){ console.warn("Couldn't mark as read:", e); }
+  }
+
+  openEmailModal();
+});
+
+/* ======================
+   Sidebar navigation
+   ====================== */
+sidebarEl?.addEventListener("click", async (e)=>{
+  const nav = e.target.closest(".nav-item");
+  if (!nav) return;
+
+  [...sidebarEl.querySelectorAll('.nav-item')].forEach(n => n.classList.remove('active'));
+  nav.classList.add('active');
+
+  const dest = nav.getAttribute('data-nav');
+
+  devTools.style.display      = "none";
+  standardBoard.style.display = "none";
+  emailBoard.style.display    = "none";
+  rolesBoard.style.display    = "none";
+  stopEmailsListener();
+
+  if (dest === 'roles'){
+    if (!canManageRoles()){
+      alert("Only Enterprise/Developers can access Roles.");
+      standardBoard.style.display = "block";
+      return;
+    }
+    rolesBoard.style.display = "block";
+    await fetchAllUsers();
+    renderRoles(rolesSearch?.value || "");
+    return;
+  }
+
+  if (dest === 'email'){
+    emailBoard.style.display = "block";
+    startEmailsListener();
+    return;
+  }
+
+  if (dest === 'board'){
+    if (currentPlan === "Developers"){
+      devTools.style.display = "block";
+      renderAllUsers();
+    } else {
       standardBoard.style.display = "block";
     }
+    return;
   }
 
-  async function ensureDevelopersPlanIfAllowed(user) {
-    const isDev = DEV_EMAILS.includes((user.email || "").toLowerCase());
-    if (!isDev) return null;
+  // Alerts/Reports/Integrations → reuse standard board
+  standardBoard.style.display = "block";
+});
+
+/* ======================
+   Auth flow
+   ====================== */
+onAuthStateChanged(auth, async (user)=>{
+  if (!user){ window.location.href = LOGIN_URL; return; }
+  currentUser = user;
+  setDashboardVisibility(true);
+  try {
+    const forced = await ensureDevelopersPlanIfAllowed(user);
+    const plan   = forced || await loadUserPlan(user);
+    applyPlanUi(plan);
+  } catch (e){
+    console.error("Dashboard init error:", e);
+    applyPlanUi("Basic");
+  }
+});
+
+/* ======================
+   Logout / delete account / plan chip
+   ====================== */
+logoutLink?.addEventListener("click", async ()=>{
+  try { await signOut(auth); window.location.href = LOGIN_URL; }
+  catch (error) { console.error("Error during logout: ", error); }
+});
+deleteAccountLink?.addEventListener("click", async ()=>{
+  if (!confirm("Are you sure you want to delete your account and data? This action cannot be undone.")) return;
+  try {
+    await deleteDoc(doc(db,"users", currentUser.uid));
+    await deleteUser(auth.currentUser);
+    alert("Your account and data have been deleted.");
+    window.location.href = LOGIN_URL;
+  } catch (error){ console.error("Error deleting account:", error); }
+});
+sidebarPlanEl?.addEventListener("click", async ()=>{
+  if (currentPlan === "Developers"){
+    const newPlan = prompt("Enter new plan (e.g., Basic, Premium, Enterprise):");
+    if (!newPlan) return;
     try {
-      const ref  = doc(db, "users", user.uid);
-      const snap = await getDoc(ref);
-      const existing = snap.exists() ? (snap.data().plan || null) : null;
-      if (existing === "Developers") return "Developers";
-      await setDoc(ref, { email: user.email || null, plan: "Developers" }, { merge: true });
-      return "Developers";
-    } catch (e) { console.warn("ensureDevelopersPlanIfAllowed:", e); return null; }
+      await setDoc(doc(db,"users", currentUser.uid), { plan:newPlan }, { merge:true });
+      alert("Your plan has been updated to " + newPlan);
+      applyPlanUi(newPlan);
+    } catch (error){ console.error("Error updating plan:", error); }
+  } else {
+    try { sessionStorage.setItem("rbx_last_nav", "from_dashboard"); } catch {}
+    window.location.replace(SELECTION_URL);
   }
+});
 
-  async function loadUserPlan(user) {
-    try {
-      const ref  = doc(db, "users", user.uid);
-      const snap = await getDoc(ref);
-      if (!snap.exists() || !snap.data().plan) {
-        await setDoc(ref, { email: user.email || null, plan: "Basic" }, { merge: true });
-        return "Basic";
-      }
-      let plan = snap.data().plan;
-      if (plan === "Dev") { await setDoc(ref, { plan: "Developers" }, { merge: true }); plan = "Developers"; }
-      return plan;
-    } catch (e) { console.warn("loadUserPlan failed:", e); return "Basic"; }
-  }
-
-  /* =======================
-     Developers panel (users)
-     ======================= */
-  function userRow({uid,email,plan}) {
-    const selectHtml = `<select class="plan-select" data-uid="${uid}">${PLAN_OPTIONS.map(p => `<option value="${p}" ${p===plan?'selected':''}>${p}</option>`).join('')}</select>`;
-    const planCell = (currentPlan === "Developers")
-      ? `${selectHtml} <span class="inline-status" id="status-${uid}"></span>`
-      : `<span>${plan || '-'}</span>`;
-    return `<div class="dev-grid-row" data-uid="${uid}"><div>${email}</div><div>${planCell}</div></div>`;
-  }
-
-  function renderList(filter = "") {
-    if (!devUsersContainer) return;
-    const q = (filter || "").trim().toLowerCase();
-    const filtered = !q ? allUsers : allUsers.filter(u => {
-      const email = (u.email || "").toLowerCase();
-      const plan  = (u.plan  || "").toLowerCase();
-      const tokens = q.split(/\s+/);
-      return tokens.every(tok => {
-        if (/^(plan|p):/.test(tok)) {
-          const val = tok.replace(/^(plan|p):/, "");
-          const wants = val.split(/[|,]/).map(s => s.trim()).filter(Boolean);
-          if (!wants.length) return true;
-          return wants.some(w => plan.includes(w));
-        }
-        if (/^(email|e):/.test(tok)) {
-          const val = tok.replace(/^(email|e):/, "");
-          return email.includes(val);
-        }
-        return email.includes(tok) || plan.includes(tok);
-      });
-    });
-    devUsersContainer.innerHTML = filtered.length
-      ? filtered.map(userRow).join("")
-      : `<div class="dev-grid-row"><div>No users found</div><div>—</div></div>`;
-  }
-
-  async function fetchAllUsers() {
-    const snap = await getDocs(collection(db, "users"));
-    const arr = [];
-    snap.forEach(d => {
-      const data = d.data() || {};
-      arr.push({
-        uid: d.id,
-        email: data.email || "(no email)",
-        plan:  data.plan  || "-",
-        roles: data.roles || {}
-      });
-    });
-    allUsers  = [...arr].sort((a,b) => (a.email||"").localeCompare(b.email||""));
-    rolesUsers= [...arr].sort((a,b) => (a.email||"").localeCompare(b.email||""));
-  }
-
-  async function renderAllUsers() {
-    if (!devUsersContainer) return;
-    devUsersContainer.innerHTML = `<div class="dev-grid-row"><div>Loading users…</div><div>—</div></div>`;
-    try { await fetchAllUsers(); renderList(document.getElementById("user-search")?.value || ""); }
-    catch (e) { console.error("renderAllUsers error:", e); devUsersContainer.innerHTML = `<div class="dev-grid-row"><div>Permission denied or error</div><div>—</div></div>`; }
-  }
-
-  async function updatePlanForUser(uid, newPlan) {
-    const status = document.getElementById(`status-${uid}`);
-    if (status) { status.className = "inline-status"; status.textContent = "Saving…"; }
-    try {
-      await setDoc(doc(db, "users", uid), { plan: newPlan }, { merge: true });
-      if (status) { status.className = "inline-status ok"; status.textContent = "Saved"; }
-      const idx = allUsers.findIndex(u => u.uid === uid);
-      if (idx >= 0) allUsers[idx].plan = newPlan;
-      if (currentUser && uid === currentUser.uid) applyPlanUi(newPlan);
-    } catch (e) { console.error("updatePlanForUser error:", e); if (status) { status.className = "inline-status err"; status.textContent = "Error"; } }
-  }
-
-  devUsersContainer?.addEventListener('change', (e) => {
-    const sel = e.target.closest('.plan-select');
-    if (!sel) return;
-    const uid = sel.getAttribute('data-uid');
-    const newPlan = sel.value;
-    if (currentPlan !== 'Developers') {
-      alert('Only Developers can change plans.');
-      renderAllUsers();
-      return;
-    }
-    if (!PLAN_OPTIONS.includes(newPlan)) {
-      alert('Invalid plan value.');
-      return;
-    }
-    updatePlanForUser(uid, newPlan);
-  });
-
-  document.getElementById("user-search")?.addEventListener('input', (e)=> renderList(e.target.value));
-
-  /* =======================
-     Roles panel (Enterprise + Dev)
-     ======================= */
-  const ROLE_KEYS = ['admin','manager','support']; // tweak as needed
-  const roleChip = (role, active) =>
-    `<button class="role-chip ${active?'active':''}" data-role="${role}" aria-pressed="${active?'true':'false'}"><span class="dot"></span>${role}</button>`;
-
-  function rolesRow({uid,email,roles}){
-    const map = roles || {};
-    const chips = ROLE_KEYS.map(r => roleChip(r, !!map[r])).join('');
-    return `<div class="dev-grid-row" data-uid="${uid}">
-      <div>${email}</div>
-      <div><div class="role-row">${chips}</div><span class="save-badge" id="save-${uid}"></span></div>
-    </div>`;
-  }
-
-  function renderRoles(filter=""){
-    if (!rolesList) return;
-    const q = (filter||"").trim().toLowerCase();
-    const filtered = !q ? rolesUsers : rolesUsers.filter(u => (u.email||"").toLowerCase().includes(q));
-    rolesList.innerHTML = filtered.length
-      ? filtered.map(rolesRow).join("")
-      : `<div class="dev-grid-row"><div>No users found</div><div>—</div></div>`;
-  }
-  rolesSearch?.addEventListener('input', () => renderRoles(rolesSearch.value));
-
-  rolesList?.addEventListener('click', async (e) => {
-    const chip = e.target.closest('.role-chip');
-    if (!chip) return;
-    if (!canManageRoles()) return alert("Only Enterprise/Developers can change roles.");
-
-    const row  = e.target.closest('.dev-grid-row');
-    const uid  = row?.getAttribute('data-uid');
-    const role = chip.getAttribute('data-role');
-    if (!uid || !role) return;
-
-    // Flip active state visually
-    const newActive = !chip.classList.contains('active');
-    chip.classList.toggle('active', newActive);
-    chip.setAttribute('aria-pressed', newActive ? 'true' : 'false');
-
-    // Build new roles map from row chips
-    const newMap = {};
-    row.querySelectorAll('.role-chip').forEach(c => {
-      const r  = c.getAttribute('data-role');
-      const on = c.classList.contains('active');
-      if (on) newMap[r] = true;
-    });
-
-    const badge = document.getElementById(`save-${uid}`);
-    if (badge){ badge.className='save-badge'; badge.textContent='Saving…'; }
-
-    try {
-      await setDoc(doc(db, "users", uid), { roles: newMap }, { merge: true });
-
-      const i1 = rolesUsers.findIndex(u => u.uid === uid);
-      if (i1 >= 0) rolesUsers[i1].roles = newMap;
-      const i2 = allUsers.findIndex(u => u.uid === uid);
-      if (i2 >= 0) allUsers[i2].roles = newMap;
-
-      if (badge){ badge.className='save-badge ok'; badge.textContent='Saved'; }
-    } catch (err) {
-      console.error('roles save error', err);
-      if (badge){ badge.className='save-badge err'; badge.textContent='Error'; }
-    }
-  });
-
-  /* =======================
-     Email board (list + modal + reply)
-     ======================= */
-  // Build Reply UI once (injected above iframe)
-  let replyUI = { built:false, box:null, to:null, subject:null, body:null, sendBtn:null, cancelBtn:null, toggleBtn:null };
-  function ensureReplyUi(){
-    if (replyUI.built) return;
-    const emailModalContent = document.querySelector('.email-modal-content');
-
-    // Add "Reply" toggle next to Close
-    const toggle = document.createElement('button');
-    toggle.id = 'email-reply-toggle';
-    toggle.className = 'email-modal-close';
-    toggle.type = 'button';
-    toggle.textContent = '↩ Reply';
-    emailModalHeader?.insertBefore(toggle, emailModalClose);
-
-    // Editor box
-    const box = document.createElement('div');
-    box.id = 'email-reply-box';
-    box.style.display = 'none';
-    box.style.borderTop = '1px solid #e5e7eb';
-    box.style.borderBottom = '1px solid #e5e7eb';
-    box.style.background = '#fafafa';
-    box.style.padding = '10px 12px';
-    box.innerHTML = `
-      <div style="display:grid;grid-template-columns:70px 1fr;gap:8px;align-items:center;margin-bottom:8px">
-        <label for="reply-to">To</label>
-        <input id="reply-to" type="text" style="width:100%;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px" />
-      </div>
-      <div style="display:grid;grid-template-columns:70px 1fr;gap:8px;align-items:center;margin-bottom:8px">
-        <label for="reply-subject">Subject</label>
-        <input id="reply-subject" type="text" style="width:100%;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px" />
-      </div>
-      <div style="margin-bottom:8px">
-        <textarea id="reply-body" rows="6" placeholder="Write your reply..." style="width:100%;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px"></textarea>
-      </div>
-      <div style="display:flex;justify-content:flex-end;gap:8px">
-        <button id="reply-cancel" type="button" class="email-modal-close">Cancel</button>
-        <button id="reply-send"   type="button" class="email-modal-close" style="background:#111827;color:#fff;border-color:#111827">Send</button>
-      </div>`;
-    emailIframe?.parentNode?.insertBefore(box, emailIframe);
-
-    replyUI = {
-      built:true,
-      box,
-      to:      box.querySelector('#reply-to'),
-      subject: box.querySelector('#reply-subject'),
-      body:    box.querySelector('#reply-body'),
-      sendBtn: box.querySelector('#reply-send'),
-      cancelBtn: box.querySelector('#reply-cancel'),
-      toggleBtn: toggle
-    };
-
-    toggle.addEventListener('click', ()=>{ box.style.display = (box.style.display === 'none') ? 'block' : 'none'; });
-    replyUI.cancelBtn.addEventListener('click', ()=>{ box.style.display = 'none'; });
-
-    replyUI.sendBtn.addEventListener('click', async ()=>{
-      try{
-        const to       = (replyUI.to?.value || '').trim();
-        const subject  = (replyUI.subject?.value || '').trim();
-        const bodyText = (replyUI.body?.value || '').trim();
-        if(!to || !subject || !bodyText){ alert('To, Subject, and Body are required.'); return; }
-
-        replyUI.sendBtn.disabled = true; replyUI.sendBtn.textContent = 'Sending…';
-
-        // Queue outbox job
-        await addDoc(collection(db,'email_outbox'), {
-          createdAt:      serverTimestamp(),
-          createdByUid:   currentUser?.uid || null,
-          createdByEmail: currentUser?.email || null,
-          to, subject, bodyText,
-          inReplyToEmailId: window.__CURRENT_EMAIL_ID__ || null,
-          status: 'pending'
-        });
-
-        // Optimistic mark on the source email
-        try {
-          const id = window.__CURRENT_EMAIL_ID__;
-          if (id) {
-            await setDoc(doc(db, "emails", id), {
-              hasReplied: true,
-              lastRepliedAt: serverTimestamp(),
-              lastRepliedBy: (currentUser?.email || "unknown"),
-              isUnread: false
-            }, { merge: true });
-
-            const idx = cachedEmails.findIndex(e => e.id === id);
-            if (idx >= 0) {
-              cachedEmails[idx].hasReplied = true;
-              cachedEmails[idx].isUnread = false;
-              cachedEmails[idx].lastRepliedBy = currentUser?.email || "you";
-              cachedEmails[idx].lastRepliedAt = new Date().toISOString();
-              renderEmails(cachedEmails, emailSearch?.value || "");
-            }
-          }
-        } catch (e) {
-          console.warn("Could not mark replied from client — backend will mark after send:", e);
-        }
-
-        alert('Reply queued to send.');
-        box.style.display = 'none';
-        if (replyUI.body) replyUI.body.value = '';
-      }catch(err){
-        console.error('Failed to queue reply:', err);
-        alert('Could not queue your reply.');
-      } finally {
-        replyUI.sendBtn.disabled = false; replyUI.sendBtn.textContent = 'Send';
-      }
-    });
-  }
-
-  function openEmailModal() {
-    emailModal.classList.add("show");
-    emailModal.setAttribute("aria-hidden", "false");
-    document.addEventListener("keydown", escToClose, { once: true });
-    if (headerRow) headerRow.hidden = true; // hide logo/header while modal open
-  }
-  function closeEmailModal() {
-    emailModal.classList.remove("show");
-    emailModal.setAttribute("aria-hidden", "true");
-    emailIframe.srcdoc = "";
-    emailPlain.textContent = "";
-    emailPlain.style.display = "none";
-    emailIframe.style.display = "block";
-    if (headerRow) headerRow.hidden = false; // show logo/header again
-  }
-  function escToClose(e){ if (e.key === "Escape") closeEmailModal(); }
-  emailModalBackdrop?.addEventListener("click", closeEmailModal);
-  emailModalClose?.addEventListener("click", closeEmailModal);
-
-  // Render emails (supports status queries: replied/unread/read)
-  function renderEmails(list, filter = "") {
-    const q = (filter || "").toLowerCase().trim();
-
-    const matches = (e, query) => {
-      if (!query) return true;
-      const from    = (e.from||"").toLowerCase();
-      const subject = (e.subject||"").toLowerCase();
-      const statusText = e.hasReplied ? "replied" : (e.isUnread ? "unread" : "read");
-
-      const tokens = query.split(/\s+/).filter(Boolean);
-      return tokens.every(tok => {
-        if (tok.startsWith("from:"))    return from.includes(tok.slice(5));
-        if (tok.startsWith("subject:")) return subject.includes(tok.slice(8));
-        if (tok === "replied" || tok === "is:replied" || tok === "status:replied") return statusText === "replied";
-        if (tok === "unread"  || tok === "is:unread"  || tok === "status:unread")  return statusText === "unread";
-        if (tok === "read"    || tok === "is:read"    || tok === "status:read")    return statusText === "read";
-        return from.includes(tok) || subject.includes(tok) || statusText.includes(tok);
-      });
-    };
-
-    const filtered = q ? list.filter(e => matches(e, q)) : list;
-
-    emailList.innerHTML = filtered.length
-      ? filtered.map(e => {
-          let pillClass, label;
-          if (e.hasReplied)     { pillClass = "status-purple"; label = "Replied"; }
-          else if (e.isUnread)  { pillClass = "status-blue";   label = "Unread";  }
-          else                  { pillClass = "status-green";  label = "Read";    }
-
-          return `
-            <div class="board-row" data-id="${e.id}">
-              <div>${e.from || "-"}</div>
-              <div>${e.subject || "(no subject)"}</div>
-              <div><span class="status-pill ${pillClass}">${label}</span></div>
-              <div>${e.receivedAt ? timeAgo(e.receivedAt) : "-"}</div>
-              <div><button class="open-link" data-id="${e.id}">Open</button></div>
-            </div>`;
-        }).join("")
-      : `<div class="board-row"><div>No emails found</div><div>—</div><div>—</div><div>—</div><div>—</div></div>`;
-  }
-
-  function startEmailsListener() {
-    const qEmails = query(collection(db, "emails"), orderBy("receivedAt", "desc"), limit(200));
-    unsubscribeEmails = onSnapshot(qEmails, (snap) => {
-      const rows = [];
-      snap.forEach(docu => {
-        const d = docu.data() || {};
-        const ts = d.receivedAt?.toDate ? d.receivedAt.toDate().toISOString() : (d.receivedAt || "");
-        rows.push({
-          id: docu.id,
-          from: d.from || "",
-          subject: d.subject || "",
-          receivedAt: ts,
-          gmailLink: d.gmailLink || "",
-          isUnread: d.isUnread === true,
-          bodyHtml: d.bodyHtml || d.html || "",
-          bodyText: d.bodyText || d.body || d.snippet || "",
-          hasReplied: d.hasReplied === true,
-          lastRepliedAt: d.lastRepliedAt?.toDate ? d.lastRepliedAt.toDate().toISOString() : (d.lastRepliedAt || ""),
-          lastRepliedBy: d.lastRepliedBy || ""
-        });
-      });
-      cachedEmails = rows;
-      renderEmails(cachedEmails, emailSearch?.value || "");
-    }, (err) => {
-      console.error("emails onSnapshot error:", err);
-      emailList.innerHTML = `<div class="board-row"><div>Error loading emails</div><div>—</div><div>—</div><div>—</div></div>`;
-    });
-  }
-  function stopEmailsListener(){ if (unsubscribeEmails) { unsubscribeEmails(); unsubscribeEmails = null; } }
-
-  // Open email from list
-  emailList?.addEventListener("click", async (ev) => {
-    const btn = ev.target.closest(".open-link");
-    if (!btn) return;
-    const id  = btn.getAttribute("data-id");
-    const item= cachedEmails.find(x => x.id === id);
-    if (!item) return;
-
-    // Header info
-    emailModalSubject.textContent = item.subject || "(no subject)";
-    const when = item.receivedAt ? new Date(item.receivedAt) : null;
-    emailModalMeta.textContent = `${item.from || "Unknown sender"}${when ? ` • ${when.toLocaleString()}` : ""}`;
-
-    // Build & prefill reply UI
-    ensureReplyUi();
-    window.__CURRENT_EMAIL_ID__ = id;
-    if (replyUI.to)      replyUI.to.value      = extractAddress(item.from || '');
-    if (replyUI.subject) replyUI.subject.value = prefixRe(item.subject || '');
-    if (replyUI.body)    replyUI.body.value    = '';
-    if (replyUI.box)     replyUI.box.style.display = 'none';
-
-    // Prefer HTML, else text
-    if (item.bodyHtml && item.bodyHtml.trim()) {
-      emailIframe.srcdoc =
-        `<!doctype html><html><head><meta charset="utf-8"><base target="_blank"><style>
-           body{font:14px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111827;padding:16px}
-           img{max-width:100%;height:auto} a{word-break:break-word}
-           blockquote{border-left:3px solid #e5e7eb;padding-left:10px;margin-left:0;color:#374151}
-           pre,code{white-space:pre-wrap}
-         </style></head><body>${item.bodyHtml}</body></html>`;
-      emailIframe.style.display = "block";
-      emailPlain.style.display  = "none";
-    } else if (item.bodyText && item.bodyText.trim()) {
-      emailPlain.textContent = item.bodyText;
-      emailPlain.style.display  = "block";
-      emailIframe.style.display = "none";
-    } else {
-      emailPlain.textContent = "This email's body isn't stored. Ask the admin to save bodyHtml or bodyText in Firestore.";
-      emailPlain.style.display  = "block";
-      emailIframe.style.display = "none";
-    }
-
-    // Mark as read (best-effort)
-    if (item.isUnread) {
-      try {
-        await updateDoc(doc(db, "emails", id), {
-          isUnread: false,
-          lastOpenedAt: serverTimestamp(),
-          lastOpenedBy: currentUser?.email || null
-        });
-        item.isUnread = false;
-        renderEmails(cachedEmails, emailSearch?.value || "");
-      } catch (e) { console.warn("Couldn't mark as read:", e); }
-    }
-
-    openEmailModal();
-  });
-
-  emailSearch?.addEventListener("input", () => renderEmails(cachedEmails, emailSearch.value));
-  emailRefresh?.addEventListener("click", () => renderEmails(cachedEmails, emailSearch?.value || ""));
-
-  /* =======================
-     Sidebar nav (async)
-     ======================= */
-  sidebarEl?.addEventListener("click", async (e) => {
-    const nav = e.target.closest(".nav-item");
-    if (!nav) return;
-
-    [...sidebarEl.querySelectorAll('.nav-item')].forEach(n => n.classList.remove('active'));
-    nav.classList.add('active');
-
-    const dest = nav.getAttribute('data-nav');
-
-    // Hide all boards
-    devTools.style.display      = "none";
-    standardBoard.style.display = "none";
-    emailBoard.style.display    = "none";
-    rolesBoard.style.display    = "none";
-    stopEmailsListener();
-
-    if (dest === 'roles') {
-      if (!canManageRoles()) {
-        alert("Only Enterprise/Developers can access Roles.");
-        standardBoard.style.display = "block";
-        return;
-      }
-      rolesBoard.style.display = "block";
-      try { await fetchAllUsers(); } catch(e) {}
-      renderRoles(rolesSearch?.value || "");
-      return;
-    }
-
-    if (dest === 'email') {
-      emailBoard.style.display = "block";
-      startEmailsListener();
-      return;
-    }
-
-    if (dest === 'board') {
-      if (currentPlan === "Developers") {
-        devTools.style.display = "block";
-        renderAllUsers();
-      } else {
-        standardBoard.style.display = "block";
-      }
-      return;
-    }
-
-    // Alerts/Reports/Integrations (reuse standard for now)
-    standardBoard.style.display = "block";
-  });
-
-  /* =======================
-     Mobile drawer helpers
-     ======================= */
-  const openDrawer = () => {
-    if (!sidebarEl || !backdropEl) return;
-    sidebarEl.classList.add("open");
-    backdropEl.classList.add("show");
-    root.classList.add("drawer-open");
-    if (headerRow) { headerRow.setAttribute('aria-hidden', 'true'); headerRow.style.pointerEvents = 'none'; }
-    if (homeTapBtn){ homeTapBtn.disabled = true; homeTapBtn.style.pointerEvents = 'none'; }
-    if (logoEl)    { savedLogoOnclick = logoEl.onclick; logoEl.onclick = null; logoEl.style.pointerEvents = 'none'; }
-  };
-  const closeDrawer = () => {
-    if (!sidebarEl || !backdropEl) return;
-    sidebarEl.classList.remove("open");
-    backdropEl.classList.remove("show");
-    root.classList.remove("drawer-open");
-    if (headerRow) { headerRow.removeAttribute('aria-hidden'); headerRow.style.pointerEvents = ''; }
-    if (homeTapBtn){ homeTapBtn.disabled = false; homeTapBtn.style.pointerEvents = ''; }
-    if (logoEl)    { logoEl.onclick = savedLogoOnclick; logoEl.style.pointerEvents = ''; }
-  };
-  openSidebarBtn?.addEventListener("click", openDrawer);
-  backdropEl?.addEventListener("click", closeDrawer);
-  window.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDrawer(); });
-  sidebarEl?.addEventListener("click", (e) => { const nav = e.target.closest(".nav-item"); if (nav) closeDrawer(); });
-
-  /* =======================
-     Auth flow + account ops
-     ======================= */
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) { window.location.href = LOGIN_URL; return; }
-    currentUser = user;
-    setDashboardVisibility(true);
-    try {
-      const forced = await ensureDevelopersPlanIfAllowed(user);
-      const plan   = forced || await loadUserPlan(user);
-      applyPlanUi(plan);
-    } catch (e) {
-      console.error("Dashboard init error:", e);
-      applyPlanUi("Basic");
-    }
-  });
-
-  logoutLink?.addEventListener("click", async () => {
-    try { await signOut(auth); window.location.href = LOGIN_URL; }
-    catch (error) { console.error("Error during logout: ", error); }
-  });
-
-  deleteAccountLink?.addEventListener("click", async () => {
-    if (!confirm("Are you sure you want to delete your account and data? This action cannot be undone.")) return;
-    try {
-      await deleteDoc(doc(db, "users", currentUser.uid));
-      await deleteUser(auth.currentUser);
-      alert("Your account and data have been deleted.");
-      window.location.href = LOGIN_URL;
-    } catch (error) { console.error("Error deleting account:", error); }
-  });
-
-  // Plan chip behavior
-  sidebarPlanEl?.addEventListener("click", async () => {
-    if (currentPlan === "Developers") {
-      const newPlan = prompt("Enter new plan (e.g., Basic, Premium, Enterprise):");
-      if (!newPlan) return;
-      try {
-        await setDoc(doc(db, "users", currentUser.uid), { plan: newPlan }, { merge: true });
-        alert("Your plan has been updated to " + newPlan);
-        applyPlanUi(newPlan);
-      } catch (error) { console.error("Error updating plan:", error); }
-    } else {
-      try { sessionStorage.setItem("rbx_last_nav", "from_dashboard"); } catch {}
-      window.location.replace(SELECTION_URL);
-    }
-  });
-
-  // Tiny home button on phones
-  if (window.matchMedia('(max-width: 640px)').matches) {
-    document.getElementById('home-tap')?.addEventListener('click', () => {
-      window.location.href = '../index.html';
-    });
-  }
+/* Phones: tiny fixed home button */
+if (window.matchMedia('(max-width: 640px)').matches){
+  document.getElementById('home-tap')?.addEventListener('click', ()=>{ window.location.href = '../index.html'; });
+}
 </script>
-
 </body>
 </html>
