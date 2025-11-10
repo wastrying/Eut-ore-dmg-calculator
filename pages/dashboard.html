@@ -312,7 +312,10 @@
    ====================== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
-  getAuth, onAuthStateChanged, signOut, deleteUser
+  getAuth, onAuthStateChanged, signOut, deleteUser,
+  // ⬇️ Added for re-auth handling
+  reauthenticateWithPopup, reauthenticateWithCredential,
+  GoogleAuthProvider, EmailAuthProvider
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, setDoc, deleteDoc, collection,
@@ -1264,15 +1267,92 @@ logoutLink?.addEventListener("click", async ()=>{
   try { await signOut(auth); window.location.href = LOGIN_URL; }
   catch (error) { console.error("Error during logout: ", error); }
 });
+
+/* ---- Re-auth helpers + account deletion (FIXED) ---- */
+async function reauthenticateCurrentUser() {
+  const u = auth.currentUser;
+  if (!u) throw new Error("No authenticated user.");
+
+  // Try to infer the primary provider
+  const providerId = u.providerData?.[0]?.providerId || "password";
+
+  if (providerId === "google.com") {
+    const provider = new GoogleAuthProvider();
+    await reauthenticateWithPopup(u, provider);
+    return;
+  }
+
+  // Default to email/password reauth
+  const email = u.email || "";
+  const pw = prompt(`For security, please confirm the password for ${email} to delete your account:`);
+  if (!pw) throw new Error("Password confirmation was cancelled.");
+  const cred = EmailAuthProvider.credential(email, pw);
+  await reauthenticateWithCredential(u, cred);
+}
+
+/** Optional: soft-clean related user data you own before deleting Auth user. */
+async function cleanupUserOwnedData() {
+  try {
+    // Delete your own /users/{uid} doc first
+    await deleteDoc(doc(db,"users", currentUser.uid));
+  } catch (e) {
+    console.warn("Couldn't delete user doc; continuing:", e);
+  }
+
+  try {
+    // Soft-delete plan_links you own (set isActive=false); allowed by rules since ownerUid == currentUser.uid.
+    const qLinks = query(collection(db,'plan_links'), where('ownerUid','==', currentUser.uid));
+    const snap = await getDocs(qLinks);
+    const ops = [];
+    snap.forEach(d => {
+      ops.push(setDoc(doc(db,'plan_links', d.id), { isActive:false, deletedAt: serverTimestamp() }, { merge:true }));
+    });
+    await Promise.all(ops);
+  } catch (e) {
+    console.warn("Couldn't soft-delete plan_links; continuing:", e);
+  }
+}
+
+async function performDeleteAccount() {
+  await cleanupUserOwnedData();         // best-effort clean-up
+  await deleteUser(auth.currentUser);   // may throw requires-recent-login
+}
+
 deleteAccountLink?.addEventListener("click", async ()=>{
   if (!confirm("Are you sure you want to delete your account and data? This action cannot be undone.")) return;
+
+  // Disable to prevent double clicks
+  const prevText = deleteAccountLink.textContent;
+  deleteAccountLink.style.pointerEvents = "none";
+  deleteAccountLink.textContent = "Deleting…";
+
   try {
-    await deleteDoc(doc(db,"users", currentUser.uid));
-    await deleteUser(auth.currentUser);
+    await performDeleteAccount();
     alert("Your account and data have been deleted.");
     window.location.href = LOGIN_URL;
-  } catch (error){ console.error("Error deleting account:", error); }
+  } catch (err) {
+    if (err?.code === "auth/requires-recent-login") {
+      try {
+        await reauthenticateCurrentUser();
+        await performDeleteAccount();
+        alert("Your account and data have been deleted.");
+        window.location.href = LOGIN_URL;
+        return;
+      } catch (err2) {
+        console.error("Delete after reauth failed:", err2);
+        alert("We couldn't delete your account even after re-authenticating. Please try again.");
+      }
+    } else {
+      console.error("Delete account failed:", err);
+      alert("We couldn't delete your account. Please try again.");
+    }
+  } finally {
+    // Restore button if still on page
+    deleteAccountLink.style.pointerEvents = "";
+    deleteAccountLink.textContent = prevText || "Delete account & data";
+  }
 });
+
 sidebarPlanEl?.addEventListener("click", async ()=>{
   if (currentPlan === "Developers"){
     const newPlan = prompt("Enter new plan (e.g., Basic, Premium, Enterprise):");
@@ -1293,5 +1373,6 @@ if (window.matchMedia('(max-width: 640px)').matches){
   document.getElementById('home-tap')?.addEventListener('click', ()=>{ window.location.href = '../index.html'; });
 }
 </script>
+
 </body>
 </html>
