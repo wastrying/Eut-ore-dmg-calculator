@@ -501,8 +501,8 @@ try {
   emailModal.setAttribute("aria-hidden", "false");
   document.addEventListener("keydown", escToClose, { once: true });
 
-  // HIDE HEADER/LOGO
-  root.classList.add("viewer-open");
+  // 🔒 Hide header + logo reliably
+  if (headerRow) headerRow.hidden = true;   // <— this hides the logo too since it's inside headerRow
 }
 
 function closeEmailModal() {
@@ -514,9 +514,10 @@ function closeEmailModal() {
   emailPlain.style.display = "none";
   emailIframe.style.display = "block";
 
-  // SHOW HEADER/LOGO BACK
-  root.classList.remove("viewer-open");
+  // 🔓 Show header + logo again
+  if (headerRow) headerRow.hidden = false;
 }
+
 
   function escToClose(e){ if (e.key === "Escape") closeEmailModal(); }
   emailModalBackdrop?.addEventListener("click", closeEmailModal);
