@@ -74,8 +74,11 @@
       <label for="depDosageTimes">Times per Day:</label>
       <input type="number" id="depDosageTimes" min="1" placeholder="Times per day" required />
 
-      <label for="depTimes">Times to take medicine:</label>
-      <div id="timesContainer" style="display:none;"></div>
+      <!-- Wrapper for label + container to toggle together -->
+      <div id="timesWrapper" style="display:none;">
+        <label for="depTimes">Times to take medicine:</label>
+        <div id="timesContainer"></div>
+      </div>
 
       <label for="depNotes">Additional Notes:</label>
       <input type="text" id="depNotes" placeholder="Enter 'NA' if none" required />
@@ -105,6 +108,7 @@
   const editBtn = document.getElementById('editDependantBtn');
 
   const timesContainer = document.getElementById('timesContainer');
+  const timesWrapper = document.getElementById('timesWrapper');
   const dosageTimesInput = document.getElementById('depDosageTimes');
 
   // Open modal for adding
@@ -121,7 +125,7 @@
     modal.classList.remove('active');
     form.reset();
     timesContainer.innerHTML = '';
-    timesContainer.style.display = 'none';
+    timesWrapper.style.display = 'none';
     errorMsg.textContent = '';
   });
 
@@ -140,7 +144,6 @@
   editBtn.addEventListener('click', () => {
     modal.classList.add('active');
 
-    // Pre-fill modal with current values
     document.getElementById('depName').value = dispName.textContent;
     document.getElementById('depMedicine').value = dispMedicine.textContent;
 
@@ -151,11 +154,9 @@
     const timesPerDay = parseInt(rest.split(' ')[2]) || 1;
     document.getElementById('depDosageTimes').value = timesPerDay;
 
-    // Pre-fill times
     const exactTimes = dispTimes.textContent.split(', ');
-    dosageTimesInput.value = exactTimes.length;
+    timesWrapper.style.display = exactTimes.length ? 'block' : 'none';
     timesContainer.innerHTML = '';
-    timesContainer.style.display = exactTimes.length ? 'flex' : 'none';
     exactTimes.forEach((time, i) => {
       const wrapper = document.createElement('div');
       wrapper.className = 'time-wrapper';
@@ -173,13 +174,13 @@
     document.getElementById('depNotes').value = dispNotes.textContent;
   });
 
-  // Show/hide timesContainer dynamically based on Times per Day
+  // Show/hide timesWrapper based on Times per Day input
   dosageTimesInput.addEventListener('input', () => {
     const timesCount = parseInt(dosageTimesInput.value) || 0;
     if(timesCount > 0){
-      timesContainer.style.display = 'flex';
+      timesWrapper.style.display = 'block';
     } else {
-      timesContainer.style.display = 'none';
+      timesWrapper.style.display = 'none';
     }
 
     const currentTimes = timesContainer.querySelectorAll('input[type="time"]');
@@ -229,7 +230,6 @@
 
     const dosageText = `${dosageNumber} ${dosageUnit}, ${dosageTimes} time(s) per day`;
 
-    // Display dependant info
     dispName.textContent = name;
     dispMedicine.textContent = medicine;
     dispTimes.textContent = exactTimes.join(', ');
