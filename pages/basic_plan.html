@@ -2,216 +2,130 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Advanced Dashboard | Remblyx</title>
+<title>Remblyx Advanced Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-:root{
-  --sidebar-width:220px;
-  --radius-lg:18px;
-  --radius-md:12px;
-  --text-sm:14px;
-  --text-base:16px;
-}
-*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
-body{background:#f5f5f5;display:flex;min-height:100vh;color:#222;}
+  /* Basic Reset */
+  *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
+  body{background:#f5f5f5;display:flex;min-height:100vh;}
 
-/* Sidebar */
-.sidebar{
-  width:var(--sidebar-width);
-  background:#111827;color:#e5e7eb;
-  display:flex;flex-direction:column;padding:20px 10px;
-  gap:10px;
-}
-.sidebar-title{font-size:var(--text-sm);color:#9ca3af;margin-bottom:8px;text-transform:uppercase;}
-.nav-item{display:flex;align-items:center;gap:8px;padding:10px;border-radius:8px;cursor:pointer;transition:.2s;color:#d1d5db;}
-.nav-item:hover{background:rgba(249,250,251,.06);}
-.nav-item.active{background:#111827;border-left:3px solid #667eea;padding-left:10px;color:#fff;}
-.icon-dot{width:8px;height:8px;border-radius:999px;background:#4ade80;}
+  /* Dashboard Layout */
+  #main-dashboard{display:grid;grid-template-columns:220px 1fr;gap:0;height:100vh;overflow:hidden;background:#fff;border-radius:18px;box-shadow:0 10px 26px rgba(0,0,0,0.2);}
+  .sidebar{background:#111827;color:#e5e7eb;padding:16px;display:flex;flex-direction:column;gap:12px;}
+  .sidebar-title{font-size:14px;font-weight:600;color:#9ca3af;text-transform:uppercase;}
+  .nav-item{display:flex;align-items:center;gap:8px;padding:10px;border-radius:8px;cursor:pointer;color:#d1d5db;transition:.2s;}
+  .nav-item:hover{background:rgba(249,250,251,.06);}
+  .nav-item.active{background:#1f2937;color:#fff;border-left:3px solid #667eea;padding-left:7px;}
+  .icon-dot{width:7px;height:7px;border-radius:999px;background:#4ade80;}
 
-/* Main content */
-.main-area{flex:1;padding:20px;overflow:auto;}
-.section{display:none;}
-.section.active{display:block;}
-h2{font-size:18px;margin-bottom:10px;}
+  .main-area{padding:16px;display:flex;flex-direction:column;gap:16px;overflow:auto;}
 
-/* Table styles */
-table{width:100%;border-collapse:collapse;margin-bottom:16px;}
-th, td{padding:8px;text-align:left;border-bottom:1px solid #e5e7eb;}
-th{background:#f3f4f6;font-weight:600;color:#6b7280;}
-tr:hover{background:#f9fafb;}
-.btn{padding:6px 12px;border:none;border-radius:6px;background:#4CAF50;color:white;cursor:pointer;}
-.btn:hover{background:#45a049;}
-.btn-edit{background:#3b82f6;}
-.btn-edit:hover{background:#2563eb;}
-.btn-remove{background:#f87171;}
-.btn-remove:hover{background:#dc2626;}
+  /* Section Titles */
+  .section-title{font-weight:600;font-size:16px;color:#111827;margin-bottom:8px;}
 
-/* Timeline styles */
-.timeline{border-left:3px solid #667eea;margin-left:10px;padding-left:10px;}
-.timeline-item{margin-bottom:14px;position:relative;}
-.timeline-item::before{content:"";position:absolute;left:-7px;top:0;width:12px;height:12px;background:#667eea;border-radius:50%;}
-.timeline-item span.time{font-size:12px;color:#6b7280;margin-left:6px;}
-.timeline-item span.dependant{font-weight:600;margin-left:6px;}
+  /* Dependant List */
+  .dependant-list{display:flex;flex-direction:column;gap:8px;}
+  .dependant-card{background:#f9fafb;padding:10px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);}
+  .dependant-card:hover{background:#eef2ff;}
+  .dependant-name{font-weight:600;color:#111827;}
+  .dependant-summary{font-size:12px;color:#6b7280;}
 
-/* Compliance */
-.progress-container{background:#e5e7eb;border-radius:6px;width:100%;height:16px;margin-top:4px;}
-.progress-bar{background:#4ade80;height:16px;border-radius:6px;width:0%;text-align:right;color:#fff;padding-right:4px;font-size:12px;line-height:16px;}
+  /* Upcoming Reminders Table */
+  .board-wrapper{background:#f9fafb;border-radius:12px;padding:12px;overflow:auto;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+  .board-header-row, .board-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:6px;border-radius:8px;align-items:center;}
+  .board-header-row{font-weight:600;background:#f3f4f6;color:#6b7280;position:sticky;top:0;z-index:2;}
+  .board-row{background:#fff;margin-top:4px;box-shadow:0 1px 2px rgba(0,0,0,.06);}
+  .status-pill{padding:4px 8px;border-radius:999px;font-size:12px;text-align:center;white-space:nowrap;}
+  .status-green{background:#bbf7d0;color:#166534;}
+  .status-red{background:#fee2e2;color:#991b1b;}
+  .status-yellow{background:#fef9c3;color:#854d0e;}
 
-/* Response history */
-.response-history{margin-top:8px;padding:10px;background:#f3f4f6;border-radius:12px;max-height:200px;overflow:auto;}
-.response-history h4{margin-bottom:6px;font-size:14px;color:#111827;}
-.response-item{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e5e7eb;font-size:13px;}
-.response-item:last-child{border-bottom:none;}
-.taken{color:#059669;font-weight:600;}
-.missed{color:#b91c1c;font-weight:600;}
+  /* Compliance Summary */
+  .compliance-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+  .compliance-card{background:#f9fafb;padding:12px;border-radius:12px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+  .compliance-value{font-size:18px;font-weight:600;color:#111827;margin-top:4px;}
+  .compliance-label{font-size:12px;color:#6b7280;}
+
 </style>
 </head>
 <body>
 
-<div class="sidebar">
-  <div class="sidebar-title">Dashboard</div>
-  <div class="nav-item active" data-section="dependants"><span class="icon-dot"></span>Dependants</div>
-  <div class="nav-item" data-section="timeline"><span class="icon-dot"></span>Timeline</div>
-  <div class="nav-item" data-section="compliance"><span class="icon-dot"></span>Compliance Summary</div>
-</div>
+<div id="main-dashboard">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-title">Dashboard</div>
+    <div class="nav-item active" data-nav="dependants"><span class="icon-dot"></span>Dependants</div>
+    <div class="nav-item" data-nav="reminders"><span class="icon-dot"></span>Upcoming Reminders</div>
+    <div class="nav-item" data-nav="compliance"><span class="icon-dot"></span>Compliance Summary</div>
+  </aside>
 
-<div class="main-area">
-  <!-- Dependants Section -->
-  <div id="dependants" class="section active">
-    <h2>Dependants</h2>
-    <button class="btn" id="addDependantBtn">Add Dependant</button>
-    <table id="dependantsTable">
-      <thead>
-        <tr><th>Name</th><th>Phone</th><th>Medicine</th><th>Times/Day</th><th>Dosage</th><th>Actions</th></tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+  <!-- Main Area -->
+  <div class="main-area">
+    <!-- Dependants Section -->
+    <div id="dependants" class="dashboard-section">
+      <div class="section-title">Your Dependants</div>
+      <div class="dependant-list">
+        <div class="dependant-card" onclick="alert('Go to dependant detail page')">
+          <div class="dependant-name">John Doe</div>
+          <div class="dependant-summary">2 upcoming reminders</div>
+        </div>
+        <div class="dependant-card" onclick="alert('Go to dependant detail page')">
+          <div class="dependant-name">Jane Smith</div>
+          <div class="dependant-summary">1 upcoming reminder</div>
+        </div>
+      </div>
+    </div>
 
-  <!-- Timeline Section -->
-  <div id="timeline" class="section">
-    <h2>Upcoming Reminders</h2>
-    <div id="timelineList" class="timeline"></div>
-  </div>
+    <!-- Upcoming Reminders Section -->
+    <div id="reminders" class="dashboard-section" style="display:none;">
+      <div class="section-title">Upcoming Reminders</div>
+      <div class="board-wrapper">
+        <div class="board-header-row">
+          <div>Dependant</div><div>Medicine</div><div>Time</div><div>Status</div>
+        </div>
+        <div class="board-row">
+          <div>John Doe</div><div>Vitamin D</div><div>09:00 AM</div><div><span class="status-pill status-green">Taken</span></div>
+        </div>
+        <div class="board-row">
+          <div>Jane Smith</div><div>Ibuprofen</div><div>10:00 AM</div><div><span class="status-pill status-red">Missed</span></div>
+        </div>
+      </div>
+    </div>
 
-  <!-- Compliance Section -->
-  <div id="compliance" class="section">
-    <h2>Compliance Summary</h2>
-    <table id="complianceTable">
-      <thead><tr><th>Dependant</th><th>Completed</th><th>Missed</th><th>Compliance</th></tr></thead>
-      <tbody></tbody>
-    </table>
+    <!-- Compliance Summary Section -->
+    <div id="compliance" class="dashboard-section" style="display:none;">
+      <div class="section-title">Compliance Summary</div>
+      <div class="compliance-grid">
+        <div class="compliance-card">
+          <div class="compliance-label">John Doe</div>
+          <div class="compliance-value">90%</div>
+          <div class="compliance-label">Doses Taken</div>
+        </div>
+        <div class="compliance-card">
+          <div class="compliance-label">Jane Smith</div>
+          <div class="compliance-value">75%</div>
+          <div class="compliance-label">Doses Taken</div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
 <script>
-  // Sidebar navigation
-  const navItems=document.querySelectorAll('.nav-item');
-  const sections=document.querySelectorAll('.section');
-  navItems.forEach(item=>{
-    item.addEventListener('click',()=>{
+  // Navigation
+  const navItems = document.querySelectorAll('.nav-item');
+  const sections = document.querySelectorAll('.dashboard-section');
+
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
       navItems.forEach(i=>i.classList.remove('active'));
       item.classList.add('active');
-      const section=item.getAttribute('data-section');
-      sections.forEach(s=>s.classList.remove('active'));
-      document.getElementById(section).classList.add('active');
+
+      const target = item.getAttribute('data-nav');
+      sections.forEach(sec => sec.style.display = (sec.id === target ? 'block' : 'none'));
     });
   });
-
-  // Data
-  let dependants=[];
-  let timelineReminders=[];
-
-  const dependantsTableBody=document.querySelector('#dependantsTable tbody');
-  const timelineList=document.getElementById('timelineList');
-  const complianceTableBody=document.querySelector('#complianceTable tbody');
-
-  function renderDependants(){
-    dependantsTableBody.innerHTML='';
-    dependants.forEach((d,i)=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`
-        <td>${d.name}</td>
-        <td>${d.phone}</td>
-        <td>${d.medicine}</td>
-        <td>${d.timesPerDay}</td>
-        <td>${d.dosage}</td>
-        <td>
-          <button class="btn btn-edit" onclick="editDependant(${i})">Edit</button>
-          <button class="btn btn-remove" onclick="removeDependant(${i})">Remove</button>
-        </td>`;
-      dependantsTableBody.appendChild(tr);
-    });
-    renderTimeline();
-    renderCompliance();
-  }
-
-  function renderTimeline(){
-    timelineList.innerHTML='';
-    timelineReminders.forEach(r=>{
-      const div=document.createElement('div');
-      div.className='timeline-item';
-      const statusText=r.completed?'Taken':'Missed';
-      const statusClass=r.completed?'taken':'missed';
-      div.innerHTML=`<strong>${r.medicine}</strong> <span class="dependant">${r.dependant}</span> at <span class="time">${r.time}</span> - <span class="${statusClass}">${statusText}</span>`;
-      div.style.cursor='pointer';
-      div.onclick=()=>{alert('Go to '+r.dependant+' details');};
-      timelineList.appendChild(div);
-    });
-  }
-
-  function renderCompliance(){
-    complianceTableBody.innerHTML='';
-    dependants.forEach(d=>{
-      const completed=timelineReminders.filter(r=>r.dependant===d.name && r.completed).length;
-      const missed=timelineReminders.filter(r=>r.dependant===d.name && !r.completed).length;
-      const total=completed+missed;
-      const percent=total?Math.round((completed/total)*100):0;
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${d.name}</td><td>${completed}</td><td>${missed}</td>
-        <td>
-          <div class="progress-container"><div class="progress-bar" style="width:${percent}%">${percent}%</div></div>
-        </td>`;
-      complianceTableBody.appendChild(tr);
-    });
-  }
-
-  // Add dependant button
-  document.getElementById('addDependantBtn').addEventListener('click',()=>{
-    const name=prompt('Dependant Name:');
-    if(!name) return;
-    const phone=prompt('Phone:');
-    const medicine=prompt('Medicine:');
-    const timesPerDay=prompt('Times per day:');
-    const dosage=prompt('Dosage:');
-    dependants.push({name, phone, medicine, timesPerDay, dosage});
-    // Add sample reminders (response history)
-    timelineReminders.push({dependant:name, medicine:medicine, time:'09:00 AM', completed:true});
-    timelineReminders.push({dependant:name, medicine:medicine, time:'21:00 PM', completed:false});
-    renderDependants();
-  });
-
-  function editDependant(index){
-    const d=dependants[index];
-    const name=prompt('Dependant Name:',d.name);
-    if(!name) return;
-    const phone=prompt('Phone:',d.phone);
-    const medicine=prompt('Medicine:',d.medicine);
-    const timesPerDay=prompt('Times per day:',d.timesPerDay);
-    const dosage=prompt('Dosage:',d.dosage);
-    dependants[index]={name, phone, medicine, timesPerDay, dosage};
-    renderDependants();
-  }
-
-  function removeDependant(index){
-    if(!confirm('Remove this dependant?')) return;
-    const name=dependants[index].name;
-    dependants.splice(index,1);
-    timelineReminders=timelineReminders.filter(r=>r.dependant!==name);
-    renderDependants();
-  }
-
-  renderDependants();
 </script>
 
 </body>
