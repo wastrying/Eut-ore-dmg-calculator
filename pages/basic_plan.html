@@ -6,32 +6,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
-    body{background:#f5f5f5; min-height:100vh; color:#222; display:flex; justify-content:center; align-items:flex-start; padding:16px;}
-    .wrapper{width:100%; max-width:1200px; margin-top:58px; display:flex; flex-direction:column; gap:16px;}
-    .board-wrapper { background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px; padding:16px; max-width:600px; }
-    button { padding:8px 12px; border:none; border-radius:6px; background:#4CAF50; color:white; cursor:pointer; }
-    button:hover { background:#45a049; }
-    .remove-btn { background:#f87171; margin-top:8px; }
-    .edit-btn { background:#3b82f6; margin-top:8px; }
-    .dependant-info { margin-top:12px; padding:12px; background:#fff; border-left:4px solid #4CAF50; border-radius:6px; }
+    body{background:#f5f5f5;min-height:100vh;color:#222;display:flex;justify-content:center;align-items:flex-start;padding:16px;}
+    .wrapper{width:100%;max-width:1200px;margin-top:58px;display:flex;flex-direction:column;gap:16px;}
+    .board-wrapper{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:16px;max-width:600px;}
+    button{padding:8px 12px;border:none;border-radius:6px;background:#4CAF50;color:white;cursor:pointer;}
+    button:hover{background:#45a049;}
+    .dependant-info{margin-top:12px;padding:12px;background:#fff;border-left:4px solid #4CAF50;border-radius:6px;}
+    .dependant-actions{display:flex;gap:8px;margin-top:10px;}
 
-    .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1000; }
-    .modal.active { display:flex; }
-    .modal-content { background:#fff; padding:20px; border-radius:12px; width:90%; max-width:400px; box-shadow:0 8px 24px rgba(0,0,0,0.3); }
-    .modal-content h2 { margin-top:0; }
-    .modal-content label { display:block; margin:8px 0 4px; font-weight:600; }
-    .modal-content input, .modal-content select { width:100%; padding:6px 8px; margin-bottom:10px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box; }
-    .modal-content .dosage-row { display:flex; gap:6px; }
-    .modal-content .dosage-row input, .modal-content .dosage-row select { flex:1; }
-    .error { color:red; font-weight:bold; margin-bottom:8px; }
-    #timesContainer { display:flex; flex-wrap: wrap; gap:8px; margin-bottom:10px; }
-    #timesContainer .time-wrapper { display:flex; align-items:center; gap:6px; }
-    #timesContainer .time-wrapper label { min-width: 50px; font-weight:500; }
-    #timesContainer .time-wrapper input { flex:1; padding:6px 10px; font-size:16px; border:1px solid #ccc; border-radius:6px; }
+    /* Modal */
+    .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;z-index:1000;}
+    .modal.active{display:flex;}
+    .modal-content{background:#fff;padding:20px;border-radius:12px;width:90%;max-width:400px;box-shadow:0 8px 24px rgba(0,0,0,0.3);}
+    .modal-content h2{margin-top:0;}
+    .modal-content label{display:block;margin:8px 0 4px;font-weight:600;}
+    .modal-content input,.modal-content select{width:100%;padding:6px 8px;margin-bottom:10px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;}
+    .modal-content .dosage-row{display:flex;gap:6px;}
+    .modal-content .dosage-row input{flex:1;}
+    .modal-content .dosage-row select{flex:1;}
+    .error{color:red;font-weight:bold;margin-bottom:8px;}
+    .time-picker-container{display:none;margin-top:10px;}
+    .time-picker-scroll{display:flex;gap:6px;overflow-x:auto;padding:4px;}
+    .time-picker-scroll input[type='time']{flex:0 0 auto;padding:6px;border:1px solid #ccc;border-radius:6px;}
+    #undoBtn{background:#fbbf24;color:#000;margin-top:10px;}
   </style>
 </head>
 <body>
-
 <div class="wrapper">
   <div class="board-wrapper">
     <h2>Basic Plan Dashboard</h2>
@@ -41,18 +41,21 @@
       <h3>Dependant Profile</h3>
       <p><strong>Name:</strong> <span id="dispName"></span></p>
       <p><strong>Medicine Type:</strong> <span id="dispMedicine"></span></p>
-      <p><strong>Times:</strong> <span id="dispTimes"></span></p>
+      <p><strong>Times to Take Medicine:</strong> <span id="dispTimes"></span></p>
       <p><strong>Dosage:</strong> <span id="dispDosage"></span></p>
       <p><strong>Additional Notes:</strong> <span id="dispNotes"></span></p>
-      <button id="editDependantBtn" class="edit-btn">Edit Dependant</button>
-      <button id="removeDependantBtn" class="remove-btn">Remove Dependant</button>
+      <div class="dependant-actions">
+        <button id="editDependantBtn" style="background:#3b82f6;">Edit</button>
+        <button id="removeDependantBtn" style="background:#f87171;">Remove</button>
+      </div>
     </div>
   </div>
 </div>
 
+<!-- Modal -->
 <div id="dependantModal" class="modal">
   <div class="modal-content">
-    <h2>Add/Edit Dependant</h2>
+    <h2 id="modalTitle">Add Dependant</h2>
     <p class="error" id="modalError"></p>
     <form id="dependantForm">
       <label for="depName">Name:</label>
@@ -61,7 +64,7 @@
       <label for="depMedicine">Type of Medicine:</label>
       <input type="text" id="depMedicine" required />
 
-      <label for="depDosageNumber">Dosage:</label>
+      <label for="depDosage">Dosage:</label>
       <div class="dosage-row">
         <input type="number" id="depDosageNumber" min="0" placeholder="Amount" required />
         <select id="depDosageUnit" required>
@@ -71,32 +74,36 @@
         </select>
       </div>
 
-      <label for="depDosageTimes">Times per Day:</label>
-      <input type="number" id="depDosageTimes" min="1" placeholder="Times per day" required />
+      <label for="depDosageTimes">Times per day:</label>
+      <input type="number" id="depDosageTimes" min="1" max="10" placeholder="Enter number of times" required />
 
-      <!-- Wrapper for label + container to toggle together -->
-      <div id="timesWrapper" style="display:none;">
-        <label for="depTimes">Times to take medicine:</label>
-        <div id="timesContainer"></div>
+      <div id="timePickerContainer" class="time-picker-container">
+        <label>Times to Take Medicine:</label>
+        <div id="timeInputs" class="time-picker-scroll"></div>
       </div>
 
       <label for="depNotes">Additional Notes:</label>
       <input type="text" id="depNotes" placeholder="Enter 'NA' if none" required />
 
       <button type="submit">Save Dependant</button>
-      <button type="button" id="closeModalBtn" style="background:#f87171;margin-top:4px;">Cancel</button>
+      <button type="button" id="closeModalBtn" style="background:#9ca3af;margin-top:4px;">Cancel</button>
     </form>
   </div>
 </div>
 
 <script>
   let dependantAdded = false;
+  let editing = false;
+  let lastDeletedDependant = null;
 
   const addBtn = document.getElementById('addDependantBtn');
+  const editBtn = document.getElementById('editDependantBtn');
+  const removeBtn = document.getElementById('removeDependantBtn');
   const modal = document.getElementById('dependantModal');
   const closeModalBtn = document.getElementById('closeModalBtn');
   const form = document.getElementById('dependantForm');
   const errorMsg = document.getElementById('modalError');
+  const modalTitle = document.getElementById('modalTitle');
 
   const infoBox = document.getElementById('dependantInfo');
   const dispName = document.getElementById('dispName');
@@ -104,33 +111,107 @@
   const dispTimes = document.getElementById('dispTimes');
   const dispDosage = document.getElementById('dispDosage');
   const dispNotes = document.getElementById('dispNotes');
-  const removeBtn = document.getElementById('removeDependantBtn');
-  const editBtn = document.getElementById('editDependantBtn');
 
-  const timesContainer = document.getElementById('timesContainer');
-  const timesWrapper = document.getElementById('timesWrapper');
   const dosageTimesInput = document.getElementById('depDosageTimes');
+  const timePickerContainer = document.getElementById('timePickerContainer');
+  const timeInputs = document.getElementById('timeInputs');
 
-  // Open modal for adding
   addBtn.addEventListener('click', () => {
-    if(dependantAdded){
+    if(dependantAdded && !editing){
       alert("You can only add one dependant in the Basic plan.");
       return;
     }
+    modalTitle.textContent = editing ? "Edit Dependant" : "Add Dependant";
     modal.classList.add('active');
   });
 
-  // Close modal
   closeModalBtn.addEventListener('click', () => {
     modal.classList.remove('active');
     form.reset();
-    timesContainer.innerHTML = '';
-    timesWrapper.style.display = 'none';
+    timePickerContainer.style.display = 'none';
     errorMsg.textContent = '';
   });
 
-  // Remove dependant
+  dosageTimesInput.addEventListener('input', () => {
+    const count = parseInt(dosageTimesInput.value);
+    timeInputs.innerHTML = '';
+    if(count > 0){
+      timePickerContainer.style.display = 'block';
+      for(let i=1;i<=count;i++){
+        const timeInput = document.createElement('input');
+        timeInput.type = 'time';
+        timeInput.required = true;
+        timeInputs.appendChild(timeInput);
+      }
+    } else {
+      timePickerContainer.style.display = 'none';
+    }
+  });
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+
+    const name = depName.value.trim();
+    const medicine = depMedicine.value.trim();
+    const dosageNumber = depDosageNumber.value.trim();
+    const dosageUnit = depDosageUnit.value;
+    const dosageTimes = depDosageTimes.value.trim();
+    const notes = depNotes.value.trim();
+    const timeValues = Array.from(timeInputs.querySelectorAll('input[type="time"]')).map(i=>i.value);
+
+    if(!name || !medicine || !dosageNumber || !dosageUnit || !dosageTimes || timeValues.includes('') || !notes){
+      errorMsg.textContent = "Please fill all required fields. Enter 'NA' if there are no additional notes.";
+      return;
+    }
+
+    const dosageText = `${dosageNumber} ${dosageUnit}, ${dosageTimes} time(s) per day`;
+    const timeText = timeValues.join(', ');
+
+    dispName.textContent = name;
+    dispMedicine.textContent = medicine;
+    dispTimes.textContent = timeText;
+    dispDosage.textContent = dosageText;
+    dispNotes.textContent = notes;
+
+    infoBox.style.display = 'block';
+    dependantAdded = true;
+    editing = false;
+
+    modal.classList.remove('active');
+    form.reset();
+    timePickerContainer.style.display = 'none';
+    errorMsg.textContent = '';
+  });
+
+  editBtn.addEventListener('click', () => {
+    editing = true;
+    addBtn.click();
+    depName.value = dispName.textContent;
+    depMedicine.value = dispMedicine.textContent;
+    depDosageNumber.value = dispDosage.textContent.split(' ')[0];
+    depDosageUnit.value = dispDosage.textContent.split(' ')[1];
+    const timesPerDay = parseInt(dispDosage.textContent.match(/\d+/g)[1]);
+    depDosageTimes.value = timesPerDay;
+    dosageTimesInput.dispatchEvent(new Event('input'));
+    const currentTimes = dispTimes.textContent.split(', ');
+    const timeInputsEls = timeInputs.querySelectorAll('input[type="time"]');
+    currentTimes.forEach((t, i) => { if(timeInputsEls[i]) timeInputsEls[i].value = t; });
+    depNotes.value = dispNotes.textContent;
+  });
+
   removeBtn.addEventListener('click', () => {
+    if(!dependantAdded) return;
+    const confirmDelete = confirm("Are you sure you want to delete this dependant?");
+    if(!confirmDelete) return;
+
+    lastDeletedDependant = {
+      name: dispName.textContent,
+      medicine: dispMedicine.textContent,
+      times: dispTimes.textContent,
+      dosage: dispDosage.textContent,
+      notes: dispNotes.textContent
+    };
+
     infoBox.style.display = 'none';
     dependantAdded = false;
     dispName.textContent = '';
@@ -138,111 +219,33 @@
     dispTimes.textContent = '';
     dispDosage.textContent = '';
     dispNotes.textContent = '';
+
+    showUndoButton();
   });
 
-  // Edit dependant
-  editBtn.addEventListener('click', () => {
-    modal.classList.add('active');
+  function showUndoButton() {
+    let undoBtn = document.getElementById('undoBtn');
+    if(!undoBtn){
+      undoBtn = document.createElement('button');
+      undoBtn.id = 'undoBtn';
+      undoBtn.textContent = 'Undo Delete';
+      document.querySelector('.board-wrapper').appendChild(undoBtn);
 
-    document.getElementById('depName').value = dispName.textContent;
-    document.getElementById('depMedicine').value = dispMedicine.textContent;
-
-    const [dosageAmount, rest] = dispDosage.textContent.split(' ');
-    document.getElementById('depDosageNumber').value = dosageAmount;
-    document.getElementById('depDosageUnit').value = rest.replace(',','');
-
-    const timesPerDay = parseInt(rest.split(' ')[2]) || 1;
-    document.getElementById('depDosageTimes').value = timesPerDay;
-
-    const exactTimes = dispTimes.textContent.split(', ');
-    timesWrapper.style.display = exactTimes.length ? 'block' : 'none';
-    timesContainer.innerHTML = '';
-    exactTimes.forEach((time, i) => {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'time-wrapper';
-      const label = document.createElement('label');
-      label.textContent = `Time ${i+1}:`;
-      const input = document.createElement('input');
-      input.type = 'time';
-      input.value = time;
-      input.required = true;
-      wrapper.appendChild(label);
-      wrapper.appendChild(input);
-      timesContainer.appendChild(wrapper);
-    });
-
-    document.getElementById('depNotes').value = dispNotes.textContent;
-  });
-
-  // Show/hide timesWrapper based on Times per Day input
-  dosageTimesInput.addEventListener('input', () => {
-    const timesCount = parseInt(dosageTimesInput.value) || 0;
-    if(timesCount > 0){
-      timesWrapper.style.display = 'block';
-    } else {
-      timesWrapper.style.display = 'none';
+      undoBtn.addEventListener('click', () => {
+        if(lastDeletedDependant){
+          dispName.textContent = lastDeletedDependant.name;
+          dispMedicine.textContent = lastDeletedDependant.medicine;
+          dispTimes.textContent = lastDeletedDependant.times;
+          dispDosage.textContent = lastDeletedDependant.dosage;
+          dispNotes.textContent = lastDeletedDependant.notes;
+          infoBox.style.display = 'block';
+          dependantAdded = true;
+          lastDeletedDependant = null;
+          undoBtn.remove();
+        }
+      });
     }
-
-    const currentTimes = timesContainer.querySelectorAll('input[type="time"]');
-    const existingValues = Array.from(currentTimes).map(input => input.value);
-    timesContainer.innerHTML = '';
-
-    for (let i = 0; i < timesCount; i++) {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'time-wrapper';
-      const label = document.createElement('label');
-      label.textContent = `Time ${i+1}:`;
-      const input = document.createElement('input');
-      input.type = 'time';
-      input.step = 60;
-      input.required = true;
-      input.value = existingValues[i] || '';
-      wrapper.appendChild(label);
-      wrapper.appendChild(input);
-      timesContainer.appendChild(wrapper);
-    }
-  });
-
-  // Handle form submit
-  form.addEventListener('submit', function(e){
-    e.preventDefault();
-
-    const name = document.getElementById('depName').value.trim();
-    const medicine = document.getElementById('depMedicine').value.trim();
-    const dosageNumber = document.getElementById('depDosageNumber').value;
-    const dosageUnit = document.getElementById('depDosageUnit').value;
-    const dosageTimes = document.getElementById('depDosageTimes').value;
-    const notesValue = document.getElementById('depNotes').value.trim();
-
-    const timeInputs = timesContainer.querySelectorAll('input[type="time"]');
-    let allTimesFilled = true;
-    const exactTimes = [];
-
-    timeInputs.forEach(input => {
-      if(!input.value) allTimesFilled = false;
-      exactTimes.push(input.value);
-    });
-
-    if(!name || !medicine || !dosageNumber || !dosageUnit || !dosageTimes || !allTimesFilled || !notesValue){
-      errorMsg.textContent = "Please fill all required fields. Enter 'NA' if there are no additional notes.";
-      return;
-    }
-
-    const dosageText = `${dosageNumber} ${dosageUnit}, ${dosageTimes} time(s) per day`;
-
-    dispName.textContent = name;
-    dispMedicine.textContent = medicine;
-    dispTimes.textContent = exactTimes.join(', ');
-    dispDosage.textContent = dosageText;
-    dispNotes.textContent = notesValue;
-
-    infoBox.style.display = 'block';
-    dependantAdded = true;
-
-    modal.classList.remove('active');
-    errorMsg.textContent = '';
-  });
+  }
 </script>
-
 </body>
 </html>
