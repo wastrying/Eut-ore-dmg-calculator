@@ -5,7 +5,6 @@
   <title>Remblyx Dashboard - Basic Plan</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    /* ====================== Dashboard Styles ====================== */
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
     body{background:#f5f5f5; min-height:100vh; color:#222; display:flex; justify-content:center; align-items:flex-start; padding:16px;}
     .wrapper{width:100%; max-width:1200px; margin-top:58px; display:flex; flex-direction:column; gap:16px;}
@@ -13,9 +12,9 @@
     button { padding:8px 12px; border:none; border-radius:6px; background:#4CAF50; color:white; cursor:pointer; }
     button:hover { background:#45a049; }
     .remove-btn { background:#f87171; margin-top:8px; }
+    .edit-btn { background:#3b82f6; margin-top:8px; }
     .dependant-info { margin-top:12px; padding:12px; background:#fff; border-left:4px solid #4CAF50; border-radius:6px; }
 
-    /* ====================== Modal Styles ====================== */
     .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1000; }
     .modal.active { display:flex; }
     .modal-content { background:#fff; padding:20px; border-radius:12px; width:90%; max-width:400px; box-shadow:0 8px 24px rgba(0,0,0,0.3); }
@@ -25,7 +24,7 @@
     .modal-content .dosage-row { display:flex; gap:6px; }
     .modal-content .dosage-row input, .modal-content .dosage-row select { flex:1; }
     .error { color:red; font-weight:bold; margin-bottom:8px; }
-    #timesContainer { display:flex; flex-wrap: wrap; gap:8px; }
+    #timesContainer { display:flex; flex-wrap: wrap; gap:8px; margin-bottom:10px; }
     #timesContainer .time-wrapper { display:flex; align-items:center; gap:6px; }
     #timesContainer .time-wrapper label { min-width: 50px; font-weight:500; }
     #timesContainer .time-wrapper input { flex:1; padding:6px 10px; font-size:16px; border:1px solid #ccc; border-radius:6px; }
@@ -34,14 +33,10 @@
 <body>
 
 <div class="wrapper">
-  <!-- ====================== Main Dashboard ====================== -->
   <div class="board-wrapper">
     <h2>Basic Plan Dashboard</h2>
-    
-    <!-- Add Dependant Button -->
     <button id="addDependantBtn">Add Dependant</button>
 
-    <!-- Dependant Info Display -->
     <div id="dependantInfo" class="dependant-info" style="display:none;">
       <h3>Dependant Profile</h3>
       <p><strong>Name:</strong> <span id="dispName"></span></p>
@@ -49,15 +44,15 @@
       <p><strong>Times:</strong> <span id="dispTimes"></span></p>
       <p><strong>Dosage:</strong> <span id="dispDosage"></span></p>
       <p><strong>Additional Notes:</strong> <span id="dispNotes"></span></p>
+      <button id="editDependantBtn" class="edit-btn">Edit Dependant</button>
       <button id="removeDependantBtn" class="remove-btn">Remove Dependant</button>
     </div>
   </div>
 </div>
 
-<!-- ====================== Dependant Modal ====================== -->
 <div id="dependantModal" class="modal">
   <div class="modal-content">
-    <h2>Add Dependant</h2>
+    <h2>Add/Edit Dependant</h2>
     <p class="error" id="modalError"></p>
     <form id="dependantForm">
       <label for="depName">Name:</label>
@@ -80,7 +75,7 @@
       <input type="number" id="depDosageTimes" min="1" placeholder="Times per day" required />
 
       <label for="depTimes">Times to take medicine:</label>
-      <div id="timesContainer"></div>
+      <div id="timesContainer" style="display:none;"></div>
 
       <label for="depNotes">Additional Notes:</label>
       <input type="text" id="depNotes" placeholder="Enter 'NA' if none" required />
@@ -107,11 +102,12 @@
   const dispDosage = document.getElementById('dispDosage');
   const dispNotes = document.getElementById('dispNotes');
   const removeBtn = document.getElementById('removeDependantBtn');
+  const editBtn = document.getElementById('editDependantBtn');
 
   const timesContainer = document.getElementById('timesContainer');
   const dosageTimesInput = document.getElementById('depDosageTimes');
 
-  // Open modal
+  // Open modal for adding
   addBtn.addEventListener('click', () => {
     if(dependantAdded){
       alert("You can only add one dependant in the Basic plan.");
@@ -125,28 +121,83 @@
     modal.classList.remove('active');
     form.reset();
     timesContainer.innerHTML = '';
+    timesContainer.style.display = 'none';
     errorMsg.textContent = '';
   });
 
-  // Dynamically create scroll-wheel style time pickers (horizontal layout)
+  // Remove dependant
+  removeBtn.addEventListener('click', () => {
+    infoBox.style.display = 'none';
+    dependantAdded = false;
+    dispName.textContent = '';
+    dispMedicine.textContent = '';
+    dispTimes.textContent = '';
+    dispDosage.textContent = '';
+    dispNotes.textContent = '';
+  });
+
+  // Edit dependant
+  editBtn.addEventListener('click', () => {
+    modal.classList.add('active');
+
+    // Pre-fill modal with current values
+    document.getElementById('depName').value = dispName.textContent;
+    document.getElementById('depMedicine').value = dispMedicine.textContent;
+
+    const [dosageAmount, rest] = dispDosage.textContent.split(' ');
+    document.getElementById('depDosageNumber').value = dosageAmount;
+    document.getElementById('depDosageUnit').value = rest.replace(',','');
+
+    const timesPerDay = parseInt(rest.split(' ')[2]) || 1;
+    document.getElementById('depDosageTimes').value = timesPerDay;
+
+    // Pre-fill times
+    const exactTimes = dispTimes.textContent.split(', ');
+    dosageTimesInput.value = exactTimes.length;
+    timesContainer.innerHTML = '';
+    timesContainer.style.display = exactTimes.length ? 'flex' : 'none';
+    exactTimes.forEach((time, i) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'time-wrapper';
+      const label = document.createElement('label');
+      label.textContent = `Time ${i+1}:`;
+      const input = document.createElement('input');
+      input.type = 'time';
+      input.value = time;
+      input.required = true;
+      wrapper.appendChild(label);
+      wrapper.appendChild(input);
+      timesContainer.appendChild(wrapper);
+    });
+
+    document.getElementById('depNotes').value = dispNotes.textContent;
+  });
+
+  // Show/hide timesContainer dynamically based on Times per Day
   dosageTimesInput.addEventListener('input', () => {
     const timesCount = parseInt(dosageTimesInput.value) || 0;
+    if(timesCount > 0){
+      timesContainer.style.display = 'flex';
+    } else {
+      timesContainer.style.display = 'none';
+    }
+
+    const currentTimes = timesContainer.querySelectorAll('input[type="time"]');
+    const existingValues = Array.from(currentTimes).map(input => input.value);
     timesContainer.innerHTML = '';
 
     for (let i = 0; i < timesCount; i++) {
       const wrapper = document.createElement('div');
       wrapper.className = 'time-wrapper';
-
       const label = document.createElement('label');
-      label.textContent = `Time ${i + 1}:`;
-
-      const timeInput = document.createElement('input');
-      timeInput.type = 'time';
-      timeInput.step = 60; // scroll by 1 minute
-      timeInput.required = true;
-
+      label.textContent = `Time ${i+1}:`;
+      const input = document.createElement('input');
+      input.type = 'time';
+      input.step = 60;
+      input.required = true;
+      input.value = existingValues[i] || '';
       wrapper.appendChild(label);
-      wrapper.appendChild(timeInput);
+      wrapper.appendChild(input);
       timesContainer.appendChild(wrapper);
     }
   });
@@ -188,22 +239,8 @@
     infoBox.style.display = 'block';
     dependantAdded = true;
 
-    // Close modal and reset
     modal.classList.remove('active');
-    form.reset();
-    timesContainer.innerHTML = '';
     errorMsg.textContent = '';
-  });
-
-  // Remove dependant
-  removeBtn.addEventListener('click', () => {
-    infoBox.style.display = 'none';
-    dependantAdded = false;
-    dispName.textContent = '';
-    dispMedicine.textContent = '';
-    dispTimes.textContent = '';
-    dispDosage.textContent = '';
-    dispNotes.textContent = '';
   });
 </script>
 
