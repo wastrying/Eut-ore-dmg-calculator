@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Basic Plan Dashboard</title>
+  <title>Basic Plan - Add Dependant</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -18,85 +18,105 @@
       text-align: center;
     }
     .container {
-      max-width: 800px;
+      max-width: 600px;
       margin: 2rem auto;
       background-color: white;
       padding: 2rem;
       border-radius: 8px;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-    h2 {
-      color: #333;
+    input, button {
+      width: 100%;
+      padding: 0.7rem;
+      margin: 0.5rem 0;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
     }
-    .dependant-info, .reminders {
-      margin-bottom: 2rem;
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
     }
-    .reminder {
-      display: flex;
-      justify-content: space-between;
-      padding: 0.5rem 1rem;
-      margin-bottom: 0.5rem;
+    button:hover {
+      background-color: #45a049;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
+    }
+    .dependant-info {
+      margin-top: 2rem;
+      padding: 1rem;
       background-color: #f9f9f9;
       border-left: 4px solid #4CAF50;
       border-radius: 4px;
-    }
-    .status {
-      font-weight: bold;
-    }
-    .status.taken {
-      color: green;
-    }
-    .status.missed {
-      color: red;
-    }
-    footer {
-      text-align: center;
-      padding: 1rem;
-      color: #777;
-      font-size: 0.9rem;
     }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>Basic Plan Dashboard</h1>
+    <h1>Basic Plan - Add Dependant</h1>
   </header>
 
   <div class="container">
-    <!-- Dependant Info -->
-    <div class="dependant-info">
-      <h2>Dependant Profile</h2>
-      <p><strong>Name:</strong> John Doe</p>
-      <p><strong>Age:</strong> 68</p>
-      <p><strong>Condition:</strong> Hypertension</p>
-    </div>
+    <form id="dependantForm">
+      <label for="name">Dependant Name:</label>
+      <input type="text" id="name" required>
 
-    <!-- Reminders -->
-    <div class="reminders">
-      <h2>Upcoming Reminders</h2>
-      
-      <div class="reminder">
-        <span>Medication: Blood Pressure Pill</span>
-        <span class="status taken">Taken</span>
-      </div>
-      
-      <div class="reminder">
-        <span>Check-up: Dr. Smith at 3 PM</span>
-        <span class="status missed">Missed</span>
-      </div>
-      
-      <div class="reminder">
-        <span>Medication: Heart Medication</span>
-        <span class="status taken">Taken</span>
-      </div>
+      <label for="age">Age:</label>
+      <input type="number" id="age" required>
+
+      <label for="condition">Condition:</label>
+      <input type="text" id="condition" required>
+
+      <button type="submit">Add Dependant</button>
+      <p class="error" id="errorMsg"></p>
+    </form>
+
+    <div class="dependant-info" id="dependantInfo" style="display:none;">
+      <h2>Dependant Profile</h2>
+      <p><strong>Name:</strong> <span id="dispName"></span></p>
+      <p><strong>Age:</strong> <span id="dispAge"></span></p>
+      <p><strong>Condition:</strong> <span id="dispCondition"></span></p>
     </div>
   </div>
 
-  <footer>
-    &copy; 2025 CareApp. All rights reserved.
-  </footer>
+  <script>
+    let dependantAdded = false; // tracks if a dependant is already added
+
+    const form = document.getElementById('dependantForm');
+    const errorMsg = document.getElementById('errorMsg');
+    const dependantInfo = document.getElementById('dependantInfo');
+    const dispName = document.getElementById('dispName');
+    const dispAge = document.getElementById('dispAge');
+    const dispCondition = document.getElementById('dispCondition');
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      if (dependantAdded) {
+        errorMsg.textContent = "You can only add one dependant in the Basic plan.";
+        return;
+      }
+
+      const name = document.getElementById('name').value;
+      const age = document.getElementById('age').value;
+      const condition = document.getElementById('condition').value;
+
+      // Display dependant info
+      dispName.textContent = name;
+      dispAge.textContent = age;
+      dispCondition.textContent = condition;
+      dependantInfo.style.display = 'block';
+
+      dependantAdded = true;
+      errorMsg.textContent = "";
+      form.reset();
+    });
+  </script>
 
 </body>
 </html>
-
