@@ -28,7 +28,6 @@
     .time-picker-container{display:none;margin-top:10px;}
     .time-picker-scroll{display:flex;gap:6px;overflow-x:auto;padding:4px;}
     .time-picker-scroll input[type='time']{flex:0 0 auto;padding:6px;border:1px solid #ccc;border-radius:6px;}
-    #undoBtn{background:#fbbf24;color:#000;margin-top:10px;}
   </style>
 </head>
 <body>
@@ -94,7 +93,6 @@
 <script>
   let dependantAdded = false;
   let editing = false;
-  let lastDeletedDependant = null;
 
   const addBtn = document.getElementById('addDependantBtn');
   const editBtn = document.getElementById('editDependantBtn');
@@ -116,6 +114,7 @@
   const timePickerContainer = document.getElementById('timePickerContainer');
   const timeInputs = document.getElementById('timeInputs');
 
+  // Add dependant
   addBtn.addEventListener('click', () => {
     if(dependantAdded && !editing){
       alert("You can only add one dependant in the Basic plan.");
@@ -125,6 +124,7 @@
     modal.classList.add('active');
   });
 
+  // Close modal
   closeModalBtn.addEventListener('click', () => {
     modal.classList.remove('active');
     form.reset();
@@ -132,6 +132,7 @@
     errorMsg.textContent = '';
   });
 
+  // Show time pickers
   dosageTimesInput.addEventListener('input', () => {
     const count = parseInt(dosageTimesInput.value);
     timeInputs.innerHTML = '';
@@ -148,6 +149,7 @@
     }
   });
 
+  // Save dependant
   form.addEventListener('submit', function(e){
     e.preventDefault();
 
@@ -183,6 +185,7 @@
     errorMsg.textContent = '';
   });
 
+  // Edit dependant
   editBtn.addEventListener('click', () => {
     editing = true;
     addBtn.click();
@@ -199,18 +202,11 @@
     depNotes.value = dispNotes.textContent;
   });
 
+  // Remove dependant with confirmation
   removeBtn.addEventListener('click', () => {
     if(!dependantAdded) return;
     const confirmDelete = confirm("Are you sure you want to delete this dependant?");
     if(!confirmDelete) return;
-
-    lastDeletedDependant = {
-      name: dispName.textContent,
-      medicine: dispMedicine.textContent,
-      times: dispTimes.textContent,
-      dosage: dispDosage.textContent,
-      notes: dispNotes.textContent
-    };
 
     infoBox.style.display = 'none';
     dependantAdded = false;
@@ -219,33 +215,7 @@
     dispTimes.textContent = '';
     dispDosage.textContent = '';
     dispNotes.textContent = '';
-
-    showUndoButton();
   });
-
-  function showUndoButton() {
-    let undoBtn = document.getElementById('undoBtn');
-    if(!undoBtn){
-      undoBtn = document.createElement('button');
-      undoBtn.id = 'undoBtn';
-      undoBtn.textContent = 'Undo Delete';
-      document.querySelector('.board-wrapper').appendChild(undoBtn);
-
-      undoBtn.addEventListener('click', () => {
-        if(lastDeletedDependant){
-          dispName.textContent = lastDeletedDependant.name;
-          dispMedicine.textContent = lastDeletedDependant.medicine;
-          dispTimes.textContent = lastDeletedDependant.times;
-          dispDosage.textContent = lastDeletedDependant.dosage;
-          dispNotes.textContent = lastDeletedDependant.notes;
-          infoBox.style.display = 'block';
-          dependantAdded = true;
-          lastDeletedDependant = null;
-          undoBtn.remove();
-        }
-      });
-    }
-  }
 </script>
 </body>
 </html>
