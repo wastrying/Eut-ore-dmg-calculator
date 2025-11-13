@@ -4,16 +4,19 @@
   <meta charset="UTF-8" />
   <title>Remblyx Dashboard - Basic Plan</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" sizes="32x32" href="../images/medisignal.png" />
+  <link rel="apple-touch-icon" href="../images/medisignal.png" />
   <style>
-    body, html { margin:0; padding:0; font-family: Arial, sans-serif; background:#f5f5f5; }
-    .wrapper { width:100%; max-width:1200px; margin:100px auto 0; display:flex; flex-direction:column; gap:16px; }
-    .main-area { padding:16px; }
+    /* ====================== Dashboard Styles ====================== */
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
+    body{background:#f5f5f5; min-height:100vh; color:#222; display:flex; justify-content:center; align-items:flex-start; padding:16px;}
+    .wrapper{width:100%; max-width:1200px; margin-top:58px; display:flex; flex-direction:column; gap:16px;}
     .board-wrapper { background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px; padding:16px; max-width:600px; }
     button { padding:8px 12px; border:none; border-radius:6px; background:#4CAF50; color:white; cursor:pointer; }
     button:hover { background:#45a049; }
     .dependant-info { margin-top:12px; padding:12px; background:#fff; border-left:4px solid #4CAF50; border-radius:6px; }
-    
-    /* Modal Styles */
+
+    /* ====================== Modal Styles ====================== */
     .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1000; }
     .modal.active { display:flex; }
     .modal-content { background:#fff; padding:20px; border-radius:12px; width:90%; max-width:400px; box-shadow:0 8px 24px rgba(0,0,0,0.3); }
@@ -26,46 +29,45 @@
 <body>
 
 <div class="wrapper">
-  <div class="main-area">
-    <div class="board-wrapper">
-      <h2>Basic Plan Dashboard</h2>
-      <button id="addDependantBtn">Add Dependant</button>
+  <!-- ====================== Main Dashboard ====================== -->
+  <div class="board-wrapper">
+    <h2>Basic Plan Dashboard</h2>
+    
+    <!-- Add Dependant Button -->
+    <button id="addDependantBtn">Add Dependant</button>
 
-      <!-- Dependant Info -->
-      <div id="dependantInfo" class="dependant-info" style="display:none;">
-        <h3>Dependant Profile</h3>
-        <p><strong>Name:</strong> <span id="dispName"></span></p>
-        <p><strong>Relationship:</strong> <span id="dispRelationship"></span></p>
-        <p><strong>Age:</strong> <span id="dispAge"></span></p>
-        <p><strong>Control Type:</strong> <span id="dispControl"></span></p>
-      </div>
+    <!-- Dependant Info Display -->
+    <div id="dependantInfo" class="dependant-info" style="display:none;">
+      <h3>Dependant Profile</h3>
+      <p><strong>Name:</strong> <span id="dispName"></span></p>
+      <p><strong>Medicine Type:</strong> <span id="dispMedicine"></span></p>
+      <p><strong>Times:</strong> <span id="dispTimes"></span></p>
+      <p><strong>Dosage:</strong> <span id="dispDosage"></span></p>
+      <p><strong>Notes:</strong> <span id="dispNotes"></span></p>
     </div>
   </div>
 </div>
 
-<!-- Modal -->
+<!-- ====================== Dependant Modal ====================== -->
 <div id="dependantModal" class="modal">
   <div class="modal-content">
     <h2>Add Dependant</h2>
     <p class="error" id="modalError"></p>
     <form id="dependantForm">
       <label for="depName">Name:</label>
-      <input type="text" id="depName" required>
+      <input type="text" id="depName" required />
 
-      <label for="depRelationship">Relationship:</label>
-      <input type="text" id="depRelationship" required>
+      <label for="depMedicine">Type of Medicine:</label>
+      <input type="text" id="depMedicine" required />
 
-      <label for="depAge">Age:</label>
-      <input type="number" id="depAge" required>
+      <label for="depTimes">Times (per day or specific times):</label>
+      <input type="text" id="depTimes" required />
 
-      <label for="depControl">Type of Control:</label>
-      <select id="depControl" required>
-        <option value="">Select control type</option>
-        <option value="Medication">Medication</option>
-        <option value="Appointments">Appointments</option>
-        <option value="Checkups">Checkups</option>
-        <option value="Full Monitoring">Full Monitoring</option>
-      </select>
+      <label for="depDosage">Dosage:</label>
+      <input type="text" id="depDosage" required />
+
+      <label for="depNotes">Notes:</label>
+      <input type="text" id="depNotes" />
 
       <button type="submit">Save Dependant</button>
       <button type="button" id="closeModalBtn" style="background:#f87171;margin-top:4px;">Cancel</button>
@@ -73,6 +75,7 @@
   </div>
 </div>
 
+<!-- ====================== JavaScript ====================== -->
 <script>
   let dependantAdded = false;
 
@@ -84,9 +87,10 @@
 
   const infoBox = document.getElementById('dependantInfo');
   const dispName = document.getElementById('dispName');
-  const dispRelationship = document.getElementById('dispRelationship');
-  const dispAge = document.getElementById('dispAge');
-  const dispControl = document.getElementById('dispControl');
+  const dispMedicine = document.getElementById('dispMedicine');
+  const dispTimes = document.getElementById('dispTimes');
+  const dispDosage = document.getElementById('dispDosage');
+  const dispNotes = document.getElementById('dispNotes');
 
   // Open modal
   addBtn.addEventListener('click', () => {
@@ -107,21 +111,24 @@
   // Handle form submit
   form.addEventListener('submit', function(e){
     e.preventDefault();
-    const name = document.getElementById('depName').value;
-    const relationship = document.getElementById('depRelationship').value;
-    const age = document.getElementById('depAge').value;
-    const control = document.getElementById('depControl').value;
 
-    if(!name || !relationship || !age || !control){
-      errorMsg.textContent = "Please fill all fields.";
+    const name = document.getElementById('depName').value;
+    const medicine = document.getElementById('depMedicine').value;
+    const times = document.getElementById('depTimes').value;
+    const dosage = document.getElementById('depDosage').value;
+    const notes = document.getElementById('depNotes').value;
+
+    if(!name || !medicine || !times || !dosage){
+      errorMsg.textContent = "Please fill all required fields.";
       return;
     }
 
     // Display dependant info
     dispName.textContent = name;
-    dispRelationship.textContent = relationship;
-    dispAge.textContent = age;
-    dispControl.textContent = control;
+    dispMedicine.textContent = medicine;
+    dispTimes.textContent = times;
+    dispDosage.textContent = dosage;
+    dispNotes.textContent = notes || "None";
 
     infoBox.style.display = 'block';
     dependantAdded = true;
