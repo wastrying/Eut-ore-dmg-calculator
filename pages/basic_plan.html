@@ -7,54 +7,102 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
 body{background:#f0f2f5;color:#333;padding:20px;}
-.dashboard-container{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;}
+h1{text-align:center;margin-bottom:30px;}
 
-/* Cards */
-.card{background:#fff;border-radius:12px;padding:40px 20px;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,0.08);cursor:pointer;transition:transform 0.2s, box-shadow 0.2s;}
-.card:hover{transform:translateY(-5px);box-shadow:0 10px 30px rgba(0,0,0,0.12);}
-.card h2{font-size:22px;margin-bottom:10px;color:#1f2937;}
-.card p{font-size:14px;color:#555;}
-.card i{font-size:36px;color:#4CAF50;margin-bottom:12px;display:block;}
+.dashboard-container{
+    max-width:1000px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:20px;
+}
 
-/* Dependant Section */
-.dependant-card{background:#fff;padding:20px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);margin-bottom:20px;}
-.dependant-card p{margin:6px 0;}
-.dependant-actions{margin-top:10px;}
-.dependant-actions button{padding:6px 10px;margin-right:6px;border:none;border-radius:6px;background:#4CAF50;color:white;cursor:pointer;}
-.dependant-actions button.remove{background:#f87171;}
-.dependant-actions button:hover{opacity:0.9;}
+/* Card styles */
+.card{
+    background:#fff;
+    border-radius:12px;
+    padding:20px;
+    display:flex;
+    align-items:center;
+    gap:15px;
+    box-shadow:0 6px 20px rgba(0,0,0,0.08);
+    cursor:pointer;
+    transition:transform 0.2s, box-shadow 0.2s;
+}
+.card:hover{
+    transform:translateY(-5px);
+    box-shadow:0 10px 30px rgba(0,0,0,0.12);
+}
 
-/* Reminder links */
-.reminder{padding:12px;border-left:4px solid #4CAF50;margin-bottom:10px;background:#f9fafb;border-radius:8px;cursor:pointer;transition:background 0.2s;}
-.reminder:hover{background:#e0f2f1;}
+.card-icon{
+    font-size:28px;
+    color:#4CAF50;
+    flex-shrink:0;
+}
+
+.card-title{
+    font-size:18px;
+    font-weight:bold;
+    color:#1f2937;
+}
+
+.card-desc{
+    font-size:13px;
+    color:#555;
+}
+
+/* Sections */
+.section{
+    display:none;
+    margin-top:40px;
+    padding:20px;
+    background:#fff;
+    border-radius:12px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.05);
+}
+
+.dependant-card{
+    background:#f9fafb;
+    padding:15px;
+    border-left:4px solid #4CAF50;
+    border-radius:8px;
+    margin-bottom:10px;
+    cursor:default;
+}
 </style>
 </head>
 <body>
 
-<h1 style="text-align:center;margin-bottom:30px;">Remblyx Dashboard</h1>
+<h1>Remblyx Dashboard</h1>
 
 <div class="dashboard-container">
     <div class="card" onclick="showSection('dependants')">
-        <i>👤</i>
-        <h2>Dependants</h2>
-        <p>View and manage dependant profiles</p>
+        <div class="card-icon">👤</div>
+        <div>
+            <div class="card-title">Dependants</div>
+            <div class="card-desc">View and manage dependant profiles</div>
+        </div>
     </div>
 
     <div class="card" onclick="showSection('summary')">
-        <i>📊</i>
-        <h2>Summary</h2>
-        <p>Overview of progress and responses</p>
+        <div class="card-icon">📊</div>
+        <div>
+            <div class="card-title">Summary</div>
+            <div class="card-desc">See overall progress and responses</div>
+        </div>
     </div>
 
     <div class="card" onclick="showSection('reminders')">
-        <i>⏰</i>
-        <h2>Upcoming Reminders</h2>
-        <p>Click to see upcoming medication & appointments</p>
+        <div class="card-icon">⏰</div>
+        <div>
+            <div class="card-title">Upcoming Reminders</div>
+            <div class="card-desc">Click to see upcoming medication & appointments</div>
+        </div>
     </div>
 </div>
 
 <!-- Sections -->
-<div id="dependants" style="display:none;margin-top:40px;">
+<div id="dependants" class="section">
     <h2>Dependants</h2>
     <div id="dependantList" class="dependant-card">
         <p><strong>Name:</strong> John Doe</p>
@@ -63,24 +111,20 @@ body{background:#f0f2f5;color:#333;padding:20px;}
         <p><strong>Dosage:</strong> 500 mg, 2 times/day</p>
         <p><strong>Times:</strong> 08:00 AM, 08:00 PM</p>
         <p><strong>Notes:</strong> NA</p>
-        <div class="dependant-actions">
-            <button>Edit</button>
-            <button class="remove">Remove</button>
-        </div>
     </div>
 </div>
 
-<div id="summary" style="display:none;margin-top:40px;">
+<div id="summary" class="section">
     <h2>Summary</h2>
     <p>John Doe responded to <strong>1</strong> of <strong>2</strong> reminders today.</p>
 </div>
 
-<div id="reminders" style="display:none;margin-top:40px;">
+<div id="reminders" class="section">
     <h2>Upcoming Reminders</h2>
-    <div class="reminder" onclick="scrollToDependant('dependantList')">
+    <div class="dependant-card" onclick="scrollToDependant('dependantList')">
         <p><strong>08:00 AM:</strong> Paracetamol for John Doe</p>
     </div>
-    <div class="reminder" onclick="scrollToDependant('dependantList')">
+    <div class="dependant-card" onclick="scrollToDependant('dependantList')">
         <p><strong>03:00 PM:</strong> Doctor Check-up for John Doe</p>
     </div>
 </div>
@@ -95,12 +139,12 @@ function showSection(sectionId){
 
 function scrollToDependant(depId){
     showSection('dependants');
-    const el = document.getElementById(depId);
+    const el=document.getElementById(depId);
     if(el){
-        el.scrollIntoView({behavior:'smooth', block:'start'});
+        el.scrollIntoView({behavior:'smooth',block:'start'});
         el.style.transition='background 0.3s';
         el.style.background='#e0f7fa';
-        setTimeout(()=>{el.style.background='#fff';},800);
+        setTimeout(()=>{el.style.background='#f9fafb';},800);
     }
 }
 </script>
