@@ -72,8 +72,8 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
             <input type="text" id="depName" required />
 
             <label>Phone Number:</label>
-            <input type="text" id="depPhone" placeholder="Enter phone number" required />
-            <div id="phoneNote" class="phone-note">Please enter a valid phone number (7–15 digits).</div>
+            <input type="text" id="depPhone" placeholder="Enter 8-digit phone number" required />
+            <div id="phoneNote" class="phone-note">Phone number must be exactly 8 digits.</div>
 
             <label>Type of Medicine:</label>
             <input type="text" id="depMedicine" required />
@@ -202,9 +202,11 @@ dosageNumberInput.addEventListener('input', ()=>{
 });
 
 phoneInput.addEventListener('input', ()=>{
-    const val = phoneInput.value.trim();
-    if(!/^\d*$/.test(val)){
+    let val = phoneInput.value.replace(/\D/g,'');
+    phoneInput.value = val;
+    if(val.length !== 8){
         phoneInput.style.border='2px solid red';
+        phoneNote.textContent = "Phone number must be exactly 8 digits.";
         phoneNote.style.display='block';
     } else {
         resetPhoneNote();
@@ -237,8 +239,8 @@ form.addEventListener('submit', function(e){
     const notes=depNotes.value.trim();
     const timeValues=Array.from(timeInputs.querySelectorAll('input[type="time"]')).map(i=>i.value);
 
-    if(!name||!medicine||!dosageUnit||!dosageTimes||!notes||timeValues.includes('')||document.querySelectorAll('.time-input.duplicate').length>0||dosageNumber<1||!/^\d{7,15}$/.test(phone)){
-        errorMsg.textContent="Please fill all fields correctly. Dosage ≥1, times unique, and valid phone number.";
+    if(!name || !medicine || !dosageUnit || !dosageTimes || !notes || timeValues.includes('') || document.querySelectorAll('.time-input.duplicate').length>0 || dosageNumber<1 || !/^\d{8}$/.test(phone)){
+        errorMsg.textContent="Please fill all fields correctly. Dosage ≥1, times unique, and valid 8-digit phone number.";
         return;
     }
 
