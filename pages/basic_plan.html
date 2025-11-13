@@ -5,57 +5,65 @@
 <title>Advanced Dashboard | Remblyx</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-  :root{
-    --sidebar-width:220px;
-    --radius-lg:18px;
-    --radius-md:12px;
-    --text-sm:14px;
-    --text-base:16px;
-  }
-  *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
-  body{background:#f5f5f5;display:flex;min-height:100vh;color:#222;}
+:root{
+  --sidebar-width:220px;
+  --radius-lg:18px;
+  --radius-md:12px;
+  --text-sm:14px;
+  --text-base:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
+body{background:#f5f5f5;display:flex;min-height:100vh;color:#222;}
 
-  /* Sidebar */
-  .sidebar{
-    width:var(--sidebar-width);
-    background:#111827;color:#e5e7eb;
-    display:flex;flex-direction:column;padding:20px 10px;
-    gap:10px;
-  }
-  .sidebar-title{font-size:var(--text-sm);color:#9ca3af;margin-bottom:8px;text-transform:uppercase;}
-  .nav-item{display:flex;align-items:center;gap:8px;padding:10px;border-radius:8px;cursor:pointer;transition:.2s;color:#d1d5db;}
-  .nav-item:hover{background:rgba(249,250,251,.06);}
-  .nav-item.active{background:#111827;border-left:3px solid #667eea;padding-left:10px;color:#fff;}
-  .icon-dot{width:8px;height:8px;border-radius:999px;background:#4ade80;}
+/* Sidebar */
+.sidebar{
+  width:var(--sidebar-width);
+  background:#111827;color:#e5e7eb;
+  display:flex;flex-direction:column;padding:20px 10px;
+  gap:10px;
+}
+.sidebar-title{font-size:var(--text-sm);color:#9ca3af;margin-bottom:8px;text-transform:uppercase;}
+.nav-item{display:flex;align-items:center;gap:8px;padding:10px;border-radius:8px;cursor:pointer;transition:.2s;color:#d1d5db;}
+.nav-item:hover{background:rgba(249,250,251,.06);}
+.nav-item.active{background:#111827;border-left:3px solid #667eea;padding-left:10px;color:#fff;}
+.icon-dot{width:8px;height:8px;border-radius:999px;background:#4ade80;}
 
-  /* Main content */
-  .main-area{flex:1;padding:20px;overflow:auto;}
-  .section{display:none;}
-  .section.active{display:block;}
-  h2{font-size:18px;margin-bottom:10px;}
+/* Main content */
+.main-area{flex:1;padding:20px;overflow:auto;}
+.section{display:none;}
+.section.active{display:block;}
+h2{font-size:18px;margin-bottom:10px;}
 
-  /* Table styles */
-  table{width:100%;border-collapse:collapse;margin-bottom:16px;}
-  th, td{padding:8px;text-align:left;border-bottom:1px solid #e5e7eb;}
-  th{background:#f3f4f6;font-weight:600;color:#6b7280;}
-  tr:hover{background:#f9fafb;}
-  .btn{padding:6px 12px;border:none;border-radius:6px;background:#4CAF50;color:white;cursor:pointer;}
-  .btn:hover{background:#45a049;}
-  .btn-edit{background:#3b82f6;}
-  .btn-edit:hover{background:#2563eb;}
-  .btn-remove{background:#f87171;}
-  .btn-remove:hover{background:#dc2626;}
+/* Table styles */
+table{width:100%;border-collapse:collapse;margin-bottom:16px;}
+th, td{padding:8px;text-align:left;border-bottom:1px solid #e5e7eb;}
+th{background:#f3f4f6;font-weight:600;color:#6b7280;}
+tr:hover{background:#f9fafb;}
+.btn{padding:6px 12px;border:none;border-radius:6px;background:#4CAF50;color:white;cursor:pointer;}
+.btn:hover{background:#45a049;}
+.btn-edit{background:#3b82f6;}
+.btn-edit:hover{background:#2563eb;}
+.btn-remove{background:#f87171;}
+.btn-remove:hover{background:#dc2626;}
 
-  /* Timeline styles */
-  .timeline{border-left:3px solid #667eea;margin-left:10px;padding-left:10px;}
-  .timeline-item{margin-bottom:14px;position:relative;}
-  .timeline-item::before{content:"";position:absolute;left:-7px;top:0;width:12px;height:12px;background:#667eea;border-radius:50%;}
-  .timeline-item span.time{font-size:12px;color:#6b7280;margin-left:6px;}
-  .timeline-item span.dependant{font-weight:600;margin-left:6px;}
+/* Timeline styles */
+.timeline{border-left:3px solid #667eea;margin-left:10px;padding-left:10px;}
+.timeline-item{margin-bottom:14px;position:relative;}
+.timeline-item::before{content:"";position:absolute;left:-7px;top:0;width:12px;height:12px;background:#667eea;border-radius:50%;}
+.timeline-item span.time{font-size:12px;color:#6b7280;margin-left:6px;}
+.timeline-item span.dependant{font-weight:600;margin-left:6px;}
 
-  /* Compliance */
-  .progress-container{background:#e5e7eb;border-radius:6px;width:100%;height:16px;margin-top:4px;}
-  .progress-bar{background:#4ade80;height:16px;border-radius:6px;width:0%;text-align:right;color:#fff;padding-right:4px;font-size:12px;line-height:16px;}
+/* Compliance */
+.progress-container{background:#e5e7eb;border-radius:6px;width:100%;height:16px;margin-top:4px;}
+.progress-bar{background:#4ade80;height:16px;border-radius:6px;width:0%;text-align:right;color:#fff;padding-right:4px;font-size:12px;line-height:16px;}
+
+/* Response history */
+.response-history{margin-top:8px;padding:10px;background:#f3f4f6;border-radius:12px;max-height:200px;overflow:auto;}
+.response-history h4{margin-bottom:6px;font-size:14px;color:#111827;}
+.response-item{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e5e7eb;font-size:13px;}
+.response-item:last-child{border-bottom:none;}
+.taken{color:#059669;font-weight:600;}
+.missed{color:#b91c1c;font-weight:600;}
 </style>
 </head>
 <body>
@@ -90,7 +98,7 @@
   <div id="compliance" class="section">
     <h2>Compliance Summary</h2>
     <table id="complianceTable">
-      <thead><tr><th>Dependant</th><th>Completed</th><th>Pending</th><th>Compliance</th></tr></thead>
+      <thead><tr><th>Dependant</th><th>Completed</th><th>Missed</th><th>Compliance</th></tr></thead>
       <tbody></tbody>
     </table>
   </div>
@@ -143,7 +151,9 @@
     timelineReminders.forEach(r=>{
       const div=document.createElement('div');
       div.className='timeline-item';
-      div.innerHTML=`<strong>${r.medicine}</strong> <span class="dependant">${r.dependant}</span> at <span class="time">${r.time}</span>`;
+      const statusText=r.completed?'Taken':'Missed';
+      const statusClass=r.completed?'taken':'missed';
+      div.innerHTML=`<strong>${r.medicine}</strong> <span class="dependant">${r.dependant}</span> at <span class="time">${r.time}</span> - <span class="${statusClass}">${statusText}</span>`;
       div.style.cursor='pointer';
       div.onclick=()=>{alert('Go to '+r.dependant+' details');};
       timelineList.appendChild(div);
@@ -154,11 +164,11 @@
     complianceTableBody.innerHTML='';
     dependants.forEach(d=>{
       const completed=timelineReminders.filter(r=>r.dependant===d.name && r.completed).length;
-      const pending=timelineReminders.filter(r=>r.dependant===d.name && !r.completed).length;
-      const total=completed+pending;
+      const missed=timelineReminders.filter(r=>r.dependant===d.name && !r.completed).length;
+      const total=completed+missed;
       const percent=total?Math.round((completed/total)*100):0;
       const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${d.name}</td><td>${completed}</td><td>${pending}</td>
+      tr.innerHTML=`<td>${d.name}</td><td>${completed}</td><td>${missed}</td>
         <td>
           <div class="progress-container"><div class="progress-bar" style="width:${percent}%">${percent}%</div></div>
         </td>`;
@@ -175,8 +185,8 @@
     const timesPerDay=prompt('Times per day:');
     const dosage=prompt('Dosage:');
     dependants.push({name, phone, medicine, timesPerDay, dosage});
-    // Add sample reminders
-    timelineReminders.push({dependant:name, medicine:medicine, time:'09:00 AM', completed:false});
+    // Add sample reminders (response history)
+    timelineReminders.push({dependant:name, medicine:medicine, time:'09:00 AM', completed:true});
     timelineReminders.push({dependant:name, medicine:medicine, time:'21:00 PM', completed:false});
     renderDependants();
   });
