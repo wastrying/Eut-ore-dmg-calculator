@@ -4,8 +4,6 @@
   <meta charset="UTF-8" />
   <title>Remblyx Dashboard - Basic Plan</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" type="image/png" sizes="32x32" href="../images/medisignal.png" />
-  <link rel="apple-touch-icon" href="../images/medisignal.png" />
   <style>
     /* ====================== Dashboard Styles ====================== */
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
@@ -15,6 +13,8 @@
     button { padding:8px 12px; border:none; border-radius:6px; background:#4CAF50; color:white; cursor:pointer; }
     button:hover { background:#45a049; }
     .dependant-info { margin-top:12px; padding:12px; background:#fff; border-left:4px solid #4CAF50; border-radius:6px; }
+    .remove-btn { background:#f87171; margin-top:8px; }
+    .remove-btn:hover { background:#dc2626; }
 
     /* ====================== Modal Styles ====================== */
     .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1000; }
@@ -23,6 +23,9 @@
     .modal-content h2 { margin-top:0; }
     .modal-content label { display:block; margin:8px 0 4px; font-weight:600; }
     .modal-content input, .modal-content select { width:100%; padding:6px 8px; margin-bottom:10px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box; }
+    .modal-content .dosage-row { display:flex; gap:6px; }
+    .modal-content .dosage-row input { flex:1; }
+    .modal-content .dosage-row select { flex:1; }
     .error { color:red; font-weight:bold; margin-bottom:8px; }
   </style>
 </head>
@@ -44,6 +47,7 @@
       <p><strong>Times:</strong> <span id="dispTimes"></span></p>
       <p><strong>Dosage:</strong> <span id="dispDosage"></span></p>
       <p><strong>Notes:</strong> <span id="dispNotes"></span></p>
+      <button id="removeDependantBtn" class="remove-btn">Remove Dependant</button>
     </div>
   </div>
 </div>
@@ -64,7 +68,21 @@
       <input type="text" id="depTimes" required />
 
       <label for="depDosage">Dosage:</label>
-      <input type="text" id="depDosage" required />
+      <div class="dosage-row">
+        <input type="number" id="depDosageNumber" min="0" placeholder="Amount" required />
+        <select id="depDosageUnit" required>
+          <option value="">Unit</option>
+          <option value="mg">mg</option>
+          <option value="g">g</option>
+        </select>
+        <select id="depDosageTimes" required>
+          <option value="">Times/Day</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+        </select>
+      </div>
 
       <label for="depNotes">Notes:</label>
       <input type="text" id="depNotes" />
@@ -91,6 +109,7 @@
   const dispTimes = document.getElementById('dispTimes');
   const dispDosage = document.getElementById('dispDosage');
   const dispNotes = document.getElementById('dispNotes');
+  const removeBtn = document.getElementById('removeDependantBtn');
 
   // Open modal
   addBtn.addEventListener('click', () => {
@@ -115,19 +134,24 @@
     const name = document.getElementById('depName').value;
     const medicine = document.getElementById('depMedicine').value;
     const times = document.getElementById('depTimes').value;
-    const dosage = document.getElementById('depDosage').value;
+    const dosageNumber = document.getElementById('depDosageNumber').value;
+    const dosageUnit = document.getElementById('depDosageUnit').value;
+    const dosageTimes = document.getElementById('depDosageTimes').value;
     const notes = document.getElementById('depNotes').value;
 
-    if(!name || !medicine || !times || !dosage){
+    if(!name || !medicine || !times || !dosageNumber || !dosageUnit || !dosageTimes){
       errorMsg.textContent = "Please fill all required fields.";
       return;
     }
+
+    // Combine dosage details
+    const dosageText = `${dosageNumber} ${dosageUnit}, ${dosageTimes} time(s) per day`;
 
     // Display dependant info
     dispName.textContent = name;
     dispMedicine.textContent = medicine;
     dispTimes.textContent = times;
-    dispDosage.textContent = dosage;
+    dispDosage.textContent = dosageText;
     dispNotes.textContent = notes || "None";
 
     infoBox.style.display = 'block';
@@ -137,6 +161,14 @@
     modal.classList.remove('active');
     form.reset();
     errorMsg.textContent = '';
+  });
+
+  // Remove dependant
+  removeBtn.addEventListener('click', () => {
+    if(confirm("Are you sure you want to remove this dependant?")){
+      infoBox.style.display = 'none';
+      dependantAdded = false;
+    }
   });
 </script>
 
