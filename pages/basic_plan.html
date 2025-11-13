@@ -1,1 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Basic Plan Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f8;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #4CAF50;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+    .container {
+      max-width: 800px;
+      margin: 2rem auto;
+      background-color: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #333;
+    }
+    .dependant-info, .reminders {
+      margin-bottom: 2rem;
+    }
+    .reminder {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 1rem;
+      margin-bottom: 0.5rem;
+      background-color: #f9f9f9;
+      border-left: 4px solid #4CAF50;
+      border-radius: 4px;
+    }
+    .status {
+      font-weight: bold;
+    }
+    .status.taken {
+      color: green;
+    }
+    .status.missed {
+      color: red;
+    }
+    footer {
+      text-align: center;
+      padding: 1rem;
+      color: #777;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Basic Plan Dashboard</h1>
+  </header>
+
+  <div class="container">
+    <!-- Dependant Info -->
+    <div class="dependant-info">
+      <h2>Dependant Profile</h2>
+      <p><strong>Name:</strong> John Doe</p>
+      <p><strong>Age:</strong> 68</p>
+      <p><strong>Condition:</strong> Hypertension</p>
+    </div>
+
+    <!-- Reminders -->
+    <div class="reminders">
+      <h2>Upcoming Reminders</h2>
+      
+      <div class="reminder">
+        <span>Medication: Blood Pressure Pill</span>
+        <span class="status taken">Taken</span>
+      </div>
+      
+      <div class="reminder">
+        <span>Check-up: Dr. Smith at 3 PM</span>
+        <span class="status missed">Missed</span>
+      </div>
+      
+      <div class="reminder">
+        <span>Medication: Heart Medication</span>
+        <span class="status taken">Taken</span>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    &copy; 2025 CareApp. All rights reserved.
+  </footer>
+
+</body>
+</html>
 
