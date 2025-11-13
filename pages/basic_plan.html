@@ -25,19 +25,13 @@
     .modal-content .dosage-row input{flex:1;}
     .modal-content .dosage-row select{flex:1;}
     .error{color:red;font-weight:bold;margin-bottom:8px;}
+
+    /* Time pickers vertically stacked */
     .time-picker-container{display:none;margin-top:10px;}
-    .time-picker-scroll{
-      display:flex;
-      flex-direction:column; /* stack downward */
-      gap:8px;
-      padding:4px;
-    }
-    .time-picker-scroll input[type='time']{
-      width:100%;
-      padding:8px;
-      border:1px solid #ccc;
-      border-radius:6px;
-    }
+    .time-picker-list{display:flex;flex-direction:column;gap:8px;}
+    .time-item{display:flex;flex-direction:column;}
+    .time-item label{font-weight:normal;margin-bottom:3px;}
+    .time-item input[type="time"]{padding:6px;border:1px solid #ccc;border-radius:6px;}
 
     /* Confirmation Popup */
     .confirm-popup {
@@ -143,7 +137,7 @@
 
       <div id="timePickerContainer" class="time-picker-container">
         <label>Times to Take Medicine:</label>
-        <div id="timeInputs" class="time-picker-scroll"></div>
+        <div id="timeInputs" class="time-picker-list"></div>
       </div>
 
       <label for="depNotes">Additional Notes:</label>
@@ -212,27 +206,23 @@
     errorMsg.textContent = '';
   });
 
-  // Show time pickers dynamically (stack vertically)
+  // Show time pickers vertically
   dosageTimesInput.addEventListener('input', () => {
     const count = parseInt(dosageTimesInput.value);
     timeInputs.innerHTML = '';
     if(count > 0){
       timePickerContainer.style.display = 'block';
       for(let i=1;i<=count;i++){
+        const div = document.createElement('div');
+        div.classList.add('time-item');
         const label = document.createElement('label');
         label.textContent = `Time ${i}:`;
-        label.style.fontWeight = 'normal';
-        label.style.marginBottom = '2px';
-
-        const timeInput = document.createElement('input');
-        timeInput.type = 'time';
-        timeInput.required = true;
-
-        const wrapper = document.createElement('div');
-        wrapper.appendChild(label);
-        wrapper.appendChild(timeInput);
-
-        timeInputs.appendChild(wrapper);
+        const input = document.createElement('input');
+        input.type = 'time';
+        input.required = true;
+        div.appendChild(label);
+        div.appendChild(input);
+        timeInputs.appendChild(div);
       }
     } else {
       timePickerContainer.style.display = 'none';
