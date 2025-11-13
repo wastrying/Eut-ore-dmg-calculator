@@ -6,168 +6,75 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
-body{background:#f5f5f5;min-height:100vh;color:#222;display:flex;justify-content:center;align-items:flex-start;padding:16px;}
-.wrapper{width:100%;max-width:800px;margin-top:40px;display:flex;flex-direction:column;gap:16px;}
-.board-wrapper{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:16px;}
-button{padding:8px 12px;border:none;border-radius:6px;background:#4CAF50;color:white;cursor:pointer;}
+body{background:#f5f5f5;min-height:100vh;color:#222;padding:20px;}
+.wrapper{max-width:1200px;margin:0 auto;display:flex;flex-wrap:wrap;gap:16px;}
+
+/* Dashboard boxes */
+.dashboard-box{background:#fff;border-radius:12px;padding:16px;flex:1 1 300px;min-width:280px;box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+.dashboard-box h2{margin-top:0;margin-bottom:12px;color:#333;}
+.dashboard-box h3{margin-top:12px;margin-bottom:8px;color:#555;}
+
+/* Dependant Info */
+.dependant-info p{margin:6px 0;}
+.dependant-actions{margin-top:10px;display:flex;gap:8px;}
+button{padding:6px 10px;border:none;border-radius:6px;background:#4CAF50;color:white;cursor:pointer;}
 button:hover{background:#45a049;}
-.dependant-info{margin-top:12px;padding:12px;background:#fff;border-left:4px solid #4CAF50;border-radius:6px; display:none;}
-.dependant-actions{display:flex;gap:8px;margin-top:10px;}
-.error{color:red;font-weight:bold;margin-bottom:8px;}
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;z-index:1000;}
-.modal.active{display:flex;}
-.modal-content{background:#fff;padding:20px;border-radius:12px;width:90%;max-width:400px;box-shadow:0 8px 24px rgba(0,0,0,0.3);}
-.modal-content h2{margin-top:0;}
-.modal-content label{display:block;margin:8px 0 4px;font-weight:600;}
-.modal-content input,.modal-content select{width:100%;padding:6px 8px;margin-bottom:10px;border:1px solid #ccc;border-radius:6px;}
-.time-picker-container{display:none;margin-top:10px;}
-.time-picker-container input{display:block;margin-bottom:6px;}
-.delete-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;padding:24px;box-shadow:0 8px 24px rgba(0,0,0,0.3);display:none;z-index:2000;text-align:center;}
-.delete-popup button{margin:0 8px;padding:8px 14px;border:none;border-radius:6px;cursor:pointer;}
-.btn-confirm{background:#f87171;color:white;}
-.btn-cancel{background:#9ca3af;color:white;}
-.dashboard-box {background: #fff; border-radius: 10px; padding: 20px; margin-top: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);}
-.dashboard-box h2, .dashboard-box h3 {margin-top: 0;color:#333;}
-.reminder {padding: 10px; border-left: 4px solid #4CAF50; margin-bottom: 10px; background: #f9f9f9; border-radius: 6px;}
-.reminder.completed {border-color: #9ca3af; opacity: 0.7;}
-.status {font-weight: bold;}
-.status.pending {color: #f59e0b;}
-.status.completed {color: #9ca3af;}
-.history {font-size: 14px;color:#555;}
+
+/* Reminders */
+.reminder{padding:10px;border-left:4px solid #4CAF50;margin-bottom:10px;background:#f9f9f9;border-radius:6px;}
+.reminder.completed{border-color:#9ca3af;opacity:0.7;}
+.status.pending{color:#f59e0b;font-weight:bold;}
+.status.completed{color:#9ca3af;font-weight:bold;}
+
+/* History */
+.history p{font-size:14px;color:#555;margin-bottom:4px;}
 </style>
 </head>
 <body>
 <div class="wrapper">
-    <div class="board-wrapper">
-        <h2>Basic Plan Dashboard</h2>
-        <div id="mainError" class="error"></div>
-        <button id="addDependantBtn">Add Dependant</button>
-
-        <!-- Dependant info -->
-        <div id="dependantInfo" class="dependant-info">
-            <h3>Dependant Profile</h3>
-            <p><strong>Name:</strong> <span id="dispName"></span></p>
-            <p><strong>Phone:</strong> <span id="dispPhone"></span></p>
-            <p><strong>Medicine:</strong> <span id="dispMedicine"></span></p>
-            <p><strong>Times to Take Medicine:</strong> <span id="dispTimes"></span></p>
-            <p><strong>Dosage:</strong> <span id="dispDosage"></span></p>
-            <p><strong>Notes:</strong> <span id="dispNotes"></span></p>
+    <!-- Dependant Profile -->
+    <div class="dashboard-box">
+        <h2>Dependant Profile</h2>
+        <div class="dependant-info">
+            <p><strong>Name:</strong> John Doe</p>
+            <p><strong>Phone:</strong> 91234567</p>
+            <p><strong>Medicine:</strong> Paracetamol</p>
+            <p><strong>Dosage:</strong> 500 mg, 2 times per day</p>
+            <p><strong>Times to Take:</strong> 08:00 AM, 08:00 PM</p>
+            <p><strong>Notes:</strong> NA</p>
             <div class="dependant-actions">
-                <button id="editDependantBtn" style="background:#3b82f6;">Edit</button>
-                <button id="removeDependantBtn" style="background:#f87171;">Remove</button>
+                <button>Edit</button>
+                <button style="background:#f87171;">Remove</button>
             </div>
         </div>
+    </div>
 
-        <!-- Static Basic Dashboard -->
-        <div class="dashboard-box">
-          <h2>Basic Dashboard Overview</h2>
-          <h3>Upcoming Reminders</h3>
-          <div class="reminder">
-            <p><strong>Medicine:</strong> Take Paracetamol</p>
+    <!-- Upcoming Reminders -->
+    <div class="dashboard-box">
+        <h2>Upcoming Reminders</h2>
+        <div class="reminder">
+            <p><strong>Medicine:</strong> Paracetamol</p>
             <p><strong>Time:</strong> 08:00 AM</p>
             <p>Status: <span class="status completed">Completed</span></p>
-          </div>
-          <div class="reminder">
-            <p><strong>Check-up:</strong> Doctor Appointment</p>
+        </div>
+        <div class="reminder">
+            <p><strong>Doctor Check-up</strong></p>
             <p><strong>Time:</strong> 03:00 PM</p>
             <p>Status: <span class="status pending">Pending</span></p>
-          </div>
-          <h3>Dependant Response</h3>
-          <p>John Doe has responded to <strong>1</strong> out of <strong>2</strong> reminders today.</p>
-          <h3>Recent History</h3>
-          <div class="history">
+        </div>
+    </div>
+
+    <!-- Dashboard Overview / History -->
+    <div class="dashboard-box">
+        <h2>Dashboard Overview</h2>
+        <h3>Dependant Response</h3>
+        <p>John Doe responded to <strong>1</strong> of <strong>2</strong> reminders today.</p>
+        <h3>Recent History</h3>
+        <div class="history">
             <p>08:00 AM - Paracetamol - Taken</p>
-            <p>03:00 PM - Doctor Appointment - Pending</p>
-          </div>
+            <p>03:00 PM - Doctor Check-up - Pending</p>
         </div>
     </div>
 </div>
-
-<!-- Modal -->
-<div id="dependantModal" class="modal">
-    <div class="modal-content">
-        <h2 id="modalTitle">Add Dependant</h2>
-        <div class="error" id="modalError"></div>
-        <form id="dependantForm">
-            <label>Name:</label>
-            <input type="text" id="depName" required />
-            <label>Phone:</label>
-            <input type="text" id="depPhone" required />
-            <label>Medicine:</label>
-            <input type="text" id="depMedicine" required />
-            <label>Dosage:</label>
-            <input type="number" id="depDosage" min="1" value="1" required />
-            <label>Times per day:</label>
-            <input type="number" id="depTimes" min="1" max="10" value="1" required />
-            <label>Notes:</label>
-            <input type="text" id="depNotes" placeholder="Enter 'NA' if none" />
-            <button type="submit">Save</button>
-            <button type="button" id="closeModalBtn" style="background:#9ca3af;margin-top:4px;">Cancel</button>
-        </form>
-    </div>
-</div>
-
-<!-- Delete -->
-<div id="deletePopup" class="delete-popup">
-    <p>Are you sure you want to delete this dependant?</p>
-    <button class="btn-confirm" id="confirmDeleteBtn">Yes, Delete</button>
-    <button class="btn-cancel" id="cancelDeleteBtn">Cancel</button>
-</div>
-
-<script>
-let dependantAdded=false;
-let editing=false;
-const addBtn=document.getElementById('addDependantBtn');
-const modal=document.getElementById('dependantModal');
-const closeModalBtn=document.getElementById('closeModalBtn');
-const form=document.getElementById('dependantForm');
-const infoBox=document.getElementById('dependantInfo');
-const mainError=document.getElementById('mainError');
-const dispName=document.getElementById('dispName');
-const dispPhone=document.getElementById('dispPhone');
-const dispMedicine=document.getElementById('dispMedicine');
-const dispDosage=document.getElementById('dispDosage');
-const dispTimes=document.getElementById('dispTimes');
-const dispNotes=document.getElementById('dispNotes');
-const editBtn=document.getElementById('editDependantBtn');
-const removeBtn=document.getElementById('removeDependantBtn');
-const deletePopup=document.getElementById('deletePopup');
-const confirmDeleteBtn=document.getElementById('confirmDeleteBtn');
-const cancelDeleteBtn=document.getElementById('cancelDeleteBtn');
-
-addBtn.addEventListener('click',()=>{
-    if(dependantAdded && !editing){mainError.textContent="Only one dependant allowed.";setTimeout(()=>mainError.textContent='',3000); return;}
-    modal.classList.add('active');
-});
-closeModalBtn.addEventListener('click',()=>{modal.classList.remove('active');form.reset();editing=false;});
-form.addEventListener('submit',e=>{
-    e.preventDefault();
-    const name=document.getElementById('depName').value;
-    const phone=document.getElementById('depPhone').value;
-    const med=document.getElementById('depMedicine').value;
-    const dosage=document.getElementById('depDosage').value;
-    const times=document.getElementById('depTimes').value;
-    const notes=document.getElementById('depNotes').value||'NA';
-    if(!name||!phone||!med||!dosage||!times){document.getElementById('modalError').textContent="Fill all fields"; return;}
-    dispName.textContent=name; dispPhone.textContent=phone; dispMedicine.textContent=med;
-    dispDosage.textContent=dosage; dispTimes.textContent=times; dispNotes.textContent=notes;
-    infoBox.style.display='block'; dependantAdded=true; editing=false;
-    modal.classList.remove('active'); form.reset(); document.getElementById('modalError').textContent='';
-});
-editBtn.addEventListener('click',()=>{
-    editing=true; modal.classList.add('active');
-    document.getElementById('depName').value=dispName.textContent;
-    document.getElementById('depPhone').value=dispPhone.textContent;
-    document.getElementById('depMedicine').value=dispMedicine.textContent;
-    document.getElementById('depDosage').value=dispDosage.textContent;
-    document.getElementById('depTimes').value=dispTimes.textContent;
-    document.getElementById('depNotes').value=dispNotes.textContent;
-});
-removeBtn.addEventListener('click',()=>{deletePopup.style.display='block';});
-confirmDeleteBtn.addEventListener('click',()=>{
-    infoBox.style.display='none'; dependantAdded=false; deletePopup.style.display='none';
-});
-cancelDeleteBtn.addEventListener('click',()=>{deletePopup.style.display='none';});
-</script>
 </body>
 </html>
