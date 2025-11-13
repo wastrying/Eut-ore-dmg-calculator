@@ -25,7 +25,7 @@ button:hover{background:#45a049;}
 .modal-content .dosage-row{display:flex;gap:6px;}
 .modal-content .dosage-row input{flex:1;}
 .modal-content .dosage-row select{flex:1;}
-.time-picker-container{display:none;margin-top:10px;}
+.time-picker-container{margin-top:10px;}
 .time-picker-container .time-input{display:block;margin-bottom:6px;}
 .time-picker-container .time-input.duplicate{border:2px solid red;}
 .time-note{font-size:12px;color:red;margin-top:2px;display:none;}
@@ -36,7 +36,6 @@ button:hover{background:#45a049;}
 .delete-popup button{margin:0 8px;padding:8px 14px;border:none;border-radius:6px;cursor:pointer;}
 .btn-confirm{background:#f87171;color:white;}
 .btn-cancel{background:#9ca3af;color:white;}
-input[type="number"]{width:100%;cursor:pointer;}
 input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: auto; margin: 0; }
 </style>
 </head>
@@ -89,12 +88,11 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
             </div>
             <div id="dosageNote" class="dosage-note">Dosage must be at least 1.</div>
 
-            <label>Times per day:</label>
-            <input type="number" id="depDosageTimes" min="0" max="10" value="0" required />
             <div id="timePickerContainer" class="time-picker-container">
-                <label>Times to Take Medicine:</label>
+                <label>Times to Take Medicine (click + to add more times):</label>
                 <div id="timeInputs"></div>
                 <div id="timeNote" class="time-note">Each time must be unique. Duplicate times are not allowed.</div>
+                <button type="button" id="addTimeBtn" style="margin-top:4px;background:#3b82f6;">+ Add Time</button>
             </div>
 
             <label>Additional Notes:</label>
@@ -113,36 +111,36 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 </div>
 
 <script>
-let dependantAdded = false;
-let editing = false;
+let dependantAdded=false;
+let editing=false;
 
-const addBtn = document.getElementById('addDependantBtn');
-const editBtn = document.getElementById('editDependantBtn');
-const removeBtn = document.getElementById('removeDependantBtn');
-const modal = document.getElementById('dependantModal');
-const closeModalBtn = document.getElementById('closeModalBtn');
-const form = document.getElementById('dependantForm');
-const errorMsg = document.getElementById('modalError');
-const modalTitle = document.getElementById('modalTitle');
-const infoBox = document.getElementById('dependantInfo');
-const dispName = document.getElementById('dispName');
-const dispPhone = document.getElementById('dispPhone');
-const dispMedicine = document.getElementById('dispMedicine');
-const dispTimes = document.getElementById('dispTimes');
-const dispDosage = document.getElementById('dispDosage');
-const dispNotes = document.getElementById('dispNotes');
-const dosageNumberInput = document.getElementById('depDosageNumber');
-const dosageTimesInput = document.getElementById('depDosageTimes');
-const timePickerContainer = document.getElementById('timePickerContainer');
-const timeInputs = document.getElementById('timeInputs');
-const deletePopup = document.getElementById('deletePopup');
-const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
-const mainError = document.getElementById('mainError');
-const timeNote = document.getElementById('timeNote');
-const dosageNote = document.getElementById('dosageNote');
-const phoneInput = document.getElementById('depPhone');
-const phoneNote = document.getElementById('phoneNote');
+const addBtn=document.getElementById('addDependantBtn');
+const editBtn=document.getElementById('editDependantBtn');
+const removeBtn=document.getElementById('removeDependantBtn');
+const modal=document.getElementById('dependantModal');
+const closeModalBtn=document.getElementById('closeModalBtn');
+const form=document.getElementById('dependantForm');
+const errorMsg=document.getElementById('modalError');
+const modalTitle=document.getElementById('modalTitle');
+const infoBox=document.getElementById('dependantInfo');
+const dispName=document.getElementById('dispName');
+const dispPhone=document.getElementById('dispPhone');
+const dispMedicine=document.getElementById('dispMedicine');
+const dispTimes=document.getElementById('dispTimes');
+const dispDosage=document.getElementById('dispDosage');
+const dispNotes=document.getElementById('dispNotes');
+const dosageNumberInput=document.getElementById('depDosageNumber');
+const timePickerContainer=document.getElementById('timePickerContainer');
+const timeInputs=document.getElementById('timeInputs');
+const addTimeBtn=document.getElementById('addTimeBtn');
+const deletePopup=document.getElementById('deletePopup');
+const confirmDeleteBtn=document.getElementById('confirmDeleteBtn');
+const cancelDeleteBtn=document.getElementById('cancelDeleteBtn');
+const mainError=document.getElementById('mainError');
+const timeNote=document.getElementById('timeNote');
+const dosageNote=document.getElementById('dosageNote');
+const phoneInput=document.getElementById('depPhone');
+const phoneNote=document.getElementById('phoneNote');
 
 phoneNote.style.display='none';
 timeNote.style.display='none';
@@ -152,44 +150,24 @@ function resetTimeNote(){timeNote.style.display='none';}
 function resetDosageNote(){dosageNote.style.display='none';dosageNumberInput.style.border='1px solid #ccc';}
 function resetPhoneNote(){phoneNote.style.display='none';phoneInput.style.border='1px solid #ccc';}
 
-addBtn.addEventListener('click', () => {
+addBtn.addEventListener('click', ()=>{
     if(dependantAdded && !editing){
-        mainError.textContent = "You can only add one dependant in the Basic plan.";
+        mainError.textContent="You can only add one dependant in the Basic plan.";
         setTimeout(()=>{mainError.textContent='';},5000);
         return;
     }
     mainError.textContent='';
-    modalTitle.textContent = editing ? "Edit Dependant" : "Add Dependant";
+    modalTitle.textContent=editing?"Edit Dependant":"Add Dependant";
     modal.classList.add('active');
 });
 
-closeModalBtn.addEventListener('click', () => {
+closeModalBtn.addEventListener('click', ()=>{
     modal.classList.remove('active');
     form.reset();
-    timePickerContainer.style.display='none';
-    errorMsg.textContent='';
+    timeInputs.innerHTML='';
     resetTimeNote();
     resetDosageNote();
     resetPhoneNote();
-});
-
-dosageTimesInput.addEventListener('input', () => {
-    let count=parseInt(dosageTimesInput.value);
-    if(isNaN(count)||count<0) count=0;
-    dosageTimesInput.value=count;
-    timeInputs.innerHTML='';
-    resetTimeNote();
-    if(count>0){
-        timePickerContainer.style.display='block';
-        for(let i=0;i<count;i++){
-            const ti=document.createElement('input');
-            ti.type='time'; ti.required=true; ti.className='time-input';
-            ti.addEventListener('input', checkDuplicateTimes);
-            timeInputs.appendChild(ti);
-        }
-    } else {
-        timePickerContainer.style.display='none';
-    }
 });
 
 dosageNumberInput.addEventListener('input', ()=>{
@@ -201,14 +179,12 @@ dosageNumberInput.addEventListener('input', ()=>{
     }
 });
 
-// Phone number validation: exactly 8 digits and start with 6,8,9
 phoneInput.addEventListener('input', ()=>{
-    let val = phoneInput.value.replace(/\D/g,'');
+    let val=phoneInput.value.replace(/\D/g,'');
     if(val.length>8) val=val.slice(0,8);
     phoneInput.value=val;
     if(val.length!==8 || !/^[689]/.test(val)){
         phoneInput.style.border='2px solid red';
-        phoneNote.textContent="Enter a valid 8-digit phone number starting with 6, 8, or 9.";
         phoneNote.style.display='block';
     } else {
         resetPhoneNote();
@@ -216,7 +192,7 @@ phoneInput.addEventListener('input', ()=>{
 });
 
 function checkDuplicateTimes(){
-    const times = Array.from(timeInputs.querySelectorAll('input')).map(i=>i.value);
+    const times=Array.from(timeInputs.querySelectorAll('input')).map(i=>i.value);
     let hasDuplicate=false;
     document.querySelectorAll('.time-input').forEach((input,i)=>{
         if(input.value!=='' && times.indexOf(input.value)!==i){
@@ -227,6 +203,13 @@ function checkDuplicateTimes(){
     timeNote.style.display=hasDuplicate?'block':'none';
 }
 
+addTimeBtn.addEventListener('click', ()=>{
+    const ti=document.createElement('input');
+    ti.type='time'; ti.required=true; ti.className='time-input';
+    ti.addEventListener('input', checkDuplicateTimes);
+    timeInputs.appendChild(ti);
+});
+
 form.addEventListener('submit', function(e){
     e.preventDefault();
     const name=depName.value.trim();
@@ -234,19 +217,18 @@ form.addEventListener('submit', function(e){
     const medicine=depMedicine.value.trim();
     const dosageNumber=parseInt(dosageNumberInput.value);
     const dosageUnit=depDosageUnit.value;
-    const dosageTimes=parseInt(dosageTimesInput.value);
     const notes=depNotes.value.trim();
-    const timeValues=Array.from(timeInputs.querySelectorAll('input[type="time"]')).map(i=>i.value);
+    const timeValues=Array.from(timeInputs.querySelectorAll('input')).map(i=>i.value);
 
-    if(!name || !medicine || !dosageUnit || !dosageTimes || !notes || timeValues.includes('') || document.querySelectorAll('.time-input.duplicate').length>0 || dosageNumber<1 || !/^\d{8}$/.test(phone) || !/^[689]/.test(phone)){
-        errorMsg.textContent="Please fill all fields correctly. Dosage ≥1, times unique, and valid 8-digit phone number.";
+    if(!name || !medicine || !dosageUnit || !notes || timeValues.includes('') || document.querySelectorAll('.time-input.duplicate').length>0 || dosageNumber<1 || !/^\d{8}$/.test(phone) || !/^[689]/.test(phone)){
+        errorMsg.textContent="Please fill all fields correctly: Dosage ≥1, unique times, and valid 8-digit phone number.";
         return;
     }
 
     dispName.textContent=name;
     dispPhone.textContent=phone;
     dispMedicine.textContent=medicine;
-    dispDosage.textContent=`${dosageNumber} ${dosageUnit}, ${dosageTimes} time(s) per day`;
+    dispDosage.textContent=`${dosageNumber} ${dosageUnit}, ${timeValues.length} time(s)`;
     dispTimes.textContent=timeValues.join(', ');
     dispNotes.textContent=notes;
     infoBox.style.display='block';
@@ -254,14 +236,13 @@ form.addEventListener('submit', function(e){
     editing=false;
     modal.classList.remove('active');
     form.reset();
-    timePickerContainer.style.display='none';
-    errorMsg.textContent='';
+    timeInputs.innerHTML='';
     resetTimeNote();
     resetDosageNote();
     resetPhoneNote();
 });
 
-editBtn.addEventListener('click',()=>{
+editBtn.addEventListener('click', ()=>{
     editing=true;
     addBtn.click();
     depName.value=dispName.textContent;
@@ -269,17 +250,24 @@ editBtn.addEventListener('click',()=>{
     depMedicine.value=dispMedicine.textContent;
     dosageNumberInput.value=parseInt(dispDosage.textContent);
     depDosageUnit.value=dispDosage.textContent.split(' ')[1];
-    dosageTimesInput.value=dispDosage.textContent.match(/\d+/g)[1];
-    dosageTimesInput.dispatchEvent(new Event('input'));
-    const currentTimes=dispTimes.textContent.split(', ');
-    const timeInputsEls=timeInputs.querySelectorAll('input');
-    currentTimes.forEach((t,i)=>{ if(timeInputsEls[i]) timeInputsEls[i].value=t; });
     depNotes.value=dispNotes.textContent;
+    const currentTimes=dispTimes.textContent.split(', ');
+    timeInputs.innerHTML='';
+    currentTimes.forEach(t=>{
+        const ti=document.createElement('input');
+        ti.type='time'; ti.required=true; ti.className='time-input'; ti.value=t;
+        ti.addEventListener('input', checkDuplicateTimes);
+        timeInputs.appendChild(ti);
+    });
 });
 
-removeBtn.addEventListener('click',()=>{ if(!dependantAdded)return; deletePopup.style.display='block'; });
-confirmDeleteBtn.addEventListener('click',()=>{ infoBox.style.display='none'; dependantAdded=false; dispName.textContent=''; dispPhone.textContent=''; dispMedicine.textContent=''; dispTimes.textContent=''; dispDosage.textContent=''; dispNotes.textContent=''; deletePopup.style.display='none'; });
-cancelDeleteBtn.addEventListener('click',()=>{ deletePopup.style.display='none'; });
+removeBtn.addEventListener('click', ()=>{if(!dependantAdded) return; deletePopup.style.display='block';});
+confirmDeleteBtn.addEventListener('click', ()=>{
+    infoBox.style.display='none'; dependantAdded=false;
+    dispName.textContent=''; dispPhone.textContent=''; dispMedicine.textContent=''; dispTimes.textContent=''; dispDosage.textContent=''; dispNotes.textContent='';
+    deletePopup.style.display='none';
+});
+cancelDeleteBtn.addEventListener('click', ()=>{deletePopup.style.display='none';});
 </script>
 </body>
 </html>
