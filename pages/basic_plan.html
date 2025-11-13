@@ -5,213 +5,115 @@
 <title>Remblyx Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
-body{background:#f0f2f5;color:#333;padding:20px;}
-h1{text-align:center;margin-bottom:30px;}
-.dashboard-container{
-    max-width:1000px;
-    margin:0 auto;
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-    gap:20px;
+:root{
+  --sidebar-width:220px;
+  --primary-color:#667eea;
+  --text-color:#111827;
+  --bg-color:#f9fafb;
 }
-.card{
-    background:#fff;
-    border-radius:12px;
-    padding:20px;
-    display:flex;
-    align-items:center;
-    gap:15px;
-    box-shadow:0 6px 20px rgba(0,0,0,0.08);
-    cursor:pointer;
-    transition:transform 0.2s, box-shadow 0.2s;
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;}
+body{display:flex;min-height:100vh;background:#f0f2f5;color:var(--text-color);}
+.sidebar{
+  width:var(--sidebar-width);
+  background:#111827;
+  color:#e5e7eb;
+  display:flex;
+  flex-direction:column;
+  padding:20px 10px;
 }
-.card:hover{transform:translateY(-5px);box-shadow:0 10px 30px rgba(0,0,0,0.12);}
-.card-icon{font-size:28px;color:#4CAF50;flex-shrink:0;}
-.card-title{font-size:18px;font-weight:bold;color:#1f2937;}
-.card-desc{font-size:13px;color:#555;}
-
-/* Sections */
-.section{display:none;margin-top:40px;padding:20px;background:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);}
-.dependant-card{background:#f9fafb;padding:15px;border-left:4px solid #4CAF50;border-radius:8px;margin-bottom:10px;}
-.dependant-actions{margin-top:10px;}
-.dependant-actions button{padding:6px 10px;margin-right:6px;border:none;border-radius:6px;background:#4CAF50;color:white;cursor:pointer;}
-.dependant-actions button.remove{background:#f87171;}
-.dependant-actions button:hover{opacity:0.9;}
-.reminder{padding:12px;border-left:4px solid #4CAF50;margin-bottom:10px;background:#f9fafb;border-radius:8px;cursor:pointer;transition:background 0.2s;}
+.sidebar h2{font-size:18px;margin-bottom:20px;color:#fff;text-align:center;}
+.nav-item{
+  display:flex; align-items:center; gap:8px;
+  padding:12px 16px;
+  border-radius:8px;
+  cursor:pointer;
+  transition:background 0.2s;
+}
+.nav-item:hover{background:rgba(255,255,255,0.05);}
+.nav-item.active{background:var(--primary-color); color:#fff;}
+.nav-item .icon{width:20px;font-size:18px;}
+.sidebar-spacer{flex:1;}
+.main-content{
+  flex:1;
+  padding:20px;
+  overflow:auto;
+}
+.section{display:none;}
+.section.active{display:block;}
+.card{background:#fff;padding:16px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.08);margin-bottom:16px;}
+.card h3{margin-bottom:8px;}
+.reminder{padding:12px;border-left:4px solid var(--primary-color);margin-bottom:10px;background:#f9fafb;border-radius:8px;cursor:pointer;transition:background 0.2s;}
 .reminder:hover{background:#e0f2f1;}
-
-/* Modal */
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;z-index:1000;}
-.modal.active{display:flex;}
-.modal-content{background:#fff;padding:20px;border-radius:12px;width:90%;max-width:400px;box-shadow:0 8px 24px rgba(0,0,0,0.3);}
-.modal-content h2{margin-top:0;}
-.modal-content label{display:block;margin:8px 0 4px;font-weight:600;}
-.modal-content input,.modal-content select{width:100%;padding:6px 8px;margin-bottom:10px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;}
-.modal-content .dosage-row{display:flex;gap:6px;}
-.modal-content .dosage-row input{flex:1;}
-.modal-content .dosage-row select{flex:1;}
-.time-picker-container{display:none;margin-top:10px;}
-.time-picker-container .time-input{display:block;margin-bottom:6px;}
-.error{color:red;font-weight:bold;margin-bottom:8px;}
-.delete-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;padding:24px;box-shadow:0 8px 24px rgba(0,0,0,0.3);display:none;z-index:2000;max-width:400px;text-align:center;}
-.delete-popup p{margin-bottom:20px;font-weight:600;}
-.delete-popup button{margin:0 8px;padding:8px 14px;border:none;border-radius:6px;cursor:pointer;}
-.btn-confirm{background:#f87171;color:white;}
-.btn-cancel{background:#9ca3af;color:white;}
+button{cursor:pointer;}
 </style>
 </head>
 <body>
 
-<h1>Remblyx Dashboard</h1>
-
-<div class="dashboard-container">
-    <div class="card" onclick="openDependantModal()">
-        <div class="card-icon">👤</div>
-        <div>
-            <div class="card-title">Dependants</div>
-            <div class="card-desc">View and manage dependant profiles</div>
-        </div>
-    </div>
-
-    <div class="card" onclick="showSection('summary')">
-        <div class="card-icon">📊</div>
-        <div>
-            <div class="card-title">Summary</div>
-            <div class="card-desc">Overview of progress and responses</div>
-        </div>
-    </div>
-
-    <div class="card" onclick="showSection('reminders')">
-        <div class="card-icon">⏰</div>
-        <div>
-            <div class="card-title">Upcoming Reminders</div>
-            <div class="card-desc">Click to see upcoming medication & appointments</div>
-        </div>
-    </div>
+<div class="sidebar">
+  <h2>Remblyx</h2>
+  <div class="nav-item active" data-section="dependants"><span class="icon">👤</span>Dependants</div>
+  <div class="nav-item" data-section="summary"><span class="icon">📊</span>Summary</div>
+  <div class="nav-item" data-section="reminders"><span class="icon">⏰</span>Reminders</div>
+  <div class="sidebar-spacer"></div>
 </div>
 
-<!-- Sections -->
-<div id="dependants" class="section">
-    <h2>Dependants</h2>
-    <div id="dependantList" class="dependant-card">
-        <p><strong>Name:</strong> <span id="dispName">John Doe</span></p>
-        <p><strong>Phone:</strong> <span id="dispPhone">91234567</span></p>
-        <p><strong>Medicine:</strong> <span id="dispMedicine">Paracetamol</span></p>
-        <p><strong>Dosage:</strong> <span id="dispDosage">500 mg, 2 times/day</span></p>
-        <p><strong>Times:</strong> <span id="dispTimes">08:00, 20:00</span></p>
-        <p><strong>Notes:</strong> <span id="dispNotes">NA</span></p>
-        <div class="dependant-actions">
-            <button onclick="editDependant()">Edit</button>
-            <button class="remove" onclick="removeDependant()">Remove</button>
-        </div>
+<div class="main-content">
+  <!-- Dependants -->
+  <div id="dependants" class="section active">
+    <div class="card">
+      <h3>John Doe</h3>
+      <p>Phone: 91234567</p>
+      <p>Medicine: Paracetamol 500mg</p>
+      <p>Times: 08:00, 20:00</p>
     </div>
-</div>
+    <div class="card">
+      <h3>Jane Doe</h3>
+      <p>Phone: 98765432</p>
+      <p>Medicine: Ibuprofen 200mg</p>
+      <p>Times: 09:00, 21:00</p>
+    </div>
+  </div>
 
-<div id="summary" class="section">
-    <h2>Summary</h2>
-    <p>John Doe responded to <strong>1</strong> of <strong>2</strong> reminders today.</p>
-</div>
+  <!-- Summary -->
+  <div id="summary" class="section">
+    <div class="card">
+      <h3>Today's Summary</h3>
+      <p>Total Dependants: 2</p>
+      <p>Reminders Scheduled: 4</p>
+    </div>
+  </div>
 
-<div id="reminders" class="section">
-    <h2>Upcoming Reminders</h2>
-    <div class="reminder" onclick="scrollToDependant('dependantList')">
-        <p><strong>08:00 AM:</strong> Paracetamol for John Doe</p>
-    </div>
-    <div class="reminder" onclick="scrollToDependant('dependantList')">
-        <p><strong>03:00 PM:</strong> Doctor Check-up for John Doe</p>
-    </div>
-</div>
-
-<!-- Dependant Modal -->
-<div id="dependantModal" class="modal">
-    <div class="modal-content">
-        <h2 id="modalTitle">Add Dependant</h2>
-        <p class="error" id="modalError"></p>
-        <form id="dependantForm">
-            <label>Name:</label><input type="text" id="depName" required />
-            <label>Phone:</label><input type="text" id="depPhone" required />
-            <label>Medicine:</label><input type="text" id="depMedicine" required />
-            <label>Dosage:</label>
-            <div class="dosage-row">
-                <input type="number" id="depDosageNumber" min="1" value="1" required />
-                <select id="depDosageUnit" required>
-                    <option value="">Unit</option><option value="mg">mg</option><option value="g">g</option>
-                </select>
-            </div>
-            <label>Times per day:</label><input type="number" id="depDosageTimes" min="1" max="10" value="1" required />
-            <div id="timePickerContainer" class="time-picker-container">
-                <label>Times to Take Medicine:</label>
-                <div id="timeInputs"></div>
-            </div>
-            <label>Additional Notes:</label><input type="text" id="depNotes" placeholder="NA" required />
-            <button type="submit">Save</button>
-            <button type="button" onclick="closeModal()" style="background:#9ca3af;margin-top:4px;">Cancel</button>
-        </form>
-    </div>
+  <!-- Reminders -->
+  <div id="reminders" class="section">
+    <div class="reminder" onclick="showDependants()">08:00 AM - John Doe - Paracetamol</div>
+    <div class="reminder" onclick="showDependants()">09:00 AM - Jane Doe - Ibuprofen</div>
+    <div class="reminder" onclick="showDependants()">20:00 PM - John Doe - Paracetamol</div>
+    <div class="reminder" onclick="showDependants()">21:00 PM - Jane Doe - Ibuprofen</div>
+  </div>
 </div>
 
 <script>
-// Sections
-function showSection(id){
-    ['dependants','summary','reminders'].forEach(s=>document.getElementById(s).style.display = (s===id)?'block':'none');
-}
+// Sidebar navigation
+const navItems = document.querySelectorAll('.nav-item');
+const sections = document.querySelectorAll('.section');
 
-// Scroll to dependant
-function scrollToDependant(id){
-    showSection('dependants');
-    const el=document.getElementById(id);
-    if(el){el.scrollIntoView({behavior:'smooth',block:'start'});}
-}
-
-// Modal handling
-let editing=false;
-function openDependantModal(){ 
-    editing=false; 
-    document.getElementById('modalTitle').innerText='Add Dependant';
-    document.getElementById('dependantModal').classList.add('active'); 
-}
-
-function closeModal(){ document.getElementById('dependantModal').classList.remove('active'); }
-
-function editDependant(){
-    editing=true;
-    document.getElementById('modalTitle').innerText='Edit Dependant';
-    document.getElementById('depName').value = document.getElementById('dispName').innerText;
-    document.getElementById('depPhone').value = document.getElementById('dispPhone').innerText;
-    document.getElementById('depMedicine').value = document.getElementById('dispMedicine').innerText;
-    document.getElementById('depDosageNumber').value = parseInt(document.getElementById('dispDosage').innerText);
-    document.getElementById('depDosageUnit').value = document.getElementById('dispDosage').innerText.split(' ')[1];
-    document.getElementById('depDosageTimes').value = parseInt(document.getElementById('dispDosage').innerText.match(/\d+/g)[1]);
-    document.getElementById('depNotes').value = document.getElementById('dispNotes').innerText;
-    document.getElementById('dependantModal').classList.add('active');
-}
-
-function removeDependant(){
-    if(confirm("Are you sure you want to remove this dependant?")){
-        document.getElementById('dispName').innerText='';
-        document.getElementById('dispPhone').innerText='';
-        document.getElementById('dispMedicine').innerText='';
-        document.getElementById('dispDosage').innerText='';
-        document.getElementById('dispTimes').innerText='';
-        document.getElementById('dispNotes').innerText='';
-    }
-}
-
-// Save dependant
-document.getElementById('dependantForm').addEventListener('submit', function(e){
-    e.preventDefault();
-    document.getElementById('dispName').innerText = document.getElementById('depName').value;
-    document.getElementById('dispPhone').innerText = document.getElementById('depPhone').value;
-    document.getElementById('dispMedicine').innerText = document.getElementById('depMedicine').value;
-    document.getElementById('dispDosage').innerText = document.getElementById('depDosageNumber').value + ' ' + document.getElementById('depDosageUnit').value + ', ' + document.getElementById('depDosageTimes').value + ' times/day';
-    let timesArray = [];
-    for(let i=0;i<parseInt(document.getElementById('depDosageTimes').value);i++){ timesArray.push('08:00'); } // placeholder
-    document.getElementById('dispTimes').innerText = timesArray.join(', ');
-    document.getElementById('dispNotes').innerText = document.getElementById('depNotes').value;
-    closeModal();
-    showSection('dependants');
+navItems.forEach(item=>{
+  item.addEventListener('click', ()=>{
+    navItems.forEach(i=>i.classList.remove('active'));
+    item.classList.add('active');
+    const target = item.getAttribute('data-section');
+    sections.forEach(s=>s.classList.remove('active'));
+    document.getElementById(target).classList.add('active');
+  });
 });
+
+// Clicking a reminder scrolls to Dependants
+function showDependants(){
+  navItems.forEach(i=>i.classList.remove('active'));
+  document.querySelector('.nav-item[data-section="dependants"]').classList.add('active');
+  sections.forEach(s=>s.classList.remove('active'));
+  document.getElementById('dependants').classList.add('active');
+}
 </script>
 
 </body>
