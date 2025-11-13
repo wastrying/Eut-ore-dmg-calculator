@@ -85,7 +85,6 @@
   </div>
 </div>
 
-<!-- ====================== JavaScript ====================== -->
 <script>
   let dependantAdded = false;
 
@@ -122,7 +121,7 @@
     errorMsg.textContent = '';
   });
 
-  // Dynamically create time pickers with labels
+  // Dynamically create scroll-wheel style time pickers with labels
   dosageTimesInput.addEventListener('input', () => {
     const timesCount = parseInt(dosageTimesInput.value) || 0;
     timesContainer.innerHTML = '';
@@ -140,9 +139,11 @@
 
       const timeInput = document.createElement('input');
       timeInput.type = 'time';
+      timeInput.step = 60; // scroll by 1 minute
       timeInput.required = true;
       timeInput.style.flex = '1';
-      timeInput.style.padding = '4px 8px';
+      timeInput.style.padding = '6px 10px';
+      timeInput.style.fontSize = '16px';
       timeInput.style.border = '1px solid #ccc';
       timeInput.style.borderRadius = '6px';
 
@@ -163,9 +164,15 @@
     const dosageTimes = document.getElementById('depDosageTimes').value;
 
     const timeInputs = timesContainer.querySelectorAll('input[type="time"]');
-    const exactTimes = Array.from(timeInputs).map(input => input.value).join(', ');
+    let allTimesFilled = true;
+    const exactTimes = [];
 
-    if(!name || !medicine || !dosageNumber || !dosageUnit || !dosageTimes || exactTimes.includes('')){
+    timeInputs.forEach(input => {
+      if(!input.value) allTimesFilled = false;
+      exactTimes.push(input.value);
+    });
+
+    if(!name || !medicine || !dosageNumber || !dosageUnit || !dosageTimes || !allTimesFilled){
       errorMsg.textContent = "Please fill all required fields.";
       return;
     }
@@ -175,7 +182,7 @@
     // Display dependant info
     dispName.textContent = name;
     dispMedicine.textContent = medicine;
-    dispTimes.textContent = exactTimes;
+    dispTimes.textContent = exactTimes.join(', ');
     dispDosage.textContent = dosageText;
     dispNotes.textContent = document.getElementById('depNotes').value || "None";
 
