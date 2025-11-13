@@ -6,75 +6,58 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
-body{background:#f5f5f5;min-height:100vh;color:#222;padding:20px;}
-.wrapper{max-width:1200px;margin:0 auto;display:flex;flex-wrap:wrap;gap:16px;}
+body{background:#f0f2f5;color:#333;padding:20px;}
+.dashboard-container{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;}
 
-/* Dashboard boxes */
-.dashboard-box{background:#fff;border-radius:12px;padding:16px;flex:1 1 300px;min-width:280px;box-shadow:0 2px 8px rgba(0,0,0,0.1);}
-.dashboard-box h2{margin-top:0;margin-bottom:12px;color:#333;}
-.dashboard-box h3{margin-top:12px;margin-bottom:8px;color:#555;}
+/* Cards */
+.card{background:#fff;border-radius:12px;padding:40px 20px;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,0.08);cursor:pointer;transition:transform 0.2s, box-shadow 0.2s;}
+.card:hover{transform:translateY(-5px);box-shadow:0 10px 30px rgba(0,0,0,0.12);}
+.card h2{font-size:22px;margin-bottom:10px;color:#1f2937;}
+.card p{font-size:14px;color:#555;}
 
-/* Dependant Info */
-.dependant-info p{margin:6px 0;}
-.dependant-actions{margin-top:10px;display:flex;gap:8px;}
-button{padding:6px 10px;border:none;border-radius:6px;background:#4CAF50;color:white;cursor:pointer;}
-button:hover{background:#45a049;}
-
-/* Reminders */
-.reminder{padding:10px;border-left:4px solid #4CAF50;margin-bottom:10px;background:#f9f9f9;border-radius:6px;}
-.reminder.completed{border-color:#9ca3af;opacity:0.7;}
-.status.pending{color:#f59e0b;font-weight:bold;}
-.status.completed{color:#9ca3af;font-weight:bold;}
-
-/* History */
-.history p{font-size:14px;color:#555;margin-bottom:4px;}
+/* Optional icons */
+.card i{font-size:36px;color:#4CAF50;margin-bottom:12px;display:block;}
 </style>
 </head>
 <body>
-<div class="wrapper">
-    <!-- Dependant Profile -->
-    <div class="dashboard-box">
-        <h2>Dependant Profile</h2>
-        <div class="dependant-info">
-            <p><strong>Name:</strong> John Doe</p>
-            <p><strong>Phone:</strong> 91234567</p>
-            <p><strong>Medicine:</strong> Paracetamol</p>
-            <p><strong>Dosage:</strong> 500 mg, 2 times per day</p>
-            <p><strong>Times to Take:</strong> 08:00 AM, 08:00 PM</p>
-            <p><strong>Notes:</strong> NA</p>
-            <div class="dependant-actions">
-                <button>Edit</button>
-                <button style="background:#f87171;">Remove</button>
-            </div>
-        </div>
+
+<h1 style="text-align:center;margin-bottom:30px;">Remblyx Dashboard</h1>
+
+<div class="dashboard-container">
+    <div class="card" onclick="window.location.href='#dependant'">
+        <i>👤</i>
+        <h2>Dependants</h2>
+        <p>View and manage dependant profiles</p>
     </div>
 
-    <!-- Upcoming Reminders -->
-    <div class="dashboard-box">
-        <h2>Upcoming Reminders</h2>
-        <div class="reminder">
-            <p><strong>Medicine:</strong> Paracetamol</p>
-            <p><strong>Time:</strong> 08:00 AM</p>
-            <p>Status: <span class="status completed">Completed</span></p>
-        </div>
-        <div class="reminder">
-            <p><strong>Doctor Check-up</strong></p>
-            <p><strong>Time:</strong> 03:00 PM</p>
-            <p>Status: <span class="status pending">Pending</span></p>
-        </div>
+    <div class="card" onclick="window.location.href='#summary'">
+        <i>📊</i>
+        <h2>Summary</h2>
+        <p>See overall progress and responses</p>
     </div>
 
-    <!-- Dashboard Overview / History -->
-    <div class="dashboard-box">
-        <h2>Dashboard Overview</h2>
-        <h3>Dependant Response</h3>
-        <p>John Doe responded to <strong>1</strong> of <strong>2</strong> reminders today.</p>
-        <h3>Recent History</h3>
-        <div class="history">
-            <p>08:00 AM - Paracetamol - Taken</p>
-            <p>03:00 PM - Doctor Check-up - Pending</p>
-        </div>
+    <div class="card" onclick="window.location.href='#reminders'">
+        <i>⏰</i>
+        <h2>Reminders</h2>
+        <p>View upcoming medication and appointments</p>
     </div>
 </div>
+
+<!-- Example sections for navigation -->
+<div id="dependant" style="margin-top:60px;padding:20px;background:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+    <h2>Dependant Page</h2>
+    <p>Here you can add/edit/remove dependants.</p>
+</div>
+
+<div id="summary" style="margin-top:40px;padding:20px;background:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+    <h2>Summary Page</h2>
+    <p>Overview of dependant responses, completed reminders, and stats.</p>
+</div>
+
+<div id="reminders" style="margin-top:40px;padding:20px;background:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+    <h2>Reminders Page</h2>
+    <p>List of upcoming medicine and appointment reminders.</p>
+</div>
+
 </body>
 </html>
