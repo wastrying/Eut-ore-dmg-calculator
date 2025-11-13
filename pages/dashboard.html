@@ -7,1372 +7,255 @@
   <link rel="icon" type="image/png" sizes="32x32" href="../images/medisignal.png" />
   <link rel="apple-touch-icon" href="../images/medisignal.png" />
   <style>
-    /* ===== Roles chips (Enterprise + Developers) ===== */
-    .role-chip{
-      display:inline-flex; align-items:center; gap:6px;
-      padding:6px 10px; border:1px solid #e5e7eb; border-radius:999px;
-      font-size: var(--text-xs); cursor:pointer; user-select:none; background:#fff;
-    }
-    .role-chip.active{ background:#eef2ff; border-color:#93c5fd; }
-    .role-chip .dot{ width:8px; height:8px; border-radius:999px; background:#9ca3af; }
-    .role-chip.active .dot{ background:#3b82f6; }
-    .role-row{ display:flex; gap:8px; flex-wrap:wrap; }
-    .save-badge{ margin-left:8px; font-size:10px; color:#6b7280 }
-    .save-badge.ok{ color:#059669 } .save-badge.err{ color:#b91c1c }
+    /* ===== Global Styles ===== */
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
+    body{background:#f5f5f5;min-height:100vh;color:#222;display:flex;justify-content:center;align-items:flex-start;padding:16px;position:relative;}
+    .wrapper{width:100%;max-width:1200px;margin-top:58px;display:flex;flex-direction:column;gap:16px;z-index:10;}
 
-    /* ===== In-app Email Viewer ===== */
-    .email-modal{ position:fixed; inset:0; display:none; z-index:2000; }
-    .email-modal.show{ display:block; }
-    .email-modal-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.45); }
-    .email-modal-content{
-      position:absolute; inset:6% 8%;
-      background:#fff; border-radius:14px; box-shadow:0 18px 48px rgba(0,0,0,.35);
-      display:flex; flex-direction:column; overflow:hidden; border:1px solid #e5e7eb;
-    }
-    .email-modal-header{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border-bottom:1px solid #e5e7eb; background:#f9fafb; }
-    .email-modal-subject{ font-size:var(--text-lg); font-weight:600; color:#111827; }
-    .email-modal-meta{ font-size:var(--text-xs); color:#6b7280; margin-top:2px; }
-    .email-modal-close{ border:1px solid #e5e7eb; background:#fff; border-radius:10px; padding:6px 10px; font-size:16px; cursor:pointer; }
-    .email-iframe{ width:100%; height:100%; border:0; flex:1; background:#fff; }
-    .email-plain{ margin:0; padding:12px 14px; white-space:pre-wrap; font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; overflow:auto; flex:1; background:#fff; }
+    /* ===== Board Styles ===== */
+    .board-wrapper{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:16px;max-width:600px;overflow:auto;}
+    button{padding:8px 12px;border:none;border-radius:6px;background:#4CAF50;color:white;cursor:pointer;}
+    button:hover{background:#45a049;}
+    .dependant-info{margin-top:12px;padding:12px;background:#fff;border-left:4px solid #4CAF50;border-radius:6px; display:none;}
+    .dependant-actions{display:flex;gap:8px;margin-top:10px;}
 
-    /* Make the "Open" look like a link but it's a button */
-    #email-board .open-link{
-      background:none; border:none; text-decoration:underline; cursor:pointer; font:inherit; padding:0;
-    }
+    /* Modal Styles */
+    .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;z-index:1000;}
+    .modal.active{display:flex;}
+    .modal-content{background:#fff;padding:20px;border-radius:12px;width:90%;max-width:400px;box-shadow:0 8px 24px rgba(0,0,0,0.3);}
+    .modal-content h2{margin-top:0;}
+    .modal-content label{display:block;margin:8px 0 4px;font-weight:600;}
+    .modal-content input,.modal-content select{width:100%;padding:6px 8px;margin-bottom:10px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;}
+    .modal-content .dosage-row{display:flex;gap:6px;}
+    .modal-content .dosage-row input{flex:1;}
+    .modal-content .dosage-row select{flex:1;}
+    .error{color:red;font-weight:bold;margin-bottom:8px;}
+    .time-picker-container{display:none;margin-top:10px;}
+    .time-picker-container .time-input{display:block;margin-bottom:6px;}
 
-    :root{
-      --radius-lg:18px; --radius-md:12px; --radius-sm:8px;
-      --space-1:6px; --space-2:8px; --space-3:12px; --space-4:16px;
-      --text-xs: clamp(10px, 2.5vw, 12px);
-      --text-sm: clamp(11px, 2.6vw, 13px);
-      --text-base: clamp(12px, 3vw, 14px);
-      --text-lg: clamp(14px, 3.5vw, 18px);
-    }
+    /* Delete confirmation popup */
+    .delete-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;padding:24px;box-shadow:0 8px 24px rgba(0,0,0,0.3);display:none;z-index:2000;max-width:400px;text-align:center;}
+    .delete-popup p{margin-bottom:20px;font-weight:600;}
+    .delete-popup button{margin:0 8px;padding:8px 14px;border:none;border-radius:6px;cursor:pointer;}
+    .btn-confirm{background:#f87171;color:white;}
+    .btn-cancel{background:#9ca3af;color:white;}
 
-    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
-    body{ background:#f5f5f5;min-height:100vh;color:#222; display:flex;justify-content:center;align-items:flex-start; position:relative;overflow:hidden;padding:16px; }
-    .overlay{position:fixed;inset:0;z-index:-1}
-    .bg-image{width:100%;height:100%;object-fit:cover;filter:blur(4px);opacity:.8}
-
+    /* Dashboard Header */
     .header-row{position:fixed;top:8px;left:8px;z-index:40}
     .logo{height:160px;cursor:pointer;transition:.3s ease}
     .logo:hover{filter:brightness(1.1);transform:scale(1.03)}
 
-    .wrapper{width:100%;max-width:1200px;margin-top:58px;display:flex;flex-direction:column;gap:16px;z-index:10}
+    /* General Inputs */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
-    #main-dashboard{
-      display:none;
-      height:calc(100dvh - 110px);
-      max-height:calc(100dvh - 110px);
-      background:rgba(255,255,255,.96);
-      border-radius:var(--radius-lg);
-      box-shadow:0 10px 26px rgba(0,0,0,.2);
-      grid-template-columns:230px 1fr;
-      overflow:hidden;
-      display:grid;
-    }
-
-    .sidebar{ background:#111827;color:#e5e7eb;display:flex;flex-direction:column; padding:14px 10px 10px;gap:10px;position:relative;z-index:60; }
-    .sidebar-title{font-size:var(--text-sm);font-weight:600;margin-bottom:4px;padding:0 4px;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em}
-    .nav-item{display:flex;align-items:center;gap:8px;padding:10px;border-radius:8px;font-size:var(--text-base);cursor:pointer;color:#d1d5db;transition:.2s}
-    .nav-item:hover{background:rgba(249,250,251,.06)}
-    .nav-item.active{background:#111827;border-left:3px solid #667eea;padding-left:10px;color:#fff}
-    .icon-dot{width:7px;height:7px;border-radius:999px;background:#4ade80}
-    .sidebar-spacer{flex:1}
-    .sidebar-plan-label{font-size:var(--text-xs);color:#9ca3af;padding:8px 8px;border-radius:8px;border:1px solid rgba(156,163,175,.4);background:rgba(17,24,39,.96);display:flex;flex-direction:column;gap:4px;cursor:pointer;transition:.2s}
-    .sidebar-plan-label:hover{background:rgba(31,41,55,1);border-color:#60a5fa}
-    .sidebar-plan-label strong{color:#60a5fa;font-weight:600}
-    .logout-link{font-size:var(--text-xs);color:#9ca3af;text-align:left;padding:6px 6px;cursor:pointer;text-decoration:underline}
-    .logout-link:hover{color:#fff}
-
-    .main-area{display:flex;flex-direction:column;padding:10px 12px 10px;gap:8px;min-width:0}
-    .top-bar{display:flex;align-items:center;justify-content:space-between;gap:10px}
-    .top-left{display:flex;align-items:center;gap:8px;min-width:0}
-    .board-title{font-size:var(--text-lg);font-weight:600;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .board-subtitle{font-size:var(--text-xs);color:#6b7280}
-    .top-actions{display:flex;align-items:center;gap:6px;font-size:var(--text-xs)}
-    .search-box{padding:8px 12px;border-radius:999px;border:1px solid #e5e7eb;font-size:var(--text-sm);min-width:200px}
-
-    .board-wrapper{ flex:1;border-radius:12px;background:#f9fafb;padding:8px;overflow:auto;border:1px solid #e5e7eb; -webkit-overflow-scrolling:touch; }
-
-    .board-header-row,.board-row{ display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1.2fr; gap:6px;align-items:center;font-size:var(--text-sm);padding:6px;border-radius:8px }
-    .board-header-row{ font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;background:#f3f4f6;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:5 }
-    .board-row{background:#fff;margin-top:4px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
-    .status-pill{padding:3px 7px;border-radius:999px;font-size:10px;display:inline-block;text-align:center;white-space:nowrap}
-    .status-green{background:#bbf7d0;color:#166534}.status-yellow{background:#fef9c3;color:#854d0e}.status-red{background:#fee2e2;color:#991b1b}.status-blue{background:#dbeafe;color:#1d4ed8}
-    .status-purple{ background:#ede9fe; color:#5b21b6; } /* Replied */
-
-    .dev-grid-header,.dev-grid-row{ display:grid;grid-template-columns:2fr 1fr;gap:6px;align-items:center;font-size:var(--text-sm);padding:6px;border-radius:8px }
-    .dev-grid-header{font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;background:#f3f4f6;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:5}
-    .dev-grid-row{background:#ffffff;margin-top:4px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
-    .plan-select{width:100%;padding:8px 10px;border-radius:6px;border:1px solid #e5e7eb;background:#fff;font-size:var(--text-sm)}
-    .inline-status{margin-left:6px;font-size:10px;color:#6b7280}
-    .inline-status.ok{color:#059669}.inline-status.err{color:#b91c1c}
-
-    .mobile-menu-btn{ display:none;border:1px solid #e5e7eb;background:#fff;border-radius:8px; padding:8px 10px;font-size:16px;line-height:1;cursor:pointer; }
-    .backdrop{ position:fixed;inset:0;background:rgba(0,0,0,.35); opacity:0;pointer-events:none;transition:opacity .2s ease; z-index:1100; }
-    .backdrop.show{opacity:1;pointer-events:auto}
-
-    /* Email board grid */
-    #email-board .board-header-row,
-    #email-board .board-row{
-      grid-template-columns: 2fr 3fr 1fr 1.4fr 0.8fr; /* From | Subject | Status | Received | Open */
-    }
-    #email-board .board-header-row > div:nth-child(3),
-    #email-board .board-row        > div:nth-child(3){ text-align: center; }
-    #email-board .board-header-row > div:nth-child(4),
-    #email-board .board-row        > div:nth-child(4){ text-align: right; white-space: nowrap; }
-    #email-board .board-header-row > div:nth-child(5),
-    #email-board .board-row        > div:nth-child(5){ text-align: center; }
-    #email-board .board-row > div:nth-child(2){ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-    @media (max-width:1024px){ #main-dashboard{grid-template-columns:200px 1fr} .logo{height:140px} }
-
-    @media (max-width:900px){
-      #main-dashboard{grid-template-columns:1fr}
-      .mobile-menu-btn{display:inline-block}
-      .sidebar{ position:fixed;left:-100%;top:0;bottom:0;width:82vw;max-width:320px; transform:translateX(0);transition:left .25s ease;box-shadow:8px 0 20px rgba(0,0,0,.25); z-index:1200; }
-      .sidebar.open{left:0}
-      .sidebar-title,.nav-item .label,.sidebar-plan-label .label-text{display:none}
-      .search-box{min-width:0;width:100%}
-      .top-actions{flex:1;justify-content:flex-end}
-      .top-left{flex:1}
-      html.drawer-open body{ overflow:hidden; }
-
-      /* Hide header + home button + logo if a drawer or viewer is open (defensive) */
-      .drawer-open .header-row,
-      .viewer-open .header-row,
-      .drawer-open #home-tap,
-      .viewer-open #home-tap,
-      .drawer-open .logo,
-      .viewer-open .logo{
-        opacity:0; visibility:hidden; pointer-events:none; transition:opacity .15s ease;
-      }
-    }
-
-    @media (max-width:640px){
-      .header-row{ top:max(0px, env(safe-area-inset-top)); left:max(6px, env(safe-area-inset-left)); }
-      .home-tap{ position:absolute; top:6px; left:6px; width:44px; height:44px; border-radius:10px; background:transparent; border:none; cursor:pointer; }
-      .home-tap:focus-visible{ outline:2px solid #60a5fa; outline-offset:2px; }
-      .logo{ height:72px; pointer-events:none }
-      .wrapper{ margin-top:86px }
-      .board-title{font-size:clamp(14px,4vw,18px)}
-      .board-subtitle{display:none}
-      .board-header-row{display:none}
-      .board-row{ grid-template-columns:1fr;gap:8px;padding:10px;border-radius:var(--radius-md) }
-      .board-row > div{display:flex;justify-content:space-between;gap:8px;align-items:center}
-      .board-row > div:nth-child(1)::before{content:"Item";font-weight:600;color:#6b7280;margin-right:8px}
-      .board-row > div:nth-child(2)::before{content:"Owner";font-weight:600;color:#6b7280;margin-right:8px}
-      .board-row > div:nth-child(3)::before{content:"Status";font-weight:600;color:#6b7280;margin-right:8px}
-      .board-row > div:nth-child(4)::before{content:"Due";font-weight:600;color:#6b7280;margin-right:8px}
-      .board-row > div:nth-child(5)::before{content:"Priority";font-weight:600;color:#6b7280;margin-right:8px}
-
-      /* === Mobile-only: compact Email board (From | Subject | Status | Open) === */
-      #email-board .board-header-row{
-        display:grid; /* override global mobile rule */
-        grid-template-columns: 1.2fr 2fr 0.9fr 0.7fr;
-        gap:6px;
-      }
-      #email-board .board-header-row > div:nth-child(4){ display:none; } /* hide Received heading */
-
-      #email-board .board-row{
-        display:grid; /* override stacked */
-        grid-template-columns: 1.2fr 2fr 0.9fr 0.7fr; /* From | Subject | Status | Open */
-        align-items:center; gap:6px; padding:8px 10px; border-radius:var(--radius-sm);
-      }
-      #email-board .board-row > div:nth-child(4){ display:none; } /* hide Received cell */
-
-      #email-board .board-row > div::before{ content:none !important; } /* remove stacked labels */
-      #email-board .board-row > div:nth-child(1),
-      #email-board .board-row > div:nth-child(2){ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-      #email-board .open-link{ font-size: var(--text-xs); }
-    }
-
-    @supports(padding:max(0px)){
-      body{padding-left:max(16px, env(safe-area-inset-left));padding-right:max(16px, env(safe-area-inset-right));padding-top:max(16px, env(safe-area-inset-top));padding-bottom:max(16px, env(safe-area-inset-bottom));}
-    }
-    @media (hover:none) and (pointer:coarse){ .logo:hover{ transform:none } }
   </style>
 </head>
 <body>
-  <div class="overlay"><img src="../images/background.png" class="bg-image" alt=""></div>
-
-  <div class="header-row" id="header-row">
-    <button id="home-tap" class="home-tap" aria-label="Go to home" title="Home"></button>
-    <img src="../images/remblyxlogo.png" alt="Remblyx" class="logo" id="logo" onclick="window.location.href='../index.html'">
-  </div>
-
   <div class="wrapper">
-    <div id="main-dashboard">
-      <aside class="sidebar" id="sidebar">
-        <div class="sidebar-title">Workspace</div>
+    <div class="board-wrapper">
+      <h2>Basic Plan Dashboard</h2>
+      <button id="addDependantBtn">Add Dependant</button>
 
-        <div class="nav-item active" data-nav="board"><span class="icon-dot"></span><span class="label">Main Board</span></div>
-        <div class="nav-item" data-nav="alerts"><span class="icon-dot"></span><span class="label">Alerts</span></div>
-        <div class="nav-item" data-nav="reports"><span class="icon-dot"></span><span class="label">Reports</span></div>
-        <div class="nav-item" data-nav="integrations"><span class="icon-dot"></span><span class="label">Integrations</span></div>
-
-        <!-- Email tab (shown for Developers via JS) -->
-        <div class="nav-item" data-nav="email" style="display:none;"><span class="icon-dot"></span><span class="label">Email</span></div>
-
-        <!-- Roles tab (Enterprise + Developers via JS) -->
-        <div class="nav-item" data-nav="roles" style="display:none;"><span class="icon-dot"></span><span class="label">Roles</span></div>
-
-        <div class="sidebar-spacer"></div>
-
-        <div id="sidebar-plan" class="sidebar-plan-label" title="Click to change plan">
-          <span class="label-text">Current Plan</span>
-          <strong id="plan-name">-</strong>
+      <div id="dependantInfo" class="dependant-info">
+        <h3>Dependant Profile</h3>
+        <p><strong>Name:</strong> <span id="dispName"></span></p>
+        <p><strong>Medicine Type:</strong> <span id="dispMedicine"></span></p>
+        <p><strong>Times to Take Medicine:</strong> <span id="dispTimes"></span></p>
+        <p><strong>Dosage:</strong> <span id="dispDosage"></span></p>
+        <p><strong>Additional Notes:</strong> <span id="dispNotes"></span></p>
+        <div class="dependant-actions">
+          <button id="editDependantBtn" style="background:#3b82f6;">Edit</button>
+          <button id="removeDependantBtn" style="background:#f87171;">Remove</button>
         </div>
-
-        <div id="logout" class="logout-link">Log out</div>
-        <div id="delete-account" class="logout-link" style="color:#f87171;">Delete account &amp; data</div>
-      </aside>
-
-      <div class="backdrop" id="backdrop"></div>
-
-      <div class="main-area">
-        <div class="top-bar">
-          <div class="top-left">
-            <button id="open-sidebar" class="mobile-menu-btn" aria-label="Open menu">☰</button>
-            <div>
-              <div id="board-title" class="board-title">Developer Command Center</div>
-              <div id="board-subtitle" class="board-subtitle">Overview of all users, their subscriptions, and status.</div>
-            </div>
-          </div>
-          <div class="top-actions"></div>
-        </div>
-
-        <!-- Developers Command Center -->
-        <div id="dev-tools" class="board-wrapper" style="display:none;">
-          <div class="top-actions" style="margin-bottom:8px;gap:8px;flex-wrap:wrap">
-            <input id="user-search" class="search-box" placeholder="Search users (email or plan)..." style="flex:1;min-width:220px" />
-          </div>
-          <div class="dev-grid-header"><div>Email</div><div>Plan</div></div>
-          <div id="dev-users"></div>
-        </div>
-
-        <!-- Standard board -->
-        <div id="standard-board" class="board-wrapper">
-          <div class="board-header-row">
-            <div>Item</div><div>Owner</div><div>Status</div><div>Due Date</div><div>Priority</div>
-          </div>
-          <div class="board-row"><div>Onboarding checks</div><div>You</div><div><span class="status-pill status-green">Done</span></div><div>Today</div><div>Low</div></div>
-          <div class="board-row"><div>Vital alerts configuration</div><div>Team Lead</div><div><span class="status-pill status-yellow">In progress</span></div><div>Tomorrow</div><div>Medium</div></div>
-          <div class="board-row"><div>Critical event pipeline</div><div>Engineering</div><div><span class="status-pill status-red">Stuck</span></div><div>Overdue</div><div>High</div></div>
-          <div class="board-row"><div>Integration testing</div><div>DevOps</div><div><span class="status-pill status-blue">Planned</span></div><div>Next week</div><div>Medium</div></div>
-        </div>
-
-        <!-- Email board (Developers) -->
-        <div id="email-board" class="board-wrapper" style="display:none;">
-          <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap">
-            <input id="email-search" class="search-box" placeholder="Search email (from / subject / status)..." style="flex:1; min-width:220px" />
-            <button id="email-refresh" class="mobile-menu-btn" aria-label="Refresh">⟳</button>
-          </div>
-          <div class="board-header-row">
-            <div>From</div><div>Subject</div><div>Status</div><div>Received</div><div>Open</div>
-          </div>
-          <div id="email-list"></div>
-        </div>
-
-        <!-- Roles board (Enterprise + Developers) -->
-        <div id="roles-board" class="board-wrapper" style="display:none;">
-          <div class="top-actions" style="margin-bottom:8px;gap:8px;flex-wrap:wrap">
-            <input id="roles-search" class="search-box" placeholder="Search users (email)..." style="flex:1;min-width:220px" />
-          </div>
-          <div class="dev-grid-header"><div>Email</div><div>Roles</div></div>
-          <div id="roles-list"></div>
-        </div>
-
-        <!-- In-app Email Viewer -->
-        <div id="email-modal" class="email-modal" aria-hidden="true">
-          <div id="email-modal-backdrop" class="email-modal-backdrop"></div>
-          <div class="email-modal-content" role="dialog" aria-modal="true" aria-labelledby="email-modal-subject">
-            <div class="email-modal-header">
-              <div>
-                <div id="email-modal-subject" class="email-modal-subject"></div>
-                <div id="email-modal-meta" class="email-modal-meta"></div>
-              </div>
-              <button id="email-modal-close" class="email-modal-close" aria-label="Close">✕</button>
-            </div>
-            <iframe id="email-iframe" class="email-iframe" sandbox=""></iframe>
-            <pre id="email-plain" class="email-plain" style="display:none"></pre>
-          </div>
-        </div>
-
       </div>
     </div>
   </div>
 
+  <!-- Add/Edit Dependant Modal -->
+  <div id="dependantModal" class="modal">
+    <div class="modal-content">
+      <h2 id="modalTitle">Add Dependant</h2>
+      <p class="error" id="modalError"></p>
+      <form id="dependantForm">
+        <label for="depName">Name:</label>
+        <input type="text" id="depName" required />
 
-<script type="module">
-/* ======================
-   Firebase imports
-   ====================== */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import {
-  getAuth, onAuthStateChanged, signOut, deleteUser,
-  // ⬇️ Added for re-auth handling
-  reauthenticateWithPopup, reauthenticateWithCredential,
-  GoogleAuthProvider, EmailAuthProvider
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import {
-  getFirestore, doc, getDoc, setDoc, deleteDoc, collection,
-  getDocs, query, orderBy, limit, onSnapshot, updateDoc,
-  serverTimestamp, addDoc, deleteField, where
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+        <label for="depMedicine">Type of Medicine:</label>
+        <input type="text" id="depMedicine" required />
 
-/* ======================
-   Firebase init
-   ====================== */
-const firebaseConfig = {
-  apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
-  authDomain: "remblyx-medisignal.firebaseapp.com",
-  projectId: "remblyx-medisignal",
-  storageBucket: "remblyx-medisignal.appspot.com",
-  messagingSenderId: "50711670199",
-  appId: "1:50711670199:web:0c9c2ff72cd77234ce0c32",
-  measurementId: "G-JQ3843RM4V"
-};
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db   = getFirestore(app);
+        <label for="depDosage">Dosage:</label>
+        <div class="dosage-row">
+          <input type="number" id="depDosageNumber" min="0" placeholder="Amount" required />
+          <select id="depDosageUnit" required>
+            <option value="">Unit</option>
+            <option value="mg">mg</option>
+            <option value="g">g</option>
+          </select>
+        </div>
 
-/* ======================
-   Config / DOM handles
-   ====================== */
-const DEV_EMAILS   = ["medisignal.remblyx@gmail.com"];
-const LOGIN_URL    = "./login.html";
-const SELECTION_URL= "./selection.html";
-const PLAN_OPTIONS = ["Basic","Premium","Enterprise","Developers"];
+        <label for="depDosageTimes">Times per day:</label>
+        <input type="number" id="depDosageTimes" min="1" max="10" placeholder="Enter number of times" required />
 
-const mainDashboard      = document.getElementById("main-dashboard");
-const sidebarPlanEl      = document.getElementById("sidebar-plan");
-const planNameEl         = document.getElementById("plan-name");
-const logoutLink         = document.getElementById("logout");
-const deleteAccountLink  = document.getElementById("delete-account");
-const boardTitle         = document.getElementById("board-title");
-const boardSubtitle      = document.getElementById("board-subtitle");
-const firstNavLabelEl    = document.querySelector(".nav-item .label");
+        <div id="timePickerContainer" class="time-picker-container">
+          <label>Times to Take Medicine:</label>
+          <div id="timeInputs"></div>
+        </div>
 
-const devTools           = document.getElementById("dev-tools");
-const devUsersContainer  = document.getElementById("dev-users");
-const standardBoard      = document.getElementById("standard-board");
-const searchInput        = document.getElementById("user-search");
+        <label for="depNotes">Additional Notes:</label>
+        <input type="text" id="depNotes" placeholder="Enter 'NA' if none" required />
 
-const emailBoard         = document.getElementById("email-board");
-const emailList          = document.getElementById("email-list");
-const emailSearch        = document.getElementById("email-search");
-const emailRefreshBtn    = document.getElementById("email-refresh");
-
-/* Roles UI present in your HTML */
-const rolesBoard         = document.getElementById("roles-board");
-const rolesList          = document.getElementById("roles-list");
-const rolesSearch        = document.getElementById("roles-search");
-
-/* We will CREATE a Members tab/board dynamically */
-const sidebarEl   = document.getElementById("sidebar");
-const openSidebarBtn = document.getElementById("open-sidebar");
-const backdropEl  = document.getElementById("backdrop");
-const root        = document.documentElement;
-
-/* Header/logo for hiding while viewer open */
-const headerRow   = document.getElementById('header-row');
-const logoEl      = document.getElementById('logo');
-const homeTapBtn  = document.getElementById('home-tap');
-let savedLogoOnclick = null;
-
-/* Email modal */
-const emailModal          = document.getElementById("email-modal");
-const emailModalBackdrop  = document.getElementById("email-modal-backdrop");
-const emailModalClose     = document.getElementById("email-modal-close");
-const emailIframe         = document.getElementById("email-iframe");
-const emailPlain          = document.getElementById("email-plain");
-const emailModalSubject   = document.getElementById("email-modal-subject");
-const emailModalMeta      = document.getElementById("email-modal-meta");
-const emailModalHeader    = document.querySelector('.email-modal-header');
-
-/* Global state */
-let currentUser = null;
-let currentPlan = null;
-let allUsers = [];     // [{uid,email,plan,roles}]
-let rolesUsers = [];   // list used by Roles panel (filtered per plan)
-let unsubscribeEmails = null;
-let cachedEmails = [];
-let currentOpenedEmailId = null;
-
-/* ===== Members feature state/refs (built dynamically) ===== */
-let membersNavEl = null;
-let membersBoard = null;
-let membersList = null;
-let membersInput = null;
-let membersAddBtn = null;
-let unsubscribeMembers = null;
-let cachedMembers = []; // [{id, memberEmail, plan, isActive, linkedUid, linkedPlan}]
-
-/* ======================
-   Small utilities
-   ====================== */
-function setDashboardVisibility(show){ if (mainDashboard) mainDashboard.style.display = show ? "grid" : "none"; }
-function safeTxt(el, txt){ if (el) el.textContent = txt; }
-function setNavLabelForPlan(plan){
-  if (!firstNavLabelEl) return;
-  firstNavLabelEl.textContent = (plan === "Developers") ? "Command Center" : "Main Board";
-}
-function timeAgo(iso){
-  if (!iso) return '-';
-  const d = new Date(iso);
-  const ms = Date.now() - d.getTime();
-  const m = Math.floor(ms/60000);
-  if (m < 1) return "now";
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m/60);
-  if (h < 24) return `${h}h ago`;
-  const days = Math.floor(h/24);
-  return `${days}d ago`;
-}
-const isEmail = (s)=>/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test((s||'').trim());
-const normalizeEmail = (s)=> (s||'').trim().toLowerCase();
-const linkDocId = (ownerUid, memberEmail)=> `${ownerUid}__${encodeURIComponent(normalizeEmail(memberEmail))}`;
-
-/* ======================
-   Drawer helpers (mobile)
-   ====================== */
-const openDrawer = () => {
-  if (!sidebarEl || !backdropEl) return;
-  sidebarEl.classList.add("open");
-  backdropEl.classList.add("show");
-  root.classList.add("drawer-open");
-  if (headerRow) { headerRow.setAttribute('aria-hidden','true'); headerRow.style.pointerEvents = 'none'; }
-  if (homeTapBtn){ homeTapBtn.disabled = true; homeTapBtn.style.pointerEvents  = 'none'; }
-  if (logoEl){ savedLogoOnclick = logoEl.onclick; logoEl.onclick = null; logoEl.style.pointerEvents = 'none'; }
-};
-const closeDrawer = () => {
-  if (!sidebarEl || !backdropEl) return;
-  sidebarEl.classList.remove("open");
-  backdropEl.classList.remove("show");
-  root.classList.remove("drawer-open");
-  if (headerRow) { headerRow.removeAttribute('aria-hidden'); headerRow.style.pointerEvents = ''; }
-  if (homeTapBtn){ homeTapBtn.disabled = false; homeTapBtn.style.pointerEvents = ''; }
-  if (logoEl){ logoEl.onclick = savedLogoOnclick; logoEl.style.pointerEvents = ''; }
-};
-openSidebarBtn?.addEventListener("click", openDrawer);
-backdropEl?.addEventListener("click", closeDrawer);
-window.addEventListener("keydown", (e)=>{ if (e.key === "Escape") closeDrawer(); });
-sidebarEl?.addEventListener("click", (e)=>{ if (e.target.closest(".nav-item")) closeDrawer(); });
-
-/* ======================
-   Plan gating
-   ====================== */
-function showDevelopersView(){
-  setNavLabelForPlan("Developers");
-  const emailNav = sidebarEl?.querySelector('[data-nav="email"]');
-  if (emailNav) emailNav.style.display = '';
-
-  const rolesNav = sidebarEl?.querySelector('[data-nav="roles"]');
-  if (rolesNav) rolesNav.style.display = '';
-
-  ensureMembersUi(true); // show Members tab for Dev
-  devTools.style.display = "block";
-  standardBoard.style.display = "none";
-  emailBoard.style.display = "none";
-  rolesBoard.style.display = "none";
-  membersBoard && (membersBoard.style.display = "none");
-  stopEmailsListener();
-  stopMembersListener();
-  renderAllUsers();
-}
-function showRegularView(){
-  setNavLabelForPlan(currentPlan);
-  const emailNav = sidebarEl?.querySelector('[data-nav="email"]');
-  if (emailNav) emailNav.style.display = 'none';
-
-  // Roles tab visible only for Enterprise
-  const rolesNav = sidebarEl?.querySelector('[data-nav="roles"]');
-  if (rolesNav) rolesNav.style.display = (currentPlan === 'Enterprise') ? '' : 'none';
-
-  ensureMembersUi(currentPlan === 'Enterprise'); // show Members only for Enterprise
-  devTools.style.display = "none";
-  standardBoard.style.display = "block";
-  emailBoard.style.display = "none";
-  rolesBoard.style.display = "none";
-  membersBoard && (membersBoard.style.display = "none");
-  stopEmailsListener();
-  stopMembersListener();
-}
-function applyPlanUi(plan){
-  currentPlan = plan || null;
-  safeTxt(planNameEl, currentPlan || "-");
-  if (boardTitle && boardSubtitle) {
-    switch (plan) {
-      case "Basic":
-        boardTitle.textContent = "Basic Monitoring Board";
-        boardSubtitle.textContent = "Lightweight overview for individual usage."; break;
-      case "Premium":
-        boardTitle.textContent = "Premium Team Workspace";
-        boardSubtitle.textContent = "Collaborative overview for teams and advanced alerts."; break;
-      case "Enterprise":
-        boardTitle.textContent = "Enterprise Control Center";
-        boardSubtitle.textContent = "Full-scale visibility, integrations, and governance."; break;
-      case "Developers":
-        boardTitle.textContent = "Developer Command Center";
-        boardSubtitle.textContent = "Internal tools, diagnostics, and elevated limits."; break;
-      default:
-        boardTitle.textContent = "Remblyx Workspace";
-        boardSubtitle.textContent = "Overview of your monitoring items, owners, and status.";
-    }
-  }
-  sidebarPlanEl?.classList.remove("locked");
-  if (sidebarPlanEl) sidebarPlanEl.title = (plan === "Developers") ? "Edit plan (developer)" : "Change subscription plan";
-  deleteAccountLink && (deleteAccountLink.style.display = "block");
-  (plan === "Developers") ? showDevelopersView() : showRegularView();
-}
-async function ensureDevelopersPlanIfAllowed(user){
-  const isDev = DEV_EMAILS.includes((user.email || "").toLowerCase());
-  if (!isDev) return null;
-  try {
-    const ref = doc(db,"users",user.uid);
-    const snap = await getDoc(ref);
-    const existing = snap.exists() ? (snap.data().plan || null) : null;
-    if (existing === "Developers") return "Developers";
-    await setDoc(ref, { email: user.email || null, plan: "Developers" }, { merge:true });
-    return "Developers";
-  } catch { return null; }
-}
-
-/* If a user is a member of someone’s plan, auto-apply it on sign-in */
-async function maybeApplyInboundMembership(user, currentLoadedPlan){
-  try{
-    const qLinks = query(collection(db,'plan_links'), where('memberEmail','==', (user.email||'').toLowerCase()));
-    const snap = await getDocs(qLinks);
-    if (snap.empty) return currentLoadedPlan;
-
-    let applied = currentLoadedPlan;
-    snap.forEach(d=>{
-      const f = d.data()||{};
-      if (f.isActive !== false && f.plan){
-        applied = f.plan; // take first active
-      }
-    });
-    if (applied && applied !== currentLoadedPlan){
-      await setDoc(doc(db,'users', user.uid), { plan: applied }, { merge:true });
-      return applied;
-    }
-    return currentLoadedPlan;
-  } catch(e){
-    console.warn('inbound membership check failed', e);
-    return currentLoadedPlan;
-  }
-}
-
-async function loadUserPlan(user){
-  try {
-    const ref = doc(db,"users",user.uid);
-    const snap = await getDoc(ref);
-    if (!snap.exists() || !snap.data().plan){
-      await setDoc(ref, { email: user.email || null, plan: "Basic" }, { merge:true });
-      return "Basic";
-    }
-    return snap.data().plan;
-  } catch { return "Basic"; }
-}
-
-/* ======================
-   Developer users panel
-   ====================== */
-function userRow({uid,email,plan}){
-  const selectHtml = `<select class="plan-select" data-uid="${uid}">
-    ${PLAN_OPTIONS.map(p => `<option value="${p}" ${p===plan?'selected':''}>${p}</option>`).join('')}
-  </select>`;
-  const planCell = (currentPlan === "Developers")
-    ? `${selectHtml} <span class="inline-status" id="status-${uid}"></span>`
-    : `<span>${plan || '-'}</span>`;
-  return `<div class="dev-grid-row" data-uid="${uid}">
-    <div>${email}</div>
-    <div>${planCell}</div>
-  </div>`;
-}
-function renderList(filter=""){
-  if (!devUsersContainer) return;
-  const q = (filter || "").trim().toLowerCase();
-  const filtered = !q ? allUsers : allUsers.filter(u => {
-    const email = (u.email || "").toLowerCase();
-    const plan  = (u.plan  || "").toLowerCase();
-    const tokens = q.split(/\s+/);
-    return tokens.every(tok => {
-      if (/^(plan|p):/.test(tok)) {
-        const val = tok.replace(/^(plan|p):/,"");
-        const wants = val.split(/[|,]/).map(s=>s.trim()).filter(Boolean);
-        if (!wants.length) return true;
-        return wants.some(w => plan.includes(w));
-      }
-      if (/^(email|e):/.test(tok)) {
-        const val = tok.replace(/^(email|e):/,"");
-        return email.includes(val);
-      }
-      return email.includes(tok) || plan.includes(tok);
-    });
-  });
-  devUsersContainer.innerHTML = filtered.length
-    ? filtered.map(userRow).join("")
-    : `<div class="dev-grid-row"><div>No users found</div><div>—</div></div>`;
-}
-async function fetchAllUsers(){
-  // NOTE: Allowed only for Developers by your rules; Enterprise querying all users would fail.
-  const snap = await getDocs(collection(db,"users"));
-  const arr = [];
-  snap.forEach(d=>{
-    const data = d.data() || {};
-    arr.push({
-      uid: d.id,
-      email: data.email || "(no email)",
-      plan:  data.plan  || "-",
-      roles: data.roles || {}
-    });
-  });
-  allUsers   = [...arr].sort((a,b)=>(a.email||"").localeCompare(b.email||""));
-}
-async function renderAllUsers(){
-  if (!devUsersContainer) return;
-  devUsersContainer.innerHTML = `<div class="dev-grid-row"><div>Loading users…</div><div>—</div></div>`;
-  try { await fetchAllUsers(); renderList(searchInput?.value || ""); }
-  catch { devUsersContainer.innerHTML = `<div class="dev-grid-row"><div>Permission denied or error</div><div>—</div></div>`; }
-}
-async function updatePlanForUser(uid, newPlan){
-  const status = document.getElementById(`status-${uid}`);
-  if (status){ status.className="inline-status"; status.textContent="Saving…"; }
-  try{
-    await setDoc(doc(db,"users",uid), { plan:newPlan }, { merge:true });
-    if (status){ status.className="inline-status ok"; status.textContent="Saved"; }
-    const i = allUsers.findIndex(u=>u.uid===uid);
-    if (i>=0) allUsers[i].plan = newPlan;
-    if (currentUser && uid === currentUser.uid) applyPlanUi(newPlan);
-  }catch(e){
-    console.error(e);
-    if (status){ status.className="inline-status err"; status.textContent="Error"; }
-  }
-}
-devUsersContainer?.addEventListener('change',(e)=>{
-  const sel = e.target.closest('.plan-select');
-  if (!sel) return;
-  const uid = sel.getAttribute('data-uid');
-  const newPlan = sel.value;
-  if (currentPlan !== 'Developers'){ alert('Only Developers can change plans.'); renderAllUsers(); return; }
-  if (!PLAN_OPTIONS.includes(newPlan)){ alert('Invalid plan value.'); return; }
-  updatePlanForUser(uid,newPlan);
-});
-searchInput?.addEventListener('input', ()=>renderList(searchInput.value));
-
-/* ======================
-   Roles (Enterprise + Developers)
-   ====================== */
-const ROLE_KEYS = ['admin','manager','support'];
-function canManageRoles(){ return currentPlan === 'Developers' || currentPlan === 'Enterprise'; }
-function canEditRoles(){ return currentPlan === 'Developers'; } // per your current rules
-
-function roleChip(role, active){
-  const disabled = canEditRoles() ? '' : ' disabled style="opacity:.6;cursor:not-allowed" ';
-  const pressed  = active ? 'true' : 'false';
-  return `<button class="role-chip ${active?'active':''}" data-role="${role}" aria-pressed="${pressed}" ${disabled}>
-    <span class="dot"></span>${role}
-  </button>`;
-}
-function rolesRow({uid,email,roles}){
-  const map = roles || {};
-  const chips = ROLE_KEYS.map(r => roleChip(r, !!map[r])).join('');
-  return `<div class="dev-grid-row" data-uid="${uid||''}">
-    <div>${email}</div>
-    <div><div class="role-row">${chips}</div><span class="save-badge" id="save-${uid||email}"></span></div>
-  </div>`;
-}
-function renderRoles(filter=""){
-  if (!rolesList) return;
-  const q = (filter||"").trim().toLowerCase();
-  const filtered = !q ? rolesUsers : rolesUsers.filter(u => (u.email||"").toLowerCase().includes(q));
-  rolesList.innerHTML = filtered.length
-    ? filtered.map(rolesRow).join("")
-    : `<div class="dev-grid-row"><div>No users found</div><div>—</div></div>`;
-}
-async function saveRoles(uid, newMap){
-  const ref = doc(db,"users",uid);
-  const updates = {};
-  ROLE_KEYS.forEach(r=>{
-    updates[`roles.${r}`] = newMap[r] ? true : deleteField(); // remove when unchecked
-  });
-  await updateDoc(ref, updates);
-}
-
-/* --- NEW: build rolesUsers depending on plan --- */
-async function fetchLinkedEmailsForOwner(){
-  if (!currentUser) return new Set();
-  // Query only your own links → allowed by rules
-  const qLinks = query(collection(db,'plan_links'), where('ownerUid','==', currentUser.uid));
-  const snap = await getDocs(qLinks);
-
-  const emails = new Set();
-  snap.forEach(d => {
-    const f = d.data() || {};
-    if (f.isActive !== false && f.memberEmail) {
-      emails.add(String(f.memberEmail).toLowerCase());
-    }
-  });
-  if (currentUser.email) emails.add(currentUser.email.toLowerCase()); // include self
-  return emails;
-}
-
-async function rebuildRolesUsersForPlan(){
-  if (currentPlan === 'Developers'){
-    await fetchAllUsers();
-    rolesUsers = [...allUsers];
-    return;
-  }
-  // Enterprise: show only linked emails (plus self). No cross-user reads needed.
-  const linked = await fetchLinkedEmailsForOwner();
-  rolesUsers = [];
-
-  // include self with actual roles (we can read our own user doc)
-  try{
-    const snap = await getDoc(doc(db,'users', currentUser.uid));
-    const data = snap.exists() ? (snap.data()||{}) : {};
-    rolesUsers.push({ uid: currentUser.uid, email: currentUser.email || '(you)', roles: data.roles || {} });
-  }catch{}
-
-  // other linked members as email-only (no uid/roles yet)
-  linked.forEach(email => {
-    if ((currentUser.email||'').toLowerCase() === email) return;
-    rolesUsers.push({ uid: null, email, roles: {} });
-  });
-}
-
-rolesSearch?.addEventListener('input', ()=>renderRoles(rolesSearch.value));
-rolesList?.addEventListener('click', async (e)=>{
-  const chip = e.target.closest('.role-chip');
-  if (!chip) return;
-  if (!canManageRoles()) return alert("Only Enterprise/Developers can access Roles.");
-  if (!canEditRoles())  return alert("Only Developers can change roles (per current security rules).");
-
-  const row  = chip.closest('.dev-grid-row');
-  const uid  = row?.getAttribute('data-uid') || null;
-  const role = chip.getAttribute('data-role');
-  if (!uid){ alert("This member hasn't linked an account yet, so roles can't be saved."); return; }
-  if (!role) return;
-
-  const newActive = !chip.classList.contains('active');
-  chip.classList.toggle('active', newActive);
-  chip.setAttribute('aria-pressed', newActive ? 'true':'false');
-
-  const newMap = {};
-  row.querySelectorAll('.role-chip').forEach(c=>{
-    const r = c.getAttribute('data-role');
-    if (c.classList.contains('active')) newMap[r] = true;
-  });
-
-  const badgeId = `save-${uid}`;
-  const badge = document.getElementById(badgeId);
-  if (badge){ badge.className='save-badge'; badge.textContent='Saving…'; }
-  try{
-    await saveRoles(uid,newMap);
-    // reflect in rolesUsers
-    const i = rolesUsers.findIndex(u=>u.uid===uid);
-    if (i>=0) rolesUsers[i].roles = newMap;
-    if (badge){ badge.className='save-badge ok'; badge.textContent='Saved'; }
-  }catch(err){
-    console.error('roles save error', err);
-    chip.classList.toggle('active', !newActive); // revert
-    chip.setAttribute('aria-pressed', (!newActive) ? 'true':'false');
-    if (badge){ badge.className='save-badge err'; badge.textContent='Error'; }
-    alert('Could not save roles. Check Firestore rules & permissions.');
-  }
-});
-
-/* ======================
-   Members (Enterprise + Developers)
-   ====================== */
-function canManageMembers(){ return currentPlan === 'Developers' || currentPlan === 'Enterprise'; }
-function ensureMembersUi(show){
-  // Create sidebar nav if missing
-  if (!membersNavEl){
-    membersNavEl = document.createElement('div');
-    membersNavEl.className = 'nav-item';
-    membersNavEl.setAttribute('data-nav','members');
-    membersNavEl.style.display = 'none';
-    membersNavEl.innerHTML = `<span class="icon-dot"></span><span class="label">Members</span>`;
-    sidebarEl?.insertBefore(membersNavEl, sidebarEl.querySelector('.sidebar-spacer'));
-  }
-  // Create board if missing
-  if (!membersBoard){
-    membersBoard = document.createElement('div');
-    membersBoard.id = 'members-board';
-    membersBoard.className = 'board-wrapper';
-    membersBoard.style.display = 'none';
-    membersBoard.innerHTML = `
-      <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap">
-        <input id="member-email-input" class="search-box" placeholder="Add Gmail (member@example.com)..." style="flex:1; min-width:260px" />
-        <button id="member-add-btn" class="mobile-menu-btn" aria-label="Add">＋</button>
-      </div>
-      <div class="dev-grid-header">
-        <div>Email</div><div>Status</div>
-      </div>
-      <div id="members-list"></div>
-    `;
-    // Insert after existing boards
-    standardBoard.parentNode.insertBefore(membersBoard, emailBoard.nextSibling);
-    // Wire refs
-    membersList  = membersBoard.querySelector('#members-list');
-    membersInput = membersBoard.querySelector('#member-email-input');
-    membersAddBtn= membersBoard.querySelector('#member-add-btn');
-
-    membersAddBtn?.addEventListener('click', onAddMemberClick);
-  }
-  // Toggle visibility of nav
-  membersNavEl.style.display = show ? '' : 'none';
-}
-function onAddMemberClick(){
-  const raw = membersInput?.value || '';
-  const email = normalizeEmail(raw);
-  if (!isEmail(email)){ alert('Please enter a valid email.'); return; }
-  addMember(email).catch(e=>{
-    console.error('addMember failed', e);
-    alert('Could not add member. Check your permissions.');
-  });
-}
-function memberRow(item){
-  const status = item.linkedUid ? `Linked${item.linkedPlan ? ' ('+item.linkedPlan+')' : ''}` : 'Pending';
-  return `<div class="dev-grid-row" data-id="${item.id}">
-    <div>${item.memberEmail}</div>
-    <div style="display:flex; align-items:center; gap:8px;">
-      <span class="inline-status">${status}</span>
-      <button class="mobile-menu-btn member-remove" title="Remove" aria-label="Remove">✕</button>
+        <button type="submit">Save Dependant</button>
+        <button type="button" id="closeModalBtn" style="background:#9ca3af;margin-top:4px;">Cancel</button>
+      </form>
     </div>
-  </div>`;
-}
-function renderMembers(){
-  if (!membersList) return;
-  membersList.innerHTML = cachedMembers.length
-    ? cachedMembers.map(memberRow).join('')
-    : `<div class="dev-grid-row"><div>No members yet</div><div>—</div></div>`;
-}
-function stopMembersListener(){ if (unsubscribeMembers){ unsubscribeMembers(); unsubscribeMembers=null; } }
-function startMembersListener(){
-  stopMembersListener();
-  if (!currentUser) return;
-  // Query ONLY this owner's links (satisfies security rules)
-  const qLinks = query(collection(db,'plan_links'), where('ownerUid','==', currentUser.uid));
-  unsubscribeMembers = onSnapshot(qLinks, async (snap)=>{
-    const rows = [];
-    snap.forEach(d=>{
-      const f = d.data()||{};
-      if (f.isActive !== false){
-        rows.push({
-          id: d.id,
-          memberEmail: f.memberEmail || '',
-          plan: f.plan || '',
-          isActive: f.isActive !== false
-        });
-      }
-    });
-    // Enrich with linkage to users list if we have it (Developers), else best-effort
-    if (currentPlan === 'Developers' && !allUsers.length) await fetchAllUsers();
-    rows.forEach(r=>{
-      const u = allUsers.find(x => (x.email||'').toLowerCase() === r.memberEmail.toLowerCase());
-      if (u){ r.linkedUid = u.uid; r.linkedPlan = u.plan; }
-    });
-    cachedMembers = rows.sort((a,b)=> a.memberEmail.localeCompare(b.memberEmail));
-    renderMembers();
+  </div>
 
-    // If Roles board is visible and you're Enterprise, keep its dataset in sync
-    if (rolesBoard && rolesBoard.style.display !== 'none' && currentPlan === 'Enterprise'){
-      await rebuildRolesUsersForPlan();
-      renderRoles(rolesSearch?.value || "");
-    }
-  }, (err)=>{
-    console.error('members snapshot error', err);
-    cachedMembers = [];
-    renderMembers();
-  });
-}
-async function addMember(memberEmail){
-  if (!canManageMembers()) { alert('Only Enterprise/Developers can add members.'); return; }
-  const id = linkDocId(currentUser.uid, memberEmail);
-  await setDoc(doc(db,'plan_links', id), {
-    ownerUid: currentUser.uid,
-    ownerEmail: (currentUser.email||'').toLowerCase(),
-    memberEmail: memberEmail.toLowerCase(),
-    plan: currentPlan,            // same plan as owner
-    createdAt: serverTimestamp(),
-    isActive: true
-  }, { merge:true });
+  <!-- Delete Confirmation Popup -->
+  <div id="deletePopup" class="delete-popup">
+    <p>Are you sure you want to delete this dependant?<br>Once deleted, it cannot be recovered.</p>
+    <button class="btn-confirm" id="confirmDeleteBtn">Yes, Delete</button>
+    <button class="btn-cancel" id="cancelDeleteBtn">Cancel</button>
+  </div>
 
-  // If member already has an account (only Developers can see all users), push plan immediately
-  if (currentPlan === 'Developers'){
-    if (!allUsers.length) await fetchAllUsers();
-    const existing = allUsers.find(u => (u.email||'').toLowerCase() === memberEmail.toLowerCase());
-    if (existing){
-      await setDoc(doc(db,'users', existing.uid), { plan: currentPlan }, { merge:true });
-    }
-  }
-  membersInput && (membersInput.value = '');
-}
-async function removeMember(id){
-  await setDoc(doc(db,'plan_links', id), { isActive:false }, { merge:true });
-}
-document.addEventListener('click', (e)=>{
-  const btn = e.target.closest('.member-remove');
-  if (!btn) return;
-  const row = btn.closest('.dev-grid-row');
-  const id  = row?.getAttribute('data-id');
-  if (!id) return;
-  if (!confirm('Remove this member from your plan?')) return;
-  removeMember(id).catch(err=>{
-    console.error('remove member error', err);
-    alert('Could not remove member.');
-  });
-});
+<script>
+  let dependantAdded = false;
+  let editing = false;
+  let pendingDelete = false;
 
-/* ======================
-   Email board + viewer + reply
-   ====================== */
-function extractAddress(str){
-  if(!str) return '';
-  const lt = str.indexOf('<'), gt = str.indexOf('>');
-  if (lt !== -1 && gt !== -1 && gt > lt) return str.slice(lt+1, gt).trim();
-  return str.trim();
-}
-function prefixRe(subj){ return !subj ? 'Re:' : (/^\s*re:/i.test(subj) ? subj : `Re: ${subj}`); }
+  const addBtn = document.getElementById('addDependantBtn');
+  const editBtn = document.getElementById('editDependantBtn');
+  const removeBtn = document.getElementById('removeDependantBtn');
+  const modal = document.getElementById('dependantModal');
+  const closeModalBtn = document.getElementById('closeModalBtn');
+  const form = document.getElementById('dependantForm');
+  const errorMsg = document.getElementById('modalError');
+  const modalTitle = document.getElementById('modalTitle');
 
-let replyUI = { built:false, box:null, to:null, subject:null, body:null, sendBtn:null, cancelBtn:null, toggleBtn:null };
-function ensureReplyUi(){
-  if (replyUI.built) return;
-  const toggle = document.createElement('button');
-  toggle.id = 'email-reply-toggle';
-  toggle.className = 'email-modal-close';
-  toggle.type = 'button';
-  toggle.textContent = '↩ Reply';
-  emailModalHeader?.insertBefore(toggle, emailModalClose);
+  const infoBox = document.getElementById('dependantInfo');
+  const dispName = document.getElementById('dispName');
+  const dispMedicine = document.getElementById('dispMedicine');
+  const dispTimes = document.getElementById('dispTimes');
+  const dispDosage = document.getElementById('dispDosage');
+  const dispNotes = document.getElementById('dispNotes');
 
-  const box = document.createElement('div');
-  box.id = 'email-reply-box';
-  box.style.display = 'none';
-  box.style.borderTop = '1px solid #e5e7eb';
-  box.style.borderBottom = '1px solid #e5e7eb';
-  box.style.background = '#fafafa';
-  box.style.padding = '10px 12px';
-  box.innerHTML = `
-    <div style="display:grid;grid-template-columns:70px 1fr;gap:8px;align-items:center;margin-bottom:8px">
-      <label for="reply-to">To</label>
-      <input id="reply-to" type="text" style="width:100%;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px" />
-    </div>
-    <div style="display:grid;grid-template-columns:70px 1fr;gap:8px;align-items:center;margin-bottom:8px">
-      <label for="reply-subject">Subject</label>
-      <input id="reply-subject" type="text" style="width:100%;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px" />
-    </div>
-    <div style="margin-bottom:8px">
-      <textarea id="reply-body" rows="6" placeholder="Write your reply..." style="width:100%;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px"></textarea>
-    </div>
-    <div style="display:flex;justify-content:flex-end;gap:8px">
-      <button id="reply-cancel" type="button" class="email-modal-close">Cancel</button>
-      <button id="reply-send"   type="button" class="email-modal-close" style="background:#111827;color:#fff;border-color:#111827">Send</button>
-    </div>`;
-  emailIframe?.parentNode?.insertBefore(box, emailIframe);
+  const dosageTimesInput = document.getElementById('depDosageTimes');
+  const timePickerContainer = document.getElementById('timePickerContainer');
+  const timeInputs = document.getElementById('timeInputs');
 
-  replyUI = {
-    built:true,
-    box,
-    to:      box.querySelector('#reply-to'),
-    subject: box.querySelector('#reply-subject'),
-    body:    box.querySelector('#reply-body'),
-    sendBtn: box.querySelector('#reply-send'),
-    cancelBtn: box.querySelector('#reply-cancel'),
-    toggleBtn: toggle
-  };
+  const deletePopup = document.getElementById('deletePopup');
+  const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+  const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
 
-  toggle.addEventListener('click', ()=>{ box.style.display = (box.style.display === 'none') ? 'block' : 'none'; });
-  replyUI.cancelBtn.addEventListener('click', ()=>{ box.style.display = 'none'; });
-
-  replyUI.sendBtn.addEventListener('click', async ()=>{
-    try{
-      const to       = (replyUI.to?.value || '').trim();
-      const subject  = (replyUI.subject?.value || '').trim();
-      const bodyText = (replyUI.body?.value || '').trim();
-      if(!to || !subject || !bodyText){ alert('To, Subject, and Body are required.'); return; }
-
-      replyUI.sendBtn.disabled = true; replyUI.sendBtn.textContent = 'Sending…';
-
-      await addDoc(collection(db,'email_outbox'), {
-        createdAt:      serverTimestamp(),
-        createdByUid:   currentUser?.uid || null,
-        createdByEmail: currentUser?.email || null,
-        to, subject, bodyText,
-        inReplyToEmailId: currentOpenedEmailId || null,
-        status: 'pending'
-      });
-
-      try {
-        await setDoc(doc(db, "emails", currentOpenedEmailId), {
-          hasReplied: true,
-          lastRepliedAt: serverTimestamp(),
-          lastRepliedBy: (currentUser?.email || "unknown"),
-          isUnread: false
-        }, { merge: true });
-        const idx = cachedEmails.findIndex(e => e.id === currentOpenedEmailId);
-        if (idx >= 0) {
-          cachedEmails[idx].hasReplied = true;
-          cachedEmails[idx].isUnread = false;
-          cachedEmails[idx].lastRepliedBy = currentUser?.email || "you";
-          cachedEmails[idx].lastRepliedAt = new Date().toISOString();
-          renderEmails(cachedEmails, emailSearch?.value || "");
-        }
-      } catch (e) {
-        console.warn("Could not mark replied from client — backend will mark after send:", e);
-      }
-
-      alert('Reply queued to send.');
-      box.style.display = 'none';
-      if (replyUI.body) replyUI.body.value = '';
-    }catch(err){
-      console.error('Failed to queue reply:', err);
-      alert('Could not queue your reply.');
-    } finally {
-      replyUI.sendBtn.disabled = false; replyUI.sendBtn.textContent = 'Send';
-    }
-  });
-}
-function openEmailModal(){
-  emailModal.classList.add("show");
-  emailModal.setAttribute("aria-hidden","false");
-  document.addEventListener("keydown", e => { if (e.key==="Escape") closeEmailModal(); }, { once:true });
-  document.documentElement.classList.add('viewer-open');
-  if (headerRow) headerRow.hidden = true;
-}
-function closeEmailModal(){
-  emailModal.classList.remove("show");
-  emailModal.setAttribute("aria-hidden","true");
-  emailIframe.srcdoc = "";
-  emailPlain.textContent = "";
-  emailPlain.style.display = "none";
-  emailIframe.style.display = "block";
-  document.documentElement.classList.remove('viewer-open');
-  if (headerRow) headerRow.hidden = false;
-}
-emailModalBackdrop?.addEventListener("click", closeEmailModal);
-emailModalClose?.addEventListener("click", closeEmailModal);
-
-function renderEmails(list, filter=""){
-  const q = (filter || "").toLowerCase().trim();
-
-  const matches = (e, query) => {
-    if (!query) return true;
-    const from = (e.from||"").toLowerCase();
-    const subject = (e.subject||"").toLowerCase();
-    const statusText = e.hasReplied ? "replied" : (e.isUnread ? "unread" : "read");
-    const tokens = query.split(/\s+/).filter(Boolean);
-    return tokens.every(tok => {
-      if (tok.startsWith("from:"))    return from.includes(tok.slice(5));
-      if (tok.startsWith("subject:")) return subject.includes(tok.slice(8));
-      if (["replied","is:replied","status:replied"].includes(tok)) return statusText === "replied";
-      if (["unread","is:unread","status:unread"].includes(tok))    return statusText === "unread";
-      if (["read","is:read","status:read"].includes(tok))          return statusText === "read";
-      return from.includes(tok) || subject.includes(tok) || statusText.includes(tok);
-    });
-  };
-
-  const filtered = q ? list.filter(e => matches(e,q)) : list;
-
-  emailList.innerHTML = filtered.length
-    ? filtered.map(e=>{
-        let pillClass, label;
-        if (e.hasReplied)     { pillClass = "status-purple"; label = "Replied"; }
-        else if (e.isUnread)  { pillClass = "status-blue";   label = "Unread";  }
-        else                  { pillClass = "status-green";  label = "Read";    }
-
-        return `<div class="board-row" data-id="${e.id}">
-          <div>${e.from || '-'}</div>
-          <div>${e.subject || '(no subject)'}</div>
-          <div><span class="status-pill ${pillClass}">${label}</span></div>
-          <div>${e.receivedAt ? timeAgo(e.receivedAt) : '-'}</div>
-          <div><button class="open-link" data-id="${e.id}">Open</button></div>
-        </div>`;
-      }).join("")
-    : `<div class="board-row"><div>No emails found</div><div>—</div><div>—</div><div>—</div><div>—</div></div>`;
-}
-function startEmailsListener(){
-  const qEmails = query(collection(db,"emails"), orderBy("receivedAt","desc"), limit(200));
-  unsubscribeEmails = onSnapshot(qEmails, (snap)=>{
-    const rows = [];
-    snap.forEach(docu=>{
-      const d  = docu.data() || {};
-      const ts = d.receivedAt?.toDate ? d.receivedAt.toDate().toISOString() : (d.receivedAt || "");
-      rows.push({
-        id: docu.id,
-        from: d.from || "",
-        subject: d.subject || "",
-        receivedAt: ts,
-        gmailLink: d.gmailLink || "",
-        isUnread: d.isUnread === true,
-        bodyHtml: d.bodyHtml || d.html || "",
-        bodyText: d.bodyText || d.body || d.snippet || "",
-        hasReplied: d.hasReplied === true,
-        lastRepliedAt: d.lastRepliedAt?.toDate ? d.lastRepliedAt.toDate().toISOString() : (d.lastRepliedAt || ""),
-        lastRepliedBy: d.lastRepliedBy || ""
-      });
-    });
-    cachedEmails = rows;
-    renderEmails(cachedEmails, emailSearch?.value || "");
-  }, (err)=>{
-    console.error("emails onSnapshot error:", err);
-    emailList.innerHTML = `<div class="board-row"><div>Error loading emails</div><div>—</div><div>—</div><div>—</div></div>`;
-  });
-}
-function stopEmailsListener(){ if (unsubscribeEmails){ unsubscribeEmails(); unsubscribeEmails=null; } }
-emailSearch?.addEventListener("input", ()=>renderEmails(cachedEmails, emailSearch.value));
-emailRefreshBtn?.addEventListener("click", ()=>renderEmails(cachedEmails, emailSearch?.value || ""));
-emailList?.addEventListener("click", async (ev)=>{
-  const btn = ev.target.closest(".open-link");
-  if (!btn) return;
-  const id = btn.getAttribute("data-id");
-  const item = cachedEmails.find(x => x.id === id);
-  if (!item) return;
-
-  currentOpenedEmailId = id;
-
-  emailModalSubject.textContent = item.subject || "(no subject)";
-  const when = item.receivedAt ? new Date(item.receivedAt) : null;
-  emailModalMeta.textContent = `${item.from || "Unknown sender"}${when ? ` • ${when.toLocaleString()}` : ""}`;
-
-  ensureReplyUi();
-  const toAddr = extractAddress(item.from||'');
-  const subj   = item.subject||'';
-  const bodyT  = '';
-  replyUI.to && (replyUI.to.value = toAddr);
-  replyUI.subject && (replyUI.subject.value = prefixRe(subj));
-  replyUI.body && (replyUI.body.value = bodyT);
-  replyUI.box && (replyUI.box.style.display = 'none');
-
-  if (item.bodyHtml && item.bodyHtml.trim()){
-    emailIframe.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><base target="_blank">
-      <style>body{font:14px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111827;padding:16px}
-      img{max-width:100%;height:auto}a{word-break:break-word}
-      blockquote{border-left:3px solid #e5e7eb;padding-left:10px;margin-left:0;color:#374151}
-      pre,code{white-space:pre-wrap}</style></head><body>${item.bodyHtml}</body></html>`;
-    emailIframe.style.display = "block"; emailPlain.style.display = "none";
-  } else if (item.bodyText && item.bodyText.trim()){
-    emailPlain.textContent = item.bodyText;
-    emailPlain.style.display = "block"; emailIframe.style.display = "none";
-  } else {
-    emailPlain.textContent = "This email's body isn't stored. Ask the admin to save `bodyHtml` or `bodyText` in Firestore for full in-app viewing.";
-    emailPlain.style.display = "block"; emailIframe.style.display = "none";
-  }
-
-  if (item.isUnread){
-    try {
-      await updateDoc(doc(db,"emails",id), {
-        isUnread: false,
-        lastOpenedAt: serverTimestamp(),
-        lastOpenedBy: currentUser?.email || null
-      });
-      item.isUnread = false;
-      renderEmails(cachedEmails, emailSearch?.value || "");
-    } catch (e){ console.warn("Couldn't mark as read:", e); }
-  }
-  emailModal.classList.add("show");
-  openEmailModal();
-});
-
-/* ======================
-   Sidebar navigation
-   ====================== */
-sidebarEl?.addEventListener("click", async (e)=>{
-  const nav = e.target.closest(".nav-item");
-  if (!nav) return;
-
-  [...sidebarEl.querySelectorAll('.nav-item')].forEach(n => n.classList.remove('active'));
-  nav.classList.add('active');
-
-  const dest = nav.getAttribute('data-nav');
-
-  devTools.style.display      = "none";
-  standardBoard.style.display = "none";
-  emailBoard.style.display    = "none";
-  rolesBoard && (rolesBoard.style.display = "none");
-  membersBoard && (membersBoard.style.display = "none");
-  stopEmailsListener();
-  stopMembersListener();
-
-  if (dest === 'roles'){
-    if (!canManageRoles()){
-      alert("Only Enterprise/Developers can access Roles.");
-      standardBoard.style.display = "block";
+  // Add dependant
+  addBtn.addEventListener('click', () => {
+    if(dependantAdded && !editing){
+      alert("You can only add one dependant in the Basic plan.");
       return;
     }
-    rolesBoard.style.display = "block";
-    await rebuildRolesUsersForPlan();     // <-- only linked members on Enterprise
-    renderRoles(rolesSearch?.value || "");
-    return;
-  }
+    modalTitle.textContent = editing ? "Edit Dependant" : "Add Dependant";
+    modal.classList.add('active');
+  });
 
-  if (dest === 'members'){
-    if (!canManageMembers()){
-      alert("Only Enterprise/Developers can access Members.");
-      standardBoard.style.display = "block";
-      return;
-    }
-    membersBoard.style.display = "block";
-    startMembersListener();
-    return;
-  }
+  // Close modal
+  closeModalBtn.addEventListener('click', () => {
+    modal.classList.remove('active');
+    form.reset();
+    timePickerContainer.style.display = 'none';
+    errorMsg.textContent = '';
+  });
 
-  if (dest === 'email'){
-    emailBoard.style.display = "block";
-    startEmailsListener();
-    return;
-  }
-
-  if (dest === 'board'){
-    if (currentPlan === "Developers"){
-      devTools.style.display = "block";
-      renderAllUsers();
-    } else {
-      standardBoard.style.display = "block";
-    }
-    return;
-  }
-
-  standardBoard.style.display = "block";
-});
-
-/* ======================
-   Auth flow
-   ====================== */
-onAuthStateChanged(auth, async (user)=>{
-  if (!user){ window.location.href = LOGIN_URL; return; }
-  currentUser = user;
-  setDashboardVisibility(true);
-  try {
-    const forced = await ensureDevelopersPlanIfAllowed(user);  // may auto-promote to Developers
-    let plan   = forced || await loadUserPlan(user);
-    // If not Developers (forced), allow inbound membership to set plan
-    if (!forced) plan = await maybeApplyInboundMembership(user, plan);
-    applyPlanUi(plan);
-  } catch (e){
-    console.error("Dashboard init error:", e);
-    applyPlanUi("Basic");
-  }
-});
-
-/* ======================
-   Logout / delete account / plan chip
-   ====================== */
-logoutLink?.addEventListener("click", async ()=>{
-  try { await signOut(auth); window.location.href = LOGIN_URL; }
-  catch (error) { console.error("Error during logout: ", error); }
-});
-
-/* ---- Re-auth helpers + account deletion (FIXED) ---- */
-async function reauthenticateCurrentUser() {
-  const u = auth.currentUser;
-  if (!u) throw new Error("No authenticated user.");
-
-  // Try to infer the primary provider
-  const providerId = u.providerData?.[0]?.providerId || "password";
-
-  if (providerId === "google.com") {
-    const provider = new GoogleAuthProvider();
-    await reauthenticateWithPopup(u, provider);
-    return;
-  }
-
-  // Default to email/password reauth
-  const email = u.email || "";
-  const pw = prompt(`For security, please confirm the password for ${email} to delete your account:`);
-  if (!pw) throw new Error("Password confirmation was cancelled.");
-  const cred = EmailAuthProvider.credential(email, pw);
-  await reauthenticateWithCredential(u, cred);
-}
-
-/** Optional: soft-clean related user data you own before deleting Auth user. */
-async function cleanupUserOwnedData() {
-  try {
-    // Delete your own /users/{uid} doc first
-    await deleteDoc(doc(db,"users", currentUser.uid));
-  } catch (e) {
-    console.warn("Couldn't delete user doc; continuing:", e);
-  }
-
-  try {
-    // Soft-delete plan_links you own (set isActive=false); allowed by rules since ownerUid == currentUser.uid.
-    const qLinks = query(collection(db,'plan_links'), where('ownerUid','==', currentUser.uid));
-    const snap = await getDocs(qLinks);
-    const ops = [];
-    snap.forEach(d => {
-      ops.push(setDoc(doc(db,'plan_links', d.id), { isActive:false, deletedAt: serverTimestamp() }, { merge:true }));
-    });
-    await Promise.all(ops);
-  } catch (e) {
-    console.warn("Couldn't soft-delete plan_links; continuing:", e);
-  }
-}
-
-async function performDeleteAccount() {
-  await cleanupUserOwnedData();         // best-effort clean-up
-  await deleteUser(auth.currentUser);   // may throw requires-recent-login
-}
-
-deleteAccountLink?.addEventListener("click", async ()=>{
-  if (!confirm("Are you sure you want to delete your account and data? This action cannot be undone.")) return;
-
-  // Disable to prevent double clicks
-  const prevText = deleteAccountLink.textContent;
-  deleteAccountLink.style.pointerEvents = "none";
-  deleteAccountLink.textContent = "Deleting…";
-
-  try {
-    await performDeleteAccount();
-    alert("Your account and data have been deleted.");
-    window.location.href = LOGIN_URL;
-  } catch (err) {
-    if (err?.code === "auth/requires-recent-login") {
-      try {
-        await reauthenticateCurrentUser();
-        await performDeleteAccount();
-        alert("Your account and data have been deleted.");
-        window.location.href = LOGIN_URL;
-        return;
-      } catch (err2) {
-        console.error("Delete after reauth failed:", err2);
-        alert("We couldn't delete your account even after re-authenticating. Please try again.");
+  // Show time pickers vertically
+  dosageTimesInput.addEventListener('input', () => {
+    const count = parseInt(dosageTimesInput.value);
+    timeInputs.innerHTML = '';
+    if(count > 0){
+      timePickerContainer.style.display = 'block';
+      for(let i=1;i<=count;i++){
+        const timeInput = document.createElement('input');
+        timeInput.type = 'time';
+        timeInput.required = true;
+        timeInput.className = 'time-input';
+        timeInputs.appendChild(timeInput);
       }
     } else {
-      console.error("Delete account failed:", err);
-      alert("We couldn't delete your account. Please try again.");
+      timePickerContainer.style.display = 'none';
     }
-  } finally {
-    // Restore button if still on page
-    deleteAccountLink.style.pointerEvents = "";
-    deleteAccountLink.textContent = prevText || "Delete account & data";
-  }
-});
+  });
 
-sidebarPlanEl?.addEventListener("click", async ()=>{
-  if (currentPlan === "Developers"){
-    const newPlan = prompt("Enter new plan (e.g., Basic, Premium, Enterprise):");
-    if (!newPlan) return;
-    try {
-      await setDoc(doc(db,"users", currentUser.uid), { plan:newPlan }, { merge:true });
-      alert("Your plan has been updated to " + newPlan);
-      applyPlanUi(newPlan);
-    } catch (error){ console.error("Error updating plan:", error); }
-  } else {
-    try { sessionStorage.setItem("rbx_last_nav", "from_dashboard"); } catch {}
-    window.location.replace(SELECTION_URL);
-  }
-});
+  // Save dependant
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
 
-/* Phones: tiny fixed home button */
-if (window.matchMedia('(max-width: 640px)').matches){
-  document.getElementById('home-tap')?.addEventListener('click', ()=>{ window.location.href = '../index.html'; });
-}
+    const name = depName.value.trim();
+    const medicine = depMedicine.value.trim();
+    const dosageNumber = depDosageNumber.value.trim();
+    const dosageUnit = depDosageUnit.value;
+    const dosageTimes = depDosageTimes.value.trim();
+    const notes = depNotes.value.trim();
+    const timeValues = Array.from(timeInputs.querySelectorAll('input[type="time"]')).map(i=>i.value);
+
+    if(!name || !medicine || !dosageNumber || !dosageUnit || !dosageTimes || timeValues.includes('') || !notes){
+      errorMsg.textContent = "Please fill all required fields. Enter 'NA' if there are no additional notes.";
+      return;
+    }
+
+    const dosageText = `${dosageNumber} ${dosageUnit}, ${dosageTimes} time(s) per day`;
+    const timeText = timeValues.join(', ');
+
+    dispName.textContent = name;
+    dispMedicine.textContent = medicine;
+    dispTimes.textContent = timeText;
+    dispDosage.textContent = dosageText;
+    dispNotes.textContent = notes;
+
+    infoBox.style.display = 'block';
+    dependantAdded = true;
+    editing = false;
+
+    modal.classList.remove('active');
+    form.reset();
+    timePickerContainer.style.display = 'none';
+    errorMsg.textContent = '';
+  });
+
+  // Edit dependant
+  editBtn.addEventListener('click', () => {
+    editing = true;
+    addBtn.click();
+    depName.value = dispName.textContent;
+    depMedicine.value = dispMedicine.textContent;
+    depDosageNumber.value = dispDosage.textContent.split(' ')[0];
+    depDosageUnit.value = dispDosage.textContent.split(' ')[1];
+    const timesPerDay = parseInt(dispDosage.textContent.match(/\d+/g)[1]);
+    depDosageTimes.value = timesPerDay;
+    dosageTimesInput.dispatchEvent(new Event('input'));
+    const currentTimes = dispTimes.textContent.split(', ');
+    const timeInputsEls = timeInputs.querySelectorAll('input[type="time"]');
+    currentTimes.forEach((t, i) => { if(timeInputsEls[i]) timeInputsEls[i].value = t; });
+    depNotes.value = dispNotes.textContent;
+  });
+
+  // Remove dependant
+  removeBtn.addEventListener('click', () => {
+    if(!dependantAdded) return;
+    deletePopup.style.display = 'block';
+  });
+
+  confirmDeleteBtn.addEventListener('click', () => {
+    infoBox.style.display = 'none';
+    dependantAdded = false;
+    dispName.textContent = '';
+    dispMedicine.textContent = '';
+    dispTimes.textContent = '';
+    dispDosage.textContent = '';
+    dispNotes.textContent = '';
+    deletePopup.style.display = 'none';
+  });
+
+  cancelDeleteBtn.addEventListener('click', () => {
+    deletePopup.style.display = 'none';
+  });
 </script>
-
 </body>
 </html>
