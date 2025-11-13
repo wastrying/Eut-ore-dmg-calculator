@@ -1,3 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Remblyx Dashboard - Basic Plan</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    /* ====================== Dashboard Styles ====================== */
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
+    body{background:#f5f5f5; min-height:100vh; color:#222; display:flex; justify-content:center; align-items:flex-start; padding:16px;}
+    .wrapper{width:100%; max-width:1200px; margin-top:58px; display:flex; flex-direction:column; gap:16px;}
+    .board-wrapper { background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px; padding:16px; max-width:600px; }
+    button { padding:8px 12px; border:none; border-radius:6px; background:#4CAF50; color:white; cursor:pointer; }
+    button:hover { background:#45a049; }
+    .dependant-info { margin-top:12px; padding:12px; background:#fff; border-left:4px solid #4CAF50; border-radius:6px; }
+
+    /* ====================== Modal Styles ====================== */
+    .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1000; }
+    .modal.active { display:flex; }
+    .modal-content { background:#fff; padding:20px; border-radius:12px; width:90%; max-width:400px; box-shadow:0 8px 24px rgba(0,0,0,0.3); }
+    .modal-content h2 { margin-top:0; }
+    .modal-content label { display:block; margin:8px 0 4px; font-weight:600; }
+    .modal-content input, .modal-content select { width:100%; padding:6px 8px; margin-bottom:10px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box; }
+    .modal-content .dosage-row { display:flex; gap:6px; }
+    .modal-content .dosage-row input { flex:1; }
+    .error { color:red; font-weight:bold; margin-bottom:8px; }
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+  <!-- ====================== Main Dashboard ====================== -->
+  <div class="board-wrapper">
+    <h2>Basic Plan Dashboard</h2>
+    
+    <!-- Add Dependant Button -->
+    <button id="addDependantBtn">Add Dependant</button>
+
+    <!-- Dependant Info Display -->
+    <div id="dependantInfo" class="dependant-info" style="display:none;">
+      <h3>Dependant Profile</h3>
+      <p><strong>Name:</strong> <span id="dispName"></span></p>
+      <p><strong>Medicine Type:</strong> <span id="dispMedicine"></span></p>
+      <p><strong>Times:</strong> <span id="dispTimes"></span></p>
+      <p><strong>Dosage:</strong> <span id="dispDosage"></span></p>
+      <p><strong>Notes:</strong> <span id="dispNotes"></span></p>
+    </div>
+  </div>
+</div>
+
 <!-- ====================== Dependant Modal ====================== -->
 <div id="dependantModal" class="modal">
   <div class="modal-content">
@@ -10,24 +60,17 @@
       <label for="depMedicine">Type of Medicine:</label>
       <input type="text" id="depMedicine" required />
 
-      <label>Dosage:</label>
-      <div class="dosage-row">
-        <input type="number" id="depDosageNumber" min="0" placeholder="Amount" required />
-        <select id="depDosageUnit">
-          <option value="">Unit</option>
-          <option value="mg">mg</option>
-          <option value="g">g</option>
-        </select>
-      </div>
+      <label for="depDosageNumber">Dosage:</label>
+      <input type="number" id="depDosageNumber" min="0" placeholder="Amount" required />
 
-      <label>Times/Doses:</label>
-      <div id="timePickers">
-        <input type="time" class="dose-time" required />
-      </div>
-      <button type="button" id="addTimeBtn" style="background:#3b82f6;margin-bottom:10px;">Add Another Time</button>
+      <label for="depDosageTimes">Times per Day:</label>
+      <input type="number" id="depDosageTimes" min="1" placeholder="Times per day" required />
+
+      <label for="depTimes">Times to take medicine:</label>
+      <div id="timesContainer"></div> <!-- Dynamic time pickers -->
 
       <label for="depNotes">Notes:</label>
-      <input type="text" id="depNotes" placeholder="Optional notes" />
+      <input type="text" id="depNotes" />
 
       <button type="submit">Save Dependant</button>
       <button type="button" id="closeModalBtn" style="background:#f87171;margin-top:4px;">Cancel</button>
@@ -35,8 +78,8 @@
   </div>
 </div>
 
+<!-- ====================== JavaScript ====================== -->
 <script>
-  // ===== Modal & Dependant Logic =====
   let dependantAdded = false;
 
   const addBtn = document.getElementById('addDependantBtn');
@@ -51,15 +94,9 @@
   const dispTimes = document.getElementById('dispTimes');
   const dispDosage = document.getElementById('dispDosage');
   const dispNotes = document.getElementById('dispNotes');
-  const removeBtn = document.getElementById('removeDependantBtn');
 
-  const scheduleTable = document.getElementById('scheduleTable');
-  const scheduleBody = document.getElementById('scheduleBody');
-
-  const depDosageNumber = document.getElementById('depDosageNumber');
-  const depDosageUnit = document.getElementById('depDosageUnit');
-  const timePickersDiv = document.getElementById('timePickers');
-  const addTimeBtn = document.getElementById('addTimeBtn');
+  const timesContainer = document.getElementById('timesContainer');
+  const dosageTimesInput = document.getElementById('depDosageTimes');
 
   // Open modal
   addBtn.addEventListener('click', () => {
@@ -74,24 +111,24 @@
   closeModalBtn.addEventListener('click', () => {
     modal.classList.remove('active');
     form.reset();
+    timesContainer.innerHTML = '';
     errorMsg.textContent = '';
-    timePickersDiv.innerHTML = '<input type="time" class="dose-time" required />';
-    depDosageNumber.style.display = 'block';
-    depDosageUnit.style.display = 'block';
   });
 
-  // Add additional time picker
-  addTimeBtn.addEventListener('click', () => {
-    const newTime = document.createElement('input');
-    newTime.type = 'time';
-    newTime.className = 'dose-time';
-    newTime.required = true;
-    timePickersDiv.appendChild(newTime);
-  });
+  // Dynamically create time pickers based on number of times per day
+  dosageTimesInput.addEventListener('input', () => {
+    const timesCount = parseInt(dosageTimesInput.value) || 0;
+    timesContainer.innerHTML = '';
 
-  // Hide dosage unit when number typed
-  depDosageNumber.addEventListener('input', () => { depDosageUnit.style.display = 'none'; });
-  depDosageUnit.addEventListener('change', () => { depDosageNumber.style.display = 'none'; });
+    for (let i = 0; i < timesCount; i++) {
+      const timeInput = document.createElement('input');
+      timeInput.type = 'time';
+      timeInput.required = true;
+      timeInput.style.display = 'block';
+      timeInput.style.marginBottom = '6px';
+      timesContainer.appendChild(timeInput);
+    }
+  });
 
   // Handle form submit
   form.addEventListener('submit', function(e){
@@ -99,33 +136,25 @@
 
     const name = document.getElementById('depName').value;
     const medicine = document.getElementById('depMedicine').value;
-    const dosageNumber = depDosageNumber.value;
-    const dosageUnit = depDosageUnit.value;
-    const notes = document.getElementById('depNotes').value;
+    const dosageNumber = document.getElementById('depDosageNumber').value;
+    const dosageTimes = document.getElementById('depDosageTimes').value;
 
-    const timesInputs = Array.from(document.querySelectorAll('.dose-time'));
-    if(!name || !medicine || !dosageNumber || !dosageUnit || timesInputs.some(input => !input.value)){
+    const timeInputs = timesContainer.querySelectorAll('input[type="time"]');
+    const exactTimes = Array.from(timeInputs).map(input => input.value).join(', ');
+
+    if(!name || !medicine || !dosageNumber || !dosageTimes || exactTimes.includes('')){
       errorMsg.textContent = "Please fill all required fields.";
       return;
     }
 
-    const dosageText = `${dosageNumber} ${dosageUnit}`;
+    const dosageText = `${dosageNumber}, ${dosageTimes} time(s) per day`;
 
     // Display dependant info
     dispName.textContent = name;
     dispMedicine.textContent = medicine;
-    dispTimes.textContent = timesInputs.map(i=>i.value).join(', ');
+    dispTimes.textContent = exactTimes;
     dispDosage.textContent = dosageText;
-    dispNotes.textContent = notes || "None";
-
-    // Generate medication schedule
-    scheduleBody.innerHTML = '';
-    timesInputs.forEach((time, index) => {
-      const row = document.createElement('tr');
-      row.innerHTML = `<td>${index+1}</td><td>${medicine}</td><td>${dosageText}</td><td>${time.value}</td>`;
-      scheduleBody.appendChild(row);
-    });
-    scheduleTable.style.display = 'table';
+    dispNotes.textContent = document.getElementById('depNotes').value || "None";
 
     infoBox.style.display = 'block';
     dependantAdded = true;
@@ -133,19 +162,10 @@
     // Close modal and reset
     modal.classList.remove('active');
     form.reset();
+    timesContainer.innerHTML = '';
     errorMsg.textContent = '';
-    depDosageNumber.style.display = 'block';
-    depDosageUnit.style.display = 'block';
-    timePickersDiv.innerHTML = '<input type="time" class="dose-time" required />';
-  });
-
-  // Remove dependant
-  removeBtn.addEventListener('click', () => {
-    if(confirm("Are you sure you want to remove this dependant?")){
-      infoBox.style.display = 'none';
-      scheduleTable.style.display = 'none';
-      dependantAdded = false;
-      timePickersDiv.innerHTML = '<input type="time" class="dose-time" required />';
-    }
   });
 </script>
+
+</body>
+</html>
