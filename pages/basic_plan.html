@@ -73,7 +73,7 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 
             <label>Phone Number:</label>
             <input type="text" id="depPhone" placeholder="Enter 8-digit phone number" required />
-            <div id="phoneNote" class="phone-note">Phone number must be exactly 8 digits.</div>
+            <div id="phoneNote" class="phone-note">Phone number must be exactly 8 digits and start with 6, 8, or 9.</div>
 
             <label>Type of Medicine:</label>
             <input type="text" id="depMedicine" required />
@@ -144,9 +144,9 @@ const dosageNote = document.getElementById('dosageNote');
 const phoneInput = document.getElementById('depPhone');
 const phoneNote = document.getElementById('phoneNote');
 
-phoneNote.style.display = 'none';
-timeNote.style.display = 'none';
-dosageNote.style.display = 'none';
+phoneNote.style.display='none';
+timeNote.style.display='none';
+dosageNote.style.display='none';
 
 function resetTimeNote(){timeNote.style.display='none';}
 function resetDosageNote(){dosageNote.style.display='none';dosageNumberInput.style.border='1px solid #ccc';}
@@ -155,10 +155,10 @@ function resetPhoneNote(){phoneNote.style.display='none';phoneInput.style.border
 addBtn.addEventListener('click', () => {
     if(dependantAdded && !editing){
         mainError.textContent = "You can only add one dependant in the Basic plan.";
-        setTimeout(() => { mainError.textContent = ''; }, 5000);
+        setTimeout(()=>{mainError.textContent='';},5000);
         return;
     }
-    mainError.textContent = '';
+    mainError.textContent='';
     modalTitle.textContent = editing ? "Edit Dependant" : "Add Dependant";
     modal.classList.add('active');
 });
@@ -174,16 +174,16 @@ closeModalBtn.addEventListener('click', () => {
 });
 
 dosageTimesInput.addEventListener('input', () => {
-    let count = parseInt(dosageTimesInput.value);
-    if (isNaN(count) || count < 0) count = 0;
-    dosageTimesInput.value = count;
+    let count=parseInt(dosageTimesInput.value);
+    if(isNaN(count)||count<0) count=0;
+    dosageTimesInput.value=count;
     timeInputs.innerHTML='';
     resetTimeNote();
     if(count>0){
         timePickerContainer.style.display='block';
         for(let i=0;i<count;i++){
             const ti=document.createElement('input');
-            ti.type='time';ti.required=true;ti.className='time-input';
+            ti.type='time'; ti.required=true; ti.className='time-input';
             ti.addEventListener('input', checkDuplicateTimes);
             timeInputs.appendChild(ti);
         }
@@ -201,12 +201,14 @@ dosageNumberInput.addEventListener('input', ()=>{
     }
 });
 
+// Phone number validation: exactly 8 digits and start with 6,8,9
 phoneInput.addEventListener('input', ()=>{
     let val = phoneInput.value.replace(/\D/g,'');
-    phoneInput.value = val;
-    if(val.length !== 8){
+    if(val.length>8) val=val.slice(0,8);
+    phoneInput.value=val;
+    if(val.length!==8 || !/^[689]/.test(val)){
         phoneInput.style.border='2px solid red';
-        phoneNote.textContent = "Phone number must be exactly 8 digits.";
+        phoneNote.textContent="Enter a valid 8-digit phone number starting with 6, 8, or 9.";
         phoneNote.style.display='block';
     } else {
         resetPhoneNote();
@@ -217,15 +219,12 @@ function checkDuplicateTimes(){
     const times = Array.from(timeInputs.querySelectorAll('input')).map(i=>i.value);
     let hasDuplicate=false;
     document.querySelectorAll('.time-input').forEach((input,i)=>{
-        const index=times.indexOf(input.value);
         if(input.value!=='' && times.indexOf(input.value)!==i){
             input.classList.add('duplicate');
             hasDuplicate=true;
-        } else {
-            input.classList.remove('duplicate');
-        }
+        } else input.classList.remove('duplicate');
     });
-    timeNote.style.display = hasDuplicate ? 'block':'none';
+    timeNote.style.display=hasDuplicate?'block':'none';
 }
 
 form.addEventListener('submit', function(e){
@@ -239,7 +238,7 @@ form.addEventListener('submit', function(e){
     const notes=depNotes.value.trim();
     const timeValues=Array.from(timeInputs.querySelectorAll('input[type="time"]')).map(i=>i.value);
 
-    if(!name || !medicine || !dosageUnit || !dosageTimes || !notes || timeValues.includes('') || document.querySelectorAll('.time-input.duplicate').length>0 || dosageNumber<1 || !/^\d{8}$/.test(phone)){
+    if(!name || !medicine || !dosageUnit || !dosageTimes || !notes || timeValues.includes('') || document.querySelectorAll('.time-input.duplicate').length>0 || dosageNumber<1 || !/^\d{8}$/.test(phone) || !/^[689]/.test(phone)){
         errorMsg.textContent="Please fill all fields correctly. Dosage ≥1, times unique, and valid 8-digit phone number.";
         return;
     }
@@ -281,7 +280,6 @@ editBtn.addEventListener('click',()=>{
 removeBtn.addEventListener('click',()=>{ if(!dependantAdded)return; deletePopup.style.display='block'; });
 confirmDeleteBtn.addEventListener('click',()=>{ infoBox.style.display='none'; dependantAdded=false; dispName.textContent=''; dispPhone.textContent=''; dispMedicine.textContent=''; dispTimes.textContent=''; dispDosage.textContent=''; dispNotes.textContent=''; deletePopup.style.display='none'; });
 cancelDeleteBtn.addEventListener('click',()=>{ deletePopup.style.display='none'; });
-
 </script>
 </body>
 </html>
