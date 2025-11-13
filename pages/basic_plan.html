@@ -29,6 +29,7 @@ button:hover{background:#45a049;}
 .time-picker-container .time-input{display:block;margin-bottom:6px;}
 .time-picker-container .time-input.duplicate{border:2px solid red;}
 .time-note{font-size:12px;color:#6b7280;margin-top:2px;}
+.time-note.error{color:red;}
 .delete-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;padding:24px;box-shadow:0 8px 24px rgba(0,0,0,0.3);display:none;z-index:2000;max-width:400px;text-align:center;}
 .delete-popup p{margin-bottom:20px;font-weight:600;}
 .delete-popup button{margin:0 8px;padding:8px 14px;border:none;border-radius:6px;cursor:pointer;}
@@ -83,7 +84,7 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
             <div id="timePickerContainer" class="time-picker-container">
                 <label>Times to Take Medicine:</label>
                 <div id="timeInputs"></div>
-                <div class="time-note">Each time must be unique. Duplicate times are not allowed.</div>
+                <div id="timeNote" class="time-note">Each time must be unique. Duplicate times are not allowed.</div>
             </div>
             <label>Additional Notes:</label>
             <input type="text" id="depNotes" placeholder="Enter 'NA' if none" required />
@@ -124,6 +125,7 @@ const deletePopup = document.getElementById('deletePopup');
 const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
 const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
 const mainError = document.getElementById('mainError');
+const timeNote = document.getElementById('timeNote');
 
 addBtn.addEventListener('click', () => {
     if(dependantAdded && !editing){
@@ -141,6 +143,7 @@ closeModalBtn.addEventListener('click', () => {
     form.reset();
     timePickerContainer.style.display = 'none';
     errorMsg.textContent = '';
+    resetTimeNote();
 });
 
 dosageTimesInput.addEventListener('input', () => {
@@ -148,6 +151,7 @@ dosageTimesInput.addEventListener('input', () => {
     if (isNaN(count) || count < 0) count = 0;
     dosageTimesInput.value = count;
     timeInputs.innerHTML = '';
+    resetTimeNote();
     if(count>0){
         timePickerContainer.style.display = 'block';
         for(let i=0;i<count;i++){
@@ -163,14 +167,23 @@ dosageTimesInput.addEventListener('input', () => {
     }
 });
 
+function resetTimeNote(){
+    timeNote.classList.remove('error');
+}
+
 function checkDuplicateTimes(){
     const times = Array.from(timeInputs.querySelectorAll('input')).map(i=>i.value);
-    const duplicates = times.filter((t,i)=>times.indexOf(t)!==i);
-    document.querySelectorAll('.time-input').forEach(input=>{
-        if(duplicates.includes(input.value) && input.value!==''){
+    document.querySelectorAll('.time-input').forEach((input,i)=>{
+        const index = times.indexOf(input.value);
+        if(input.value!=='' && times.indexOf(input.value)!==i){
             input.classList.add('duplicate');
+            timeNote.classList.add('error');
         } else {
             input.classList.remove('duplicate');
+            // reset only if no duplicates left
+            if(document.querySelectorAll('.time-input.duplicate').length===0){
+                timeNote.classList.remove('error');
+            }
         }
     });
 }
@@ -202,6 +215,7 @@ form.addEventListener('submit', function(e){
     form.reset();
     timePickerContainer.style.display='none';
     errorMsg.textContent='';
+    resetTimeNote();
 });
 
 editBtn.addEventListener('click',()=>{
