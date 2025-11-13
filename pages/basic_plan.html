@@ -12,6 +12,7 @@
     .board-wrapper { background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px; padding:16px; max-width:600px; }
     button { padding:8px 12px; border:none; border-radius:6px; background:#4CAF50; color:white; cursor:pointer; }
     button:hover { background:#45a049; }
+    .remove-btn { background:#f87171; margin-top:8px; }
     .dependant-info { margin-top:12px; padding:12px; background:#fff; border-left:4px solid #4CAF50; border-radius:6px; }
 
     /* ====================== Modal Styles ====================== */
@@ -24,6 +25,10 @@
     .modal-content .dosage-row { display:flex; gap:6px; }
     .modal-content .dosage-row input, .modal-content .dosage-row select { flex:1; }
     .error { color:red; font-weight:bold; margin-bottom:8px; }
+    #timesContainer { display:flex; flex-wrap: wrap; gap:8px; }
+    #timesContainer .time-wrapper { display:flex; align-items:center; gap:6px; }
+    #timesContainer .time-wrapper label { min-width: 50px; font-weight:500; }
+    #timesContainer .time-wrapper input { flex:1; padding:6px 10px; font-size:16px; border:1px solid #ccc; border-radius:6px; }
   </style>
 </head>
 <body>
@@ -43,7 +48,8 @@
       <p><strong>Medicine Type:</strong> <span id="dispMedicine"></span></p>
       <p><strong>Times:</strong> <span id="dispTimes"></span></p>
       <p><strong>Dosage:</strong> <span id="dispDosage"></span></p>
-      <p><strong>Notes:</strong> <span id="dispNotes"></span></p>
+      <p><strong>Additional Notes:</strong> <span id="dispNotes"></span></p>
+      <button id="removeDependantBtn" class="remove-btn">Remove Dependant</button>
     </div>
   </div>
 </div>
@@ -74,10 +80,10 @@
       <input type="number" id="depDosageTimes" min="1" placeholder="Times per day" required />
 
       <label for="depTimes">Times to take medicine:</label>
-      <div id="timesContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
+      <div id="timesContainer"></div>
 
-      <label for="depNotes">Notes:</label>
-      <input type="text" id="depNotes" />
+      <label for="depNotes">Additional Notes:</label>
+      <input type="text" id="depNotes" placeholder="Enter 'NA' if none" required />
 
       <button type="submit">Save Dependant</button>
       <button type="button" id="closeModalBtn" style="background:#f87171;margin-top:4px;">Cancel</button>
@@ -100,6 +106,7 @@
   const dispTimes = document.getElementById('dispTimes');
   const dispDosage = document.getElementById('dispDosage');
   const dispNotes = document.getElementById('dispNotes');
+  const removeBtn = document.getElementById('removeDependantBtn');
 
   const timesContainer = document.getElementById('timesContainer');
   const dosageTimesInput = document.getElementById('depDosageTimes');
@@ -121,31 +128,22 @@
     errorMsg.textContent = '';
   });
 
-  // Dynamically create scroll-wheel style time pickers with labels
+  // Dynamically create scroll-wheel style time pickers (horizontal layout)
   dosageTimesInput.addEventListener('input', () => {
     const timesCount = parseInt(dosageTimesInput.value) || 0;
     timesContainer.innerHTML = '';
 
     for (let i = 0; i < timesCount; i++) {
       const wrapper = document.createElement('div');
-      wrapper.style.display = 'flex';
-      wrapper.style.alignItems = 'center';
-      wrapper.style.gap = '8px';
+      wrapper.className = 'time-wrapper';
 
       const label = document.createElement('label');
       label.textContent = `Time ${i + 1}:`;
-      label.style.width = '70px';
-      label.style.fontWeight = '500';
 
       const timeInput = document.createElement('input');
       timeInput.type = 'time';
       timeInput.step = 60; // scroll by 1 minute
       timeInput.required = true;
-      timeInput.style.flex = '1';
-      timeInput.style.padding = '6px 10px';
-      timeInput.style.fontSize = '16px';
-      timeInput.style.border = '1px solid #ccc';
-      timeInput.style.borderRadius = '6px';
 
       wrapper.appendChild(label);
       wrapper.appendChild(timeInput);
@@ -157,11 +155,12 @@
   form.addEventListener('submit', function(e){
     e.preventDefault();
 
-    const name = document.getElementById('depName').value;
-    const medicine = document.getElementById('depMedicine').value;
+    const name = document.getElementById('depName').value.trim();
+    const medicine = document.getElementById('depMedicine').value.trim();
     const dosageNumber = document.getElementById('depDosageNumber').value;
     const dosageUnit = document.getElementById('depDosageUnit').value;
     const dosageTimes = document.getElementById('depDosageTimes').value;
+    const notesValue = document.getElementById('depNotes').value.trim();
 
     const timeInputs = timesContainer.querySelectorAll('input[type="time"]');
     let allTimesFilled = true;
@@ -172,8 +171,8 @@
       exactTimes.push(input.value);
     });
 
-    if(!name || !medicine || !dosageNumber || !dosageUnit || !dosageTimes || !allTimesFilled){
-      errorMsg.textContent = "Please fill all required fields.";
+    if(!name || !medicine || !dosageNumber || !dosageUnit || !dosageTimes || !allTimesFilled || !notesValue){
+      errorMsg.textContent = "Please fill all required fields. Enter 'NA' if there are no additional notes.";
       return;
     }
 
@@ -184,7 +183,7 @@
     dispMedicine.textContent = medicine;
     dispTimes.textContent = exactTimes.join(', ');
     dispDosage.textContent = dosageText;
-    dispNotes.textContent = document.getElementById('depNotes').value || "None";
+    dispNotes.textContent = notesValue;
 
     infoBox.style.display = 'block';
     dependantAdded = true;
@@ -194,6 +193,17 @@
     form.reset();
     timesContainer.innerHTML = '';
     errorMsg.textContent = '';
+  });
+
+  // Remove dependant
+  removeBtn.addEventListener('click', () => {
+    infoBox.style.display = 'none';
+    dependantAdded = false;
+    dispName.textContent = '';
+    dispMedicine.textContent = '';
+    dispTimes.textContent = '';
+    dispDosage.textContent = '';
+    dispNotes.textContent = '';
   });
 </script>
 
