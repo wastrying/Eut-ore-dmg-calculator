@@ -26,8 +26,18 @@
     .modal-content .dosage-row select{flex:1;}
     .error{color:red;font-weight:bold;margin-bottom:8px;}
     .time-picker-container{display:none;margin-top:10px;}
-    .time-picker-scroll{display:flex;gap:6px;overflow-x:auto;padding:4px;}
-    .time-picker-scroll input[type='time']{flex:0 0 auto;padding:6px;border:1px solid #ccc;border-radius:6px;}
+    .time-picker-scroll{
+      display:flex;
+      flex-direction:column; /* stack downward */
+      gap:8px;
+      padding:4px;
+    }
+    .time-picker-scroll input[type='time']{
+      width:100%;
+      padding:8px;
+      border:1px solid #ccc;
+      border-radius:6px;
+    }
 
     /* Confirmation Popup */
     .confirm-popup {
@@ -74,31 +84,15 @@
       font-weight: bold;
       transition: background 0.2s ease, transform 0.15s ease;
     }
-    .confirm-buttons button:active {
-      transform: scale(0.97);
-    }
-    .confirm-delete {
-      background: #ef4444;
-    }
-    .confirm-delete:hover {
-      background: #dc2626;
-    }
-    .confirm-cancel {
-      background: #9ca3af;
-    }
-    .confirm-cancel:hover {
-      background: #6b7280;
-    }
+    .confirm-buttons button:active {transform: scale(0.97);}
+    .confirm-delete {background: #ef4444;}
+    .confirm-delete:hover {background: #dc2626;}
+    .confirm-cancel {background: #9ca3af;}
+    .confirm-cancel:hover {background: #6b7280;}
 
     /* Animations */
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    @keyframes slideUp {
-      from { transform: translateY(30px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
+    @keyframes fadeIn {from{opacity:0;} to{opacity:1;}}
+    @keyframes slideUp {from{transform:translateY(30px);opacity:0;} to{transform:translateY(0);opacity:1;}}
   </style>
 </head>
 <body>
@@ -218,17 +212,27 @@
     errorMsg.textContent = '';
   });
 
-  // Show time pickers dynamically
+  // Show time pickers dynamically (stack vertically)
   dosageTimesInput.addEventListener('input', () => {
     const count = parseInt(dosageTimesInput.value);
     timeInputs.innerHTML = '';
     if(count > 0){
       timePickerContainer.style.display = 'block';
       for(let i=1;i<=count;i++){
+        const label = document.createElement('label');
+        label.textContent = `Time ${i}:`;
+        label.style.fontWeight = 'normal';
+        label.style.marginBottom = '2px';
+
         const timeInput = document.createElement('input');
         timeInput.type = 'time';
         timeInput.required = true;
-        timeInputs.appendChild(timeInput);
+
+        const wrapper = document.createElement('div');
+        wrapper.appendChild(label);
+        wrapper.appendChild(timeInput);
+
+        timeInputs.appendChild(wrapper);
       }
     } else {
       timePickerContainer.style.display = 'none';
