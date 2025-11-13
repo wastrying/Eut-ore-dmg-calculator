@@ -89,7 +89,7 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
             <div id="dosageNote" class="dosage-note">Dosage must be at least 1.</div>
 
             <div id="timePickerContainer" class="time-picker-container">
-                <label>Times to Take Medicine (click + to add more times):</label>
+                <label>Times to Take Medicine:</label>
                 <div id="timeInputs"></div>
                 <div id="timeNote" class="time-note">Each time must be unique. Duplicate times are not allowed.</div>
                 <button type="button" id="addTimeBtn" style="margin-top:4px;background:#3b82f6;">+ Add Time</button>
@@ -150,6 +150,13 @@ function resetTimeNote(){timeNote.style.display='none';}
 function resetDosageNote(){dosageNote.style.display='none';dosageNumberInput.style.border='1px solid #ccc';}
 function resetPhoneNote(){phoneNote.style.display='none';phoneInput.style.border='1px solid #ccc';}
 
+function addTimeInput(value=''){
+    const ti=document.createElement('input');
+    ti.type='time'; ti.required=true; ti.className='time-input'; ti.value=value;
+    ti.addEventListener('input', checkDuplicateTimes);
+    timeInputs.appendChild(ti);
+}
+
 addBtn.addEventListener('click', ()=>{
     if(dependantAdded && !editing){
         mainError.textContent="You can only add one dependant in the Basic plan.";
@@ -159,6 +166,7 @@ addBtn.addEventListener('click', ()=>{
     mainError.textContent='';
     modalTitle.textContent=editing?"Edit Dependant":"Add Dependant";
     modal.classList.add('active');
+    if(timeInputs.children.length===0) addTimeInput(); // default first time input
 });
 
 closeModalBtn.addEventListener('click', ()=>{
@@ -174,9 +182,7 @@ dosageNumberInput.addEventListener('input', ()=>{
     if(parseInt(dosageNumberInput.value)<1){
         dosageNumberInput.style.border='2px solid red';
         dosageNote.style.display='block';
-    } else {
-        resetDosageNote();
-    }
+    } else resetDosageNote();
 });
 
 phoneInput.addEventListener('input', ()=>{
@@ -186,9 +192,7 @@ phoneInput.addEventListener('input', ()=>{
     if(val.length!==8 || !/^[689]/.test(val)){
         phoneInput.style.border='2px solid red';
         phoneNote.style.display='block';
-    } else {
-        resetPhoneNote();
-    }
+    } else resetPhoneNote();
 });
 
 function checkDuplicateTimes(){
@@ -203,12 +207,7 @@ function checkDuplicateTimes(){
     timeNote.style.display=hasDuplicate?'block':'none';
 }
 
-addTimeBtn.addEventListener('click', ()=>{
-    const ti=document.createElement('input');
-    ti.type='time'; ti.required=true; ti.className='time-input';
-    ti.addEventListener('input', checkDuplicateTimes);
-    timeInputs.appendChild(ti);
-});
+addTimeBtn.addEventListener('click', ()=>{ addTimeInput(); });
 
 form.addEventListener('submit', function(e){
     e.preventDefault();
@@ -251,14 +250,9 @@ editBtn.addEventListener('click', ()=>{
     dosageNumberInput.value=parseInt(dispDosage.textContent);
     depDosageUnit.value=dispDosage.textContent.split(' ')[1];
     depNotes.value=dispNotes.textContent;
-    const currentTimes=dispTimes.textContent.split(', ');
     timeInputs.innerHTML='';
-    currentTimes.forEach(t=>{
-        const ti=document.createElement('input');
-        ti.type='time'; ti.required=true; ti.className='time-input'; ti.value=t;
-        ti.addEventListener('input', checkDuplicateTimes);
-        timeInputs.appendChild(ti);
-    });
+    const currentTimes=dispTimes.textContent.split(', ');
+    currentTimes.forEach(t=>addTimeInput(t));
 });
 
 removeBtn.addEventListener('click', ()=>{if(!dependantAdded) return; deletePopup.style.display='block';});
