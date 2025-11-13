@@ -14,9 +14,19 @@ body{background:#f0f2f5;color:#333;padding:20px;}
 .card:hover{transform:translateY(-5px);box-shadow:0 10px 30px rgba(0,0,0,0.12);}
 .card h2{font-size:22px;margin-bottom:10px;color:#1f2937;}
 .card p{font-size:14px;color:#555;}
-
-/* Optional icons */
 .card i{font-size:36px;color:#4CAF50;margin-bottom:12px;display:block;}
+
+/* Dependant Section */
+.dependant-card{background:#fff;padding:20px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);margin-bottom:20px;}
+.dependant-card p{margin:6px 0;}
+.dependant-actions{margin-top:10px;}
+.dependant-actions button{padding:6px 10px;margin-right:6px;border:none;border-radius:6px;background:#4CAF50;color:white;cursor:pointer;}
+.dependant-actions button.remove{background:#f87171;}
+.dependant-actions button:hover{opacity:0.9;}
+
+/* Reminder links */
+.reminder{padding:12px;border-left:4px solid #4CAF50;margin-bottom:10px;background:#f9fafb;border-radius:8px;cursor:pointer;transition:background 0.2s;}
+.reminder:hover{background:#e0f2f1;}
 </style>
 </head>
 <body>
@@ -24,40 +34,76 @@ body{background:#f0f2f5;color:#333;padding:20px;}
 <h1 style="text-align:center;margin-bottom:30px;">Remblyx Dashboard</h1>
 
 <div class="dashboard-container">
-    <div class="card" onclick="window.location.href='#dependant'">
+    <div class="card" onclick="showSection('dependants')">
         <i>👤</i>
         <h2>Dependants</h2>
         <p>View and manage dependant profiles</p>
     </div>
 
-    <div class="card" onclick="window.location.href='#summary'">
+    <div class="card" onclick="showSection('summary')">
         <i>📊</i>
         <h2>Summary</h2>
-        <p>See overall progress and responses</p>
+        <p>Overview of progress and responses</p>
     </div>
 
-    <div class="card" onclick="window.location.href='#reminders'">
+    <div class="card" onclick="showSection('reminders')">
         <i>⏰</i>
-        <h2>Reminders</h2>
-        <p>View upcoming medication and appointments</p>
+        <h2>Upcoming Reminders</h2>
+        <p>Click to see upcoming medication & appointments</p>
     </div>
 </div>
 
-<!-- Example sections for navigation -->
-<div id="dependant" style="margin-top:60px;padding:20px;background:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);">
-    <h2>Dependant Page</h2>
-    <p>Here you can add/edit/remove dependants.</p>
+<!-- Sections -->
+<div id="dependants" style="display:none;margin-top:40px;">
+    <h2>Dependants</h2>
+    <div id="dependantList" class="dependant-card">
+        <p><strong>Name:</strong> John Doe</p>
+        <p><strong>Phone:</strong> 91234567</p>
+        <p><strong>Medicine:</strong> Paracetamol</p>
+        <p><strong>Dosage:</strong> 500 mg, 2 times/day</p>
+        <p><strong>Times:</strong> 08:00 AM, 08:00 PM</p>
+        <p><strong>Notes:</strong> NA</p>
+        <div class="dependant-actions">
+            <button>Edit</button>
+            <button class="remove">Remove</button>
+        </div>
+    </div>
 </div>
 
-<div id="summary" style="margin-top:40px;padding:20px;background:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);">
-    <h2>Summary Page</h2>
-    <p>Overview of dependant responses, completed reminders, and stats.</p>
+<div id="summary" style="display:none;margin-top:40px;">
+    <h2>Summary</h2>
+    <p>John Doe responded to <strong>1</strong> of <strong>2</strong> reminders today.</p>
 </div>
 
-<div id="reminders" style="margin-top:40px;padding:20px;background:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);">
-    <h2>Reminders Page</h2>
-    <p>List of upcoming medicine and appointment reminders.</p>
+<div id="reminders" style="display:none;margin-top:40px;">
+    <h2>Upcoming Reminders</h2>
+    <div class="reminder" onclick="scrollToDependant('dependantList')">
+        <p><strong>08:00 AM:</strong> Paracetamol for John Doe</p>
+    </div>
+    <div class="reminder" onclick="scrollToDependant('dependantList')">
+        <p><strong>03:00 PM:</strong> Doctor Check-up for John Doe</p>
+    </div>
 </div>
+
+<script>
+function showSection(sectionId){
+    const sections=['dependants','summary','reminders'];
+    sections.forEach(s=>{
+        document.getElementById(s).style.display = (s===sectionId)?'block':'none';
+    });
+}
+
+function scrollToDependant(depId){
+    showSection('dependants');
+    const el = document.getElementById(depId);
+    if(el){
+        el.scrollIntoView({behavior:'smooth', block:'start'});
+        el.style.transition='background 0.3s';
+        el.style.background='#e0f7fa';
+        setTimeout(()=>{el.style.background='#fff';},800);
+    }
+}
+</script>
 
 </body>
 </html>
