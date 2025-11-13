@@ -14,7 +14,7 @@
     .dependant-info{margin-top:12px;padding:12px;background:#fff;border-left:4px solid #4CAF50;border-radius:6px;}
     .dependant-actions{display:flex;gap:8px;margin-top:10px;}
 
-    /* Modal */
+    /* Main Modal */
     .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;z-index:1000;}
     .modal.active{display:flex;}
     .modal-content{background:#fff;padding:20px;border-radius:12px;width:90%;max-width:400px;box-shadow:0 8px 24px rgba(0,0,0,0.3);}
@@ -28,6 +28,15 @@
     .time-picker-container{display:none;margin-top:10px;}
     .time-picker-scroll{display:flex;gap:6px;overflow-x:auto;padding:4px;}
     .time-picker-scroll input[type='time']{flex:0 0 auto;padding:6px;border:1px solid #ccc;border-radius:6px;}
+
+    /* Confirm Delete Modal */
+    #confirmModal .modal-content{text-align:center;}
+    #confirmModal h3{margin-bottom:16px;}
+    #confirmModal button{margin:0 6px;}
+    .cancel-btn{background:#9ca3af;}
+    .cancel-btn:hover{background:#6b7280;}
+    .delete-btn{background:#ef4444;}
+    .delete-btn:hover{background:#dc2626;}
   </style>
 </head>
 <body>
@@ -51,7 +60,7 @@
   </div>
 </div>
 
-<!-- Modal -->
+<!-- Add/Edit Modal -->
 <div id="dependantModal" class="modal">
   <div class="modal-content">
     <h2 id="modalTitle">Add Dependant</h2>
@@ -90,6 +99,15 @@
   </div>
 </div>
 
+<!-- Custom Confirm Delete Modal -->
+<div id="confirmModal" class="modal">
+  <div class="modal-content">
+    <h3>Are you sure you want to delete this dependant?</h3>
+    <button id="confirmYes" class="delete-btn">Yes, Delete</button>
+    <button id="confirmNo" class="cancel-btn">Cancel</button>
+  </div>
+</div>
+
 <script>
   let dependantAdded = false;
   let editing = false;
@@ -102,6 +120,9 @@
   const form = document.getElementById('dependantForm');
   const errorMsg = document.getElementById('modalError');
   const modalTitle = document.getElementById('modalTitle');
+  const confirmModal = document.getElementById('confirmModal');
+  const confirmYes = document.getElementById('confirmYes');
+  const confirmNo = document.getElementById('confirmNo');
 
   const infoBox = document.getElementById('dependantInfo');
   const dispName = document.getElementById('dispName');
@@ -202,12 +223,14 @@
     depNotes.value = dispNotes.textContent;
   });
 
-  // Remove dependant with confirmation
+  // Remove dependant - show custom popup
   removeBtn.addEventListener('click', () => {
     if(!dependantAdded) return;
-    const confirmDelete = confirm("Are you sure you want to delete this dependant?");
-    if(!confirmDelete) return;
+    confirmModal.classList.add('active');
+  });
 
+  // Confirm delete
+  confirmYes.addEventListener('click', () => {
     infoBox.style.display = 'none';
     dependantAdded = false;
     dispName.textContent = '';
@@ -215,6 +238,12 @@
     dispTimes.textContent = '';
     dispDosage.textContent = '';
     dispNotes.textContent = '';
+    confirmModal.classList.remove('active');
+  });
+
+  // Cancel delete
+  confirmNo.addEventListener('click', () => {
+    confirmModal.classList.remove('active');
   });
 </script>
 </body>
