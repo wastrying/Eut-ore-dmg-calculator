@@ -4,138 +4,134 @@
   <meta charset="UTF-8" />
   <title>Remblyx Dashboard - Basic Plan</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" type="image/png" sizes="32x32" href="../images/medisignal.png" />
-  <link rel="apple-touch-icon" href="../images/medisignal.png" />
   <style>
-    /* ===== Global styles ===== */
     body, html { margin:0; padding:0; font-family: Arial, sans-serif; background:#f5f5f5; }
-    .overlay { position:fixed; inset:0; z-index:-1; }
-    .bg-image { width:100%; height:100%; object-fit:cover; filter:blur(4px); opacity:.8; }
-
-    .header-row { position:fixed; top:8px; left:8px; z-index:40; display:flex; align-items:center; gap:12px; }
-    .logo { height:72px; cursor:pointer; transition:.3s ease; }
-    .logo:hover { transform:scale(1.03); filter:brightness(1.1); }
-
-    .wrapper { width:100%; max-width:1200px; margin-top:100px; display:flex; flex-direction:column; gap:16px; z-index:10; }
-
-    #main-dashboard {
-      display:grid;
-      grid-template-columns:230px 1fr;
-      height:calc(100dvh - 110px);
-      max-height:calc(100dvh - 110px);
-      background:rgba(255,255,255,.96);
-      border-radius:18px;
-      box-shadow:0 10px 26px rgba(0,0,0,.2);
-      overflow:hidden;
-    }
-
-    /* Sidebar */
-    .sidebar { background:#111827; color:#e5e7eb; display:flex; flex-direction:column; padding:14px 10px 10px; gap:10px; }
-    .sidebar-title { font-size:12px; font-weight:600; color:#9ca3af; text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }
-    .nav-item { display:flex; align-items:center; gap:8px; padding:10px; border-radius:8px; font-size:14px; cursor:pointer; transition:.2s; color:#d1d5db; }
-    .nav-item:hover { background:rgba(249,250,251,.06); }
-    .nav-item.active { background:#111827; border-left:3px solid #667eea; padding-left:10px; color:#fff; }
-
-    /* Main Area */
-    .main-area { display:flex; flex-direction:column; padding:10px 12px 10px; gap:8px; min-width:0; overflow:auto; }
-    .top-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; }
-    .board-title { font-size:18px; font-weight:600; color:#111827; }
-
-    .board-wrapper { background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px; padding:12px; overflow:auto; }
-
-    .dependant-info { margin-top:12px; padding:12px; background:#fff; border-left:4px solid #4CAF50; border-radius:6px; }
-    .error { color:red; font-weight:bold; margin-top:6px; }
-
-    input, button { width:100%; padding:8px; margin:6px 0; border-radius:6px; border:1px solid #ccc; box-sizing:border-box; }
-    button { background:#4CAF50; color:white; border:none; cursor:pointer; }
+    .wrapper { width:100%; max-width:1200px; margin:100px auto 0; display:flex; flex-direction:column; gap:16px; }
+    .main-area { padding:16px; }
+    .board-wrapper { background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px; padding:16px; max-width:600px; }
+    button { padding:8px 12px; border:none; border-radius:6px; background:#4CAF50; color:white; cursor:pointer; }
     button:hover { background:#45a049; }
-
-    @media(max-width:900px){ #main-dashboard{grid-template-columns:1fr} }
+    .dependant-info { margin-top:12px; padding:12px; background:#fff; border-left:4px solid #4CAF50; border-radius:6px; }
+    
+    /* Modal Styles */
+    .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1000; }
+    .modal.active { display:flex; }
+    .modal-content { background:#fff; padding:20px; border-radius:12px; width:90%; max-width:400px; box-shadow:0 8px 24px rgba(0,0,0,0.3); }
+    .modal-content h2 { margin-top:0; }
+    .modal-content label { display:block; margin:8px 0 4px; font-weight:600; }
+    .modal-content input, .modal-content select { width:100%; padding:6px 8px; margin-bottom:10px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box; }
+    .error { color:red; font-weight:bold; margin-bottom:8px; }
   </style>
 </head>
 <body>
-  <div class="overlay"><img src="../images/background.png" class="bg-image" alt=""></div>
 
-  <div class="header-row">
-    <img src="../images/remblyxlogo.png" alt="Remblyx" class="logo" onclick="window.location.href='../index.html'">
-  </div>
+<div class="wrapper">
+  <div class="main-area">
+    <div class="board-wrapper">
+      <h2>Basic Plan Dashboard</h2>
+      <button id="addDependantBtn">Add Dependant</button>
 
-  <div class="wrapper">
-    <div id="main-dashboard">
-      <!-- Sidebar -->
-      <aside class="sidebar">
-        <div class="sidebar-title">Workspace</div>
-        <div class="nav-item active" data-nav="board"><span class="label">Dashboard</span></div>
-        <div class="nav-item" data-nav="alerts"><span class="label">Alerts</span></div>
-        <div class="nav-item" data-nav="reports"><span class="label">Reports</span></div>
-        <div class="sidebar-spacer"></div>
-        <div class="logout-link">Log out</div>
-      </aside>
-
-      <!-- Main Area -->
-      <div class="main-area">
-        <div class="top-bar">
-          <div>
-            <div class="board-title">Basic Plan Dashboard</div>
-          </div>
-        </div>
-
-        <!-- Dependant Form -->
-        <div id="basic-dependant-board" class="board-wrapper">
-          <h2>Add Your Dependant (Basic Plan)</h2>
-          <form id="dependantForm">
-            <label for="depName">Name:</label>
-            <input type="text" id="depName" required />
-
-            <label for="depAge">Age:</label>
-            <input type="number" id="depAge" required />
-
-            <label for="depCondition">Condition:</label>
-            <input type="text" id="depCondition" required />
-
-            <button type="submit">Add Dependant</button>
-            <p id="depError" class="error"></p>
-          </form>
-
-          <div id="dependantInfo" class="dependant-info" style="display:none;">
-            <h3>Dependant Profile</h3>
-            <p><strong>Name:</strong> <span id="dispName"></span></p>
-            <p><strong>Age:</strong> <span id="dispAge"></span></p>
-            <p><strong>Condition:</strong> <span id="dispCondition"></span></p>
-          </div>
-        </div>
+      <!-- Dependant Info -->
+      <div id="dependantInfo" class="dependant-info" style="display:none;">
+        <h3>Dependant Profile</h3>
+        <p><strong>Name:</strong> <span id="dispName"></span></p>
+        <p><strong>Relationship:</strong> <span id="dispRelationship"></span></p>
+        <p><strong>Age:</strong> <span id="dispAge"></span></p>
+        <p><strong>Control Type:</strong> <span id="dispControl"></span></p>
       </div>
     </div>
   </div>
+</div>
 
-  <script>
-    let dependantAdded = false;
+<!-- Modal -->
+<div id="dependantModal" class="modal">
+  <div class="modal-content">
+    <h2>Add Dependant</h2>
+    <p class="error" id="modalError"></p>
+    <form id="dependantForm">
+      <label for="depName">Name:</label>
+      <input type="text" id="depName" required>
 
-    const form = document.getElementById('dependantForm');
-    const errorMsg = document.getElementById('depError');
-    const infoBox = document.getElementById('dependantInfo');
+      <label for="depRelationship">Relationship:</label>
+      <input type="text" id="depRelationship" required>
 
-    form.addEventListener('submit', function(e){
-      e.preventDefault();
+      <label for="depAge">Age:</label>
+      <input type="number" id="depAge" required>
 
-      if(dependantAdded){
-        errorMsg.textContent = "You can only add one dependant in the Basic plan.";
-        return;
-      }
+      <label for="depControl">Type of Control:</label>
+      <select id="depControl" required>
+        <option value="">Select control type</option>
+        <option value="Medication">Medication</option>
+        <option value="Appointments">Appointments</option>
+        <option value="Checkups">Checkups</option>
+        <option value="Full Monitoring">Full Monitoring</option>
+      </select>
 
-      const name = document.getElementById('depName').value;
-      const age = document.getElementById('depAge').value;
-      const condition = document.getElementById('depCondition').value;
+      <button type="submit">Save Dependant</button>
+      <button type="button" id="closeModalBtn" style="background:#f87171;margin-top:4px;">Cancel</button>
+    </form>
+  </div>
+</div>
 
-      document.getElementById('dispName').textContent = name;
-      document.getElementById('dispAge').textContent = age;
-      document.getElementById('dispCondition').textContent = condition;
+<script>
+  let dependantAdded = false;
 
-      infoBox.style.display = 'block';
-      errorMsg.textContent = '';
-      form.reset();
-      dependantAdded = true;
-    });
-  </script>
+  const addBtn = document.getElementById('addDependantBtn');
+  const modal = document.getElementById('dependantModal');
+  const closeModalBtn = document.getElementById('closeModalBtn');
+  const form = document.getElementById('dependantForm');
+  const errorMsg = document.getElementById('modalError');
+
+  const infoBox = document.getElementById('dependantInfo');
+  const dispName = document.getElementById('dispName');
+  const dispRelationship = document.getElementById('dispRelationship');
+  const dispAge = document.getElementById('dispAge');
+  const dispControl = document.getElementById('dispControl');
+
+  // Open modal
+  addBtn.addEventListener('click', () => {
+    if(dependantAdded){
+      alert("You can only add one dependant in the Basic plan.");
+      return;
+    }
+    modal.classList.add('active');
+  });
+
+  // Close modal
+  closeModalBtn.addEventListener('click', () => {
+    modal.classList.remove('active');
+    form.reset();
+    errorMsg.textContent = '';
+  });
+
+  // Handle form submit
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    const name = document.getElementById('depName').value;
+    const relationship = document.getElementById('depRelationship').value;
+    const age = document.getElementById('depAge').value;
+    const control = document.getElementById('depControl').value;
+
+    if(!name || !relationship || !age || !control){
+      errorMsg.textContent = "Please fill all fields.";
+      return;
+    }
+
+    // Display dependant info
+    dispName.textContent = name;
+    dispRelationship.textContent = relationship;
+    dispAge.textContent = age;
+    dispControl.textContent = control;
+
+    infoBox.style.display = 'block';
+    dependantAdded = true;
+
+    // Close modal and reset
+    modal.classList.remove('active');
+    form.reset();
+    errorMsg.textContent = '';
+  });
+</script>
+
 </body>
 </html>
