@@ -86,7 +86,15 @@
     .logout-link{font-size:var(--text-xs);color:#9ca3af;text-align:left;padding:6px 6px;cursor:pointer;text-decoration:underline}
     .logout-link:hover{color:#fff}
 
-    .main-area{display:flex;flex-direction:column;padding:10px 12px 10px;gap:8px;min-width:0}
+        .main-area{
+      display:flex;
+      flex-direction:column;
+      padding:10px 12px 10px;
+      gap:8px;
+      min-width:0;
+      min-height:0; /* 👈 allow inner boards to scroll */
+    }
+
     .top-bar{display:flex;align-items:center;justify-content:space-between;gap:10px}
     .top-left{display:flex;align-items:center;gap:8px;min-width:0}
     .board-title{font-size:var(--text-lg);font-weight:600;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
