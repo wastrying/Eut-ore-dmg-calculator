@@ -369,6 +369,12 @@ const LOGIN_URL    = "./login.html";
 const SELECTION_URL= "./selection.html";
 const PLAN_OPTIONS = ["Basic","Premium","Enterprise","Developers"];
 
+/** 🔐 Page plan guard:
+ *  - In enterprise_plan.html → "Enterprise"
+ *  - In developer_plan.html → "Developers"
+ */
+const PAGE_PLAN    = "Developers"; // CHANGE TO "Developers" in developer_plan.html
+
 const mainDashboard      = document.getElementById("main-dashboard");
 const sidebarPlanEl      = document.getElementById("sidebar-plan");
 const planNameEl         = document.getElementById("plan-name");
@@ -457,6 +463,15 @@ function timeAgo(iso){
 const isEmail = (s)=>/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test((s||'').trim());
 const normalizeEmail = (s)=> (s||'').trim().toLowerCase();
 const linkDocId = (ownerUid, memberEmail)=> `${ownerUid}__${encodeURIComponent(normalizeEmail(memberEmail))}`;
+
+/** 🔁 Plan-based redirect helper used by this page guard */
+function redirectByPlan(plan){
+  if (plan === "Basic")       window.location.href = "./basic_plan.html";
+  else if (plan === "Premium")    window.location.href = "./premium_plan.html";
+  else if (plan === "Enterprise") window.location.href = "./enterprise_plan.html";
+  else if (plan === "Developers") window.location.href = "./developer_plan.html";
+  else window.location.href = "./basic_plan.html"; // fallback
+}
 
 /* ======================
    Drawer helpers (mobile)
@@ -733,13 +748,10 @@ async function fetchLinkedEmailsForOwner(){
   const snap = await getDocs(qLinks);
 
   const emails = new Set();
-  snap.forEach(d => {
+  snap.forEach(d=>{
     const f = d.data() || {};
     if (f.isActive !== false && f.memberEmail) {
       emails.add(String(f.memberEmail).toLowerCase());
-
-
-
     }
   });
   if (currentUser.email) emails.add(currentUser.email.toLowerCase()); // include self
@@ -763,7 +775,6 @@ async function rebuildRolesUsersForPlan(){
     rolesUsers.push({ uid: currentUser.uid, email: currentUser.email || '(you)', roles: data.roles || {} });
   }catch{}
 
-
   // other linked members as email-only (no uid/roles yet)
   linked.forEach(email => {
     if ((currentUser.email||'').toLowerCase() === email) return;
@@ -775,13 +786,22 @@ rolesSearch?.addEventListener('input', ()=>renderRoles(rolesSearch.value));
 rolesList?.addEventListener('click', async (e)=>{
   const chip = e.target.closest('.role-chip');
   if (!chip) return;
-  if (!canManageRoles()) return alert("Only Enterprise/Developers can access Roles.");
-  if (!canEditRoles())  return alert("Only Developers can change roles (per current security rules).");
+  if (!canManageRoles()){
+    alert("Only Enterprise/Developers can access Roles.");
+    return;
+  }
+  if (!canEditRoles()){
+    alert("Only Developers can change roles (per current security rules).");
+    return;
+  }
 
   const row  = chip.closest('.dev-grid-row');
   const uid  = row?.getAttribute('data-uid') || null;
   const role = chip.getAttribute('data-role');
-  if (!uid){ alert("This member hasn't linked an account yet, so roles can't be saved."); return; }
+  if (!uid){
+    alert("This member hasn't linked an account yet, so roles can't be saved.");
+    return;
+  }
   if (!role) return;
 
   const newActive = !chip.classList.contains('active');
@@ -1268,21 +1288,46 @@ sidebarEl?.addEventListener("click", async (e)=>{
 });
 
 /* ======================
-   Auth flow
+   Auth flow (page-guarded by PAGE_PLAN)
    ====================== */
 onAuthStateChanged(auth, async (user)=>{
-  if (!user){ window.location.href = LOGIN_URL; return; }
+  if (!user){
+    // Not logged in → return to login
+    window.location.href = LOGIN_URL;
+    return;
+  }
+
+  // Optional: enforce email verification for password users as well
+  const isPasswordUser = user.providerData.some(p => p.providerId === "password");
+  if (isPasswordUser && !user.emailVerified){
+    try { await signOut(auth); } catch {}
+    window.location.href = LOGIN_URL;
+    return;
+  }
+
   currentUser = user;
   setDashboardVisibility(true);
+
   try {
+    // Keep your existing logic (dev auto-promote + inbound membership)
     const forced = await ensureDevelopersPlanIfAllowed(user);  // may auto-promote to Developers
     let plan   = forced || await loadUserPlan(user);
-    // If not Developers (forced), allow inbound membership to set plan
-    if (!forced) plan = await maybeApplyInboundMembership(user, plan);
+    if (!forced){
+      plan = await maybeApplyInboundMembership(user, plan);
+    }
+
+    // 🔐 PAGE PLAN GUARD:
+    // If this user is not on the plan that matches this file, bounce them
+    if (plan !== PAGE_PLAN){
+      redirectByPlan(plan);
+      return;
+    }
+
+    // Plan matches this page → normal UI setup
     applyPlanUi(plan);
   } catch (e){
     console.error("Dashboard init error:", e);
-    applyPlanUi("Basic");
+    redirectByPlan("Basic");
   }
 });
 
@@ -1387,6 +1432,7 @@ sidebarPlanEl?.addEventListener("click", async ()=>{
       await setDoc(doc(db,"users", currentUser.uid), { plan:newPlan }, { merge:true });
       alert("Your plan has been updated to " + newPlan);
       applyPlanUi(newPlan);
+      // optional: you could also redirectByPlan(newPlan) here
     } catch (error){ console.error("Error updating plan:", error); }
   } else {
     try { sessionStorage.setItem("rbx_last_nav", "from_dashboard"); } catch {}
@@ -1396,9 +1442,12 @@ sidebarPlanEl?.addEventListener("click", async ()=>{
 
 /* Phones: tiny fixed home button */
 if (window.matchMedia('(max-width: 640px)').matches){
-  document.getElementById('home-tap')?.addEventListener('click', ()=>{ window.location.href = '../index.html'; });
+  document.getElementById('home-tap')?.addEventListener('click', ()=>{
+    window.location.href = '../index.html';
+  });
 }
 </script>
+
 
 </body>
 </html>
