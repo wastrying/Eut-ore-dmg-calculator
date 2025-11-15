@@ -126,6 +126,26 @@
     #email-board .board-header-row > div:nth-child(5),
     #email-board .board-row        > div:nth-child(5){ text-align: center; }
     #email-board .board-row > div:nth-child(2){ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        /* Make only the email list scroll inside the Email board */
+    #email-board{
+      display:flex;
+      flex-direction:column;
+      overflow:hidden; /* let the inner list handle scrolling */
+    }
+
+    /* Top bar (search) + header row stay fixed */
+    #email-board > :first-child,
+    #email-board > .board-header-row{
+      flex:0 0 auto;
+    }
+
+    /* The email rows container becomes the scrollable area */
+    #email-list{
+      flex:1 1 auto;
+      overflow-y:auto;
+      max-height:100%;
+      min-height:0;
+    }
 
     @media (max-width:1024px){ #main-dashboard{grid-template-columns:200px 1fr} .logo{height:140px} }
 
