@@ -280,10 +280,6 @@
           <div class="dev-grid-header"><div>Email</div><div>Plan</div></div>
           <div id="dev-users"></div>
         </div>
-
-
-
-
         <!-- Standard board -->
         <div id="standard-board" class="board-wrapper">
           <div class="board-header-row">
@@ -293,17 +289,6 @@
           <div class="board-row"><div>Vital alerts configuration</div><div>Team Lead</div><div><span class="status-pill status-yellow">In progress</span></div><div>Tomorrow</div><div>Medium</div></div>
           <div class="board-row"><div>Critical event pipeline</div><div>Engineering</div><div><span class="status-pill status-red">Stuck</span></div><div>Overdue</div><div>High</div></div>
           <div class="board-row"><div>Integration testing</div><div>DevOps</div><div><span class="status-pill status-blue">Planned</span></div><div>Next week</div><div>Medium</div></div>
-
-
-
-
-
-
-
-
-
-
-
         </div>
 
         <!-- Email board (Developers) -->
@@ -342,20 +327,9 @@
             <pre id="email-plain" class="email-plain" style="display:none"></pre>
           </div>
         </div>
-
       </div>
-
-
     </div>
   </div>
-
-
-
-
-
-
-
-
 <script type="module">
 /* ======================
    Firebase imports
@@ -609,40 +583,142 @@ async function ensureDevelopersPlanIfAllowed(user){
 /* If a user is a member of someone’s plan, auto-apply it on sign-in */
 async function maybeApplyInboundMembership(user, currentLoadedPlan){
   try{
-    const qLinks = query(collection(db,'plan_links'), where('memberEmail','==', (user.email||'').toLowerCase()));
-    const snap = await getDocs(qLinks);
-    if (snap.empty) return currentLoadedPlan;
+    const memberEmail = (user.email || "").toLowerCase();
 
-    let applied = currentLoadedPlan;
-    snap.forEach(d=>{
-      const f = d.data()||{};
-      if (f.isActive !== false && f.plan){
-        applied = f.plan; // take first active
+    // Read the user's current doc so we know their basePlan
+    const userRef  = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+    const userData = userSnap.exists() ? (userSnap.data() || {}) : {};
+    const existingBase = userData.basePlan || null;
+
+    // All plan_links where this user is the member
+    const qLinks = query(
+      collection(db,'plan_links'),
+      where('memberEmail','==', memberEmail)
+    );
+    const snap = await getDocs(qLinks);
+
+    // No membership links at all => ensure we just use basePlan
+    if (snap.empty){
+      const basePlan = existingBase || currentLoadedPlan || "Basic";
+
+      // Normalise fields so they don't point to any old membership
+      if (userData.plan !== basePlan ||
+          userData.basePlan !== basePlan ||
+          userData.activeLinkId ||
+          userData.linkedByPlan) {
+        await setDoc(userRef, {
+          plan:       basePlan,
+          basePlan:   basePlan,
+          activeLinkId: deleteField(),
+          linkedByPlan: deleteField()
+        }, { merge:true });
+      }
+
+      return basePlan;
+    }
+
+    let activeLink = null;            // currently active membership, if any
+    let baseFromLinks = existingBase; // original plan remembered in links
+    const writes = [];
+
+    snap.forEach((d)=>{
+      const f = d.data() || {};
+
+      // If any link already stored an originalPlan, treat that as basePlan
+      if (!baseFromLinks && typeof f.originalPlan === "string" && f.originalPlan){
+        baseFromLinks = f.originalPlan;
+      }
+
+      // Pick the first active link as the one that controls the plan
+      if (f.isActive !== false && f.plan && !activeLink){
+        activeLink = { id: d.id, ...f };
+      }
+
+      // If this active link is missing originalPlan, backfill it once
+      if (f.isActive !== false && !f.originalPlan){
+        const baseCandidate = existingBase
+          || currentLoadedPlan
+          || userData.plan
+          || "Basic";
+
+        writes.push(
+          setDoc(doc(db, "plan_links", d.id), {
+            originalPlan: baseCandidate
+          }, { merge:true })
+        );
+
+        if (!baseFromLinks) baseFromLinks = baseCandidate;
       }
     });
-    if (applied && applied !== currentLoadedPlan){
-      await setDoc(doc(db,'users', user.uid), { plan: applied }, { merge:true });
-      return applied;
+
+    // Perform any pending writes (backfilling originalPlan)
+    if (writes.length) await Promise.all(writes);
+
+    const basePlan = baseFromLinks || existingBase || currentLoadedPlan || "Basic";
+
+    // 🚫 No active memberships anymore → restore original plan
+    if (!activeLink){
+      if (userData.plan !== basePlan ||
+          userData.basePlan !== basePlan ||
+          userData.activeLinkId ||
+          userData.linkedByPlan){
+        await setDoc(userRef, {
+          plan:       basePlan,
+          basePlan:   basePlan,
+          activeLinkId: deleteField(),
+          linkedByPlan: deleteField()
+        }, { merge:true });
+      }
+      return basePlan;
     }
-    return currentLoadedPlan;
-  } catch(e){
-    console.warn('inbound membership check failed', e);
+
+    // ✅ At least one active membership → apply owner's plan
+    const membershipPlan = activeLink.plan || basePlan;
+
+    await setDoc(userRef, {
+      plan:         membershipPlan,  // what the app uses
+      basePlan:     basePlan,        // remembered original
+      activeLinkId: activeLink.id,
+      linkedByPlan: membershipPlan
+    }, { merge:true });
+
+    return membershipPlan;
+
+  } catch(err){
+    console.warn('inbound membership check failed', err);
     return currentLoadedPlan;
   }
 }
 
+
 async function loadUserPlan(user){
   try {
-    const ref = doc(db,"users",user.uid);
+    const ref  = doc(db,"users",user.uid);
     const snap = await getDoc(ref);
-    if (!snap.exists() || !snap.data().plan){
-      await setDoc(ref, { email: user.email || null, plan: "Basic" }, { merge:true });
-      return "Basic";
-    }
-    return snap.data().plan;
-  } catch { return "Basic"; }
-}
+    const data = snap.exists() ? (snap.data() || {}) : {};
 
+    // If this is a brand new user or no plan is set yet
+    if (!data.plan){
+      const base = data.basePlan || "Basic";
+      await setDoc(ref, {
+        email: user.email || null,
+        plan: base,
+        basePlan: base
+      }, { merge:true });
+      return base;
+    }
+
+    // If plan exists but we never stored basePlan, backfill it once
+    if (!data.basePlan){
+      await setDoc(ref, { basePlan: data.plan }, { merge:true });
+    }
+
+    return data.plan;
+  } catch {
+    return "Basic";
+  }
+}
 /* ======================
    Developer users panel
    ====================== */
