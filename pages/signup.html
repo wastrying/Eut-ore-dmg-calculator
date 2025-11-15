@@ -257,13 +257,47 @@
   const facebookProvider = new FacebookAuthProvider();
   let popupInProgress = false;
 
-  // Redirect target (dashboard)
-  const SELECTION_URL = "./dashboard.html";
-  const goToSelection = () => { window.location.replace(SELECTION_URL); };
+  // === Plan-based redirect helper (same logic as login/selection) ===
+  async function goToSelection() {
+    const user = auth.currentUser;
+    if (!user) {
+      window.location.replace("./login.html");
+      return;
+    }
 
-  const showError = (msg) => { errorText.textContent = msg; errorText.classList.add("show"); };
-  const clearError = () => { errorText.textContent = ""; errorText.classList.remove("show"); };
-  const showSuccess = (msg) => { successText.textContent = msg; successText.style.display = "block"; };
+    try {
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+
+      let plan = "Basic";
+      if (snap.exists() && snap.data().plan) {
+        plan = snap.data().plan;
+      }
+
+      // Example after login, once you know the user's plan:
+      if (plan === "Basic")       window.location.href = "./basic_plan.html";
+      else if (plan === "Premium")    window.location.href = "./premium_plan.html";
+      else if (plan === "Enterprise") window.location.href = "./enterprise_plan.html";
+      else if (plan === "Developers") window.location.href = "./developer_plan.html";
+      else window.location.href = "./basic_plan.html"; // fallback
+    } catch (err) {
+      console.error("Plan routing failed:", err);
+      window.location.href = "./basic_plan.html";
+    }
+  }
+
+  const showError = (msg) => {
+    errorText.textContent = msg;
+    errorText.classList.add("show");
+  };
+  const clearError = () => {
+    errorText.textContent = "";
+    errorText.classList.remove("show");
+  };
+  const showSuccess = (msg) => {
+    successText.textContent = msg;
+    successText.style.display = "block";
+  };
 
   const getEmailProviderUrl = (email) => {
     const domain = (email.split("@")[1] || "").toLowerCase();
@@ -280,34 +314,53 @@
   if (termsLink) termsLink.addEventListener("click", (e) => { e.preventDefault(); openTermsModal(); });
   if (termsCloseBtn) termsCloseBtn.addEventListener("click", closeTermsModal);
   if (termsModalBackdrop) {
-    termsModalBackdrop.addEventListener("click", (e) => { if (e.target === termsModalBackdrop) closeTermsModal(); });
+    termsModalBackdrop.addEventListener("click", (e) => {
+      if (e.target === termsModalBackdrop) closeTermsModal();
+    });
   }
 
   // Hold-to-show password (preserve caret)
   if (togglePasswordBtn && passwordInput && passwordEyeIcon) {
     let lastSelection = { start: null, end: null };
     const rememberSelection = () => {
-      try { lastSelection.start = passwordInput.selectionStart; lastSelection.end = passwordInput.selectionEnd; }
-      catch { lastSelection.start = lastSelection.end = null; }
+      try {
+        lastSelection.start = passwordInput.selectionStart;
+        lastSelection.end = passwordInput.selectionEnd;
+      } catch { lastSelection.start = lastSelection.end = null; }
     };
     const restoreSelection = () => {
       if (lastSelection.start !== null && lastSelection.end !== null && document.activeElement === passwordInput) {
-        requestAnimationFrame(() => { try { passwordInput.setSelectionRange(lastSelection.start, lastSelection.end); } catch {} });
+        requestAnimationFrame(() => {
+          try { passwordInput.setSelectionRange(lastSelection.start, lastSelection.end); } catch {}
+        });
       }
     };
     const showPassword = () => {
-      rememberSelection(); passwordInput.type = "text"; passwordInput.focus(); restoreSelection();
-      passwordEyeIcon.classList.remove("fi-rr-eye-crossed"); passwordEyeIcon.classList.add("fi-rr-eye");
+      rememberSelection();
+      passwordInput.type = "text";
+      passwordInput.focus();
+      restoreSelection();
+      passwordEyeIcon.classList.remove("fi-rr-eye-crossed");
+      passwordEyeIcon.classList.add("fi-rr-eye");
     };
     const hidePassword = () => {
-      rememberSelection(); passwordInput.type = "password"; passwordInput.focus(); restoreSelection();
-      passwordEyeIcon.classList.remove("fi-rr-eye"); passwordEyeIcon.classList.add("fi-rr-eye-crossed");
+      rememberSelection();
+      passwordInput.type = "password";
+      passwordInput.focus();
+      restoreSelection();
+      passwordEyeIcon.classList.remove("fi-rr-eye");
+      passwordEyeIcon.classList.add("fi-rr-eye-crossed");
     };
     ["mousedown", "touchstart"].forEach(evt => {
-      togglePasswordBtn.addEventListener(evt, (e) => { e.preventDefault(); showPassword(); }, { passive: false });
+      togglePasswordBtn.addEventListener(evt, (e) => {
+        e.preventDefault();
+        showPassword();
+      }, { passive: false });
     });
     ["mouseup", "mouseleave", "touchend", "touchcancel"].forEach(evt => {
-      window.addEventListener(evt, () => { if (passwordInput.type === "text") hidePassword(); });
+      window.addEventListener(evt, () => {
+        if (passwordInput.type === "text") hidePassword();
+      });
     });
   }
 
@@ -408,7 +461,7 @@
     }
   });
 
-  // Google OAuth → ensure plan then go to dashboard
+  // Google OAuth → ensure plan then go to correct plan page
   googleBtn.addEventListener("click", async (e) => {
     e.preventDefault();
     if (popupInProgress) return;
@@ -419,8 +472,10 @@
 
     try {
       await signInWithPopup(auth, new GoogleAuthProvider());
-      await ensureDefaultPlanIfMissing(auth.currentUser);
-      goToSelection();
+      if (auth.currentUser) {
+        await ensureDefaultPlanIfMissing(auth.currentUser);
+        await goToSelection();
+      }
     } catch (error) {
       if (error.code !== "auth/cancelled-popup-request") {
         showError("⚠ Google sign-in failed. Check Firebase/Google config.");
@@ -430,7 +485,7 @@
     }
   });
 
-  // Facebook OAuth → ensure plan then go to dashboard
+  // Facebook OAuth → ensure plan then go to correct plan page
   facebookBtn.addEventListener("click", async (e) => {
     e.preventDefault();
     if (popupInProgress) return;
@@ -441,8 +496,10 @@
 
     try {
       await signInWithPopup(auth, new FacebookAuthProvider());
-      await ensureDefaultPlanIfMissing(auth.currentUser);
-      goToSelection();
+      if (auth.currentUser) {
+        await ensureDefaultPlanIfMissing(auth.currentUser);
+        await goToSelection();
+      }
     } catch (error) {
       if (error.code !== "auth/cancelled-popup-request") {
         showError("⚠ Facebook sign-in failed. Check Facebook + Firebase config.");
@@ -458,7 +515,7 @@
     const isPasswordUser = user.providerData.some(p => p.providerId === "password");
     if (!isPasswordUser) {
       await ensureDefaultPlanIfMissing(user);
-      goToSelection();
+      await goToSelection();
     }
     // Password users must verify via email first (handled on login page)
   });
@@ -469,3 +526,4 @@
 
 </body>
 </html>
+
