@@ -400,14 +400,17 @@ const emailModalSubject   = document.getElementById("email-modal-subject");
 const emailModalMeta      = document.getElementById("email-modal-meta");
 const emailModalHeader    = document.querySelector('.email-modal-header');
 
-/* Global state */
 let currentUser = null;
 let currentPlan = null;
+
+let workspaceOwnerUid = null;
+
 let allUsers = [];     // [{uid,email,plan,roles}]
 let rolesUsers = [];   // used by Roles panel
 let unsubscribeEmails = null;
 let cachedEmails = [];
 let currentOpenedEmailId = null;
+
 
 /* Members feature state/refs */
 let membersNavEl = null;
@@ -564,27 +567,38 @@ async function ensureDevelopersPlanIfAllowed(user){
   try {
     const ref = doc(db,"users",user.uid);
     const snap = await getDoc(ref);
-    const existing = snap.exists() ? (snap.data().plan || null) : null;
+    const existingData = snap.exists() ? (snap.data() || {}) : {};
+    const existingPlan = existingData.plan || null;
 
-    if (existing === "Developers") {
-      // make sure email is normalised
-      if (!snap.exists() || snap.data().email !== emailLower) {
-        await setDoc(ref, { email: emailLower }, { merge:true });
+    if (existingPlan === "Developers") {
+      const updates = {};
+      if (existingData.email !== emailLower) updates.email = emailLower;
+      if (!existingData.basePlan) updates.basePlan = "Developers";
+      if (!existingData.workspaceOwnerUid) updates.workspaceOwnerUid = user.uid;
+
+      if (Object.keys(updates).length){
+        await setDoc(ref, updates, { merge:true });
       }
+
+      workspaceOwnerUid = user.uid;
       return "Developers";
     }
 
     await setDoc(ref, {
       email: emailLower,
       plan: "Developers",
-      basePlan: "Developers"
+      basePlan: "Developers",
+      workspaceOwnerUid: user.uid
     }, { merge:true });
 
+    workspaceOwnerUid = user.uid;
     return "Developers";
   } catch {
+    workspaceOwnerUid = user.uid;
     return null;
   }
 }
+
 
 
 /** If user is a member of someone’s plan, apply that plan on sign-in
@@ -594,62 +608,63 @@ async function maybeApplyInboundMembership(user, currentLoadedPlan){
   try {
     const memberEmail = (user.email || "").toLowerCase();
 
-    // 1) Read the user's own doc (allowed by rules)
+    // 1) Read the user's own doc
     const userRef  = doc(db, "users", user.uid);
     const userSnap = await getDoc(userRef);
     const userData = userSnap.exists() ? (userSnap.data() || {}) : {};
 
-    // What we consider their original plan if no membership is active
     const basePlan =
       userData.basePlan ||
       currentLoadedPlan ||
       userData.plan ||
       "Basic";
 
-    // 2) Read all plan_links where this account is the member (READ is allowed)
+    // Default: they own their own workspace unless a membership says otherwise
+    workspaceOwnerUid = userData.workspaceOwnerUid || user.uid;
+
+    // 2) Read all plan_links where this account is the member
     const qLinks = query(
       collection(db, "plan_links"),
       where("memberEmail", "==", memberEmail)
     );
     const snap = await getDocs(qLinks);
 
-    // Filter only active links (isActive !== false)
+    // Only active links with an owner + plan
     const activeLinks = snap.docs.filter(d => {
       const f = d.data() || {};
-      return f.isActive !== false && !!f.plan;
+      return f.isActive !== false && !!f.plan && !!f.ownerUid;
     });
 
-    // ❌ No active membership → restore original plan
+    // ❌ No active membership → restore original plan & workspace
     if (activeLinks.length === 0) {
-      if (
-        userData.plan !== basePlan ||
-        userData.basePlan !== basePlan ||
-        userData.activeLinkId
-      ) {
-        await setDoc(
-          userRef,
-          {
-            plan: basePlan,
-            basePlan: basePlan,
-            activeLinkId: deleteField()
-          },
-          { merge: true }
-        );
-      }
+      await setDoc(
+        userRef,
+        {
+          plan: basePlan,
+          basePlan: basePlan,
+          activeLinkId: deleteField(),
+          workspaceOwnerUid: workspaceOwnerUid || user.uid
+        },
+        { merge: true }
+      );
       return basePlan;
     }
 
-    // ✅ At least one active membership → apply the first link's plan
+    // ✅ Apply the first active membership
     const first = activeLinks[0];
     const f     = first.data() || {};
-    const membershipPlan = f.plan || basePlan;
+
+    const ownerUidFromLink = f.ownerUid || user.uid;
+    workspaceOwnerUid = ownerUidFromLink;        // 🔴 THIS makes members share the owner’s workspace
+    const membershipPlan  = f.plan || basePlan;  // plan stored on the link
 
     await setDoc(
       userRef,
       {
-        plan:         membershipPlan, // what your app checks
-        basePlan:     basePlan,       // remember original
-        activeLinkId: first.id        // which link they belong to
+        plan:         membershipPlan,
+        basePlan:     basePlan,
+        activeLinkId: first.id,
+        workspaceOwnerUid
       },
       { merge: true }
     );
@@ -657,9 +672,11 @@ async function maybeApplyInboundMembership(user, currentLoadedPlan){
     return membershipPlan;
   } catch (err) {
     console.warn("inbound membership check failed", err);
+    if (!workspaceOwnerUid && user) workspaceOwnerUid = user.uid;
     return currentLoadedPlan;
   }
 }
+
 
 
 async function loadUserPlan(user){
@@ -675,25 +692,33 @@ async function loadUserPlan(user){
       await setDoc(ref, {
         email: emailLower,
         plan: base,
-        basePlan: base
+        basePlan: base,
+        workspaceOwnerUid: user.uid  // 🟢 owner’s workspace = self
       }, { merge:true });
+
+      workspaceOwnerUid = user.uid;
       return base;
     }
 
-    // Backfill basePlan/email if missing or not normalised
+    // Backfill basePlan/email/workspaceOwnerUid if missing or not normalised
     const updates = {};
     if (!data.basePlan) updates.basePlan = data.plan;
     if (data.email !== emailLower) updates.email = emailLower;
+    if (!data.workspaceOwnerUid) updates.workspaceOwnerUid = user.uid;
 
     if (Object.keys(updates).length){
       await setDoc(ref, updates, { merge:true });
     }
 
+    workspaceOwnerUid = data.workspaceOwnerUid || user.uid;
     return data.plan;
   } catch {
+    // Fallback: treat user as owning their own workspace
+    workspaceOwnerUid = user.uid;
     return "Basic";
   }
 }
+
 /* ======================
    Developer users panel
    ====================== */
@@ -794,8 +819,21 @@ searchInput?.addEventListener('input', ()=>renderList(searchInput.value));
    Roles (Enterprise + Developers)
    ====================== */
 const ROLE_KEYS = ['admin','manager','support'];
-function canManageRoles(){ return currentPlan === 'Developers' || currentPlan === 'Enterprise'; }
-function canEditRoles(){ return currentPlan === 'Developers'; }
+
+function isWorkspaceOwner(){
+  return !!(currentUser && workspaceOwnerUid && currentUser.uid === workspaceOwnerUid);
+}
+
+function canManageRoles(){
+  // Only owners of an Enterprise/Developers workspace can open/manage roles
+  return (currentPlan === 'Developers' || currentPlan === 'Enterprise') && isWorkspaceOwner();
+}
+
+function canEditRoles(){
+  // Still only Developers can toggle roles
+  return currentPlan === 'Developers';
+}
+
 
 function roleChip(role, active){
   const disabled = canEditRoles() ? '' : ' disabled style="opacity:.6;cursor:not-allowed" ';
@@ -920,8 +958,10 @@ rolesList?.addEventListener('click', async (e)=>{
 /* ======================
    Members (Enterprise + Developers)
    ====================== */
-function canManageMembers(){ return currentPlan === 'Developers' || currentPlan === 'Enterprise'; }
-
+function canManageMembers(){
+  // Only the workspace owner (Enterprise/Developers) can add/remove members
+  return (currentPlan === 'Developers' || currentPlan === 'Enterprise') && isWorkspaceOwner();
+}
 function ensureMembersUi(show){
   if (!membersNavEl){
     membersNavEl = document.createElement('div');
@@ -954,8 +994,12 @@ function ensureMembersUi(show){
 
     membersAddBtn?.addEventListener('click', onAddMemberClick);
   }
-  membersNavEl.style.display = show ? '' : 'none';
+
+  // Only show the tab if this user actually owns the workspace
+  const shouldShow = show && isWorkspaceOwner();
+  membersNavEl.style.display = shouldShow ? '' : 'none';
 }
+
 function onAddMemberClick(){
   const raw = membersInput?.value || '';
   const email = normalizeEmail(raw);
@@ -993,7 +1037,10 @@ function stopMembersListener(){
 function startMembersListener(){
   stopMembersListener();
   if (!currentUser) return;
-  const qLinks = query(collection(db,'plan_links'), where('ownerUid','==', currentUser.uid));
+
+  const ownerUid = workspaceOwnerUid || currentUser.uid;
+  const qLinks = query(collection(db,'plan_links'), where('ownerUid','==', ownerUid));
+
   unsubscribeMembers = onSnapshot(qLinks, async (snap)=>{
     const rows = [];
     snap.forEach(d=>{
@@ -1008,12 +1055,12 @@ function startMembersListener(){
       }
     });
 
-   if (!allUsers.length) await fetchAllUsers();  // works for both Enterprise and Developers
+    if (!allUsers.length) await fetchAllUsers();  // works for both Enterprise and Developers
 
-rows.forEach(r=>{
-  const u = allUsers.find(x => (x.email||'').toLowerCase() === r.memberEmail.toLowerCase());
-  if (u){ r.linkedUid = u.uid; r.linkedPlan = u.plan; }
-});
+    rows.forEach(r=>{
+      const u = allUsers.find(x => (x.email||'').toLowerCase() === r.memberEmail.toLowerCase());
+      if (u){ r.linkedUid = u.uid; r.linkedPlan = u.plan; }
+    });
 
     cachedMembers = rows.sort((a,b)=> a.memberEmail.localeCompare(b.memberEmail));
     renderMembers();
@@ -1029,17 +1076,20 @@ rows.forEach(r=>{
   });
 }
 
+
 /** Add or reactivate a member.
  *  - CREATE: write all fields (matches plan_links create rule)
  *  - UPDATE: only changes isActive + plan (matches update rule)
  */
 async function addMember(memberEmail){
   if (!canManageMembers()){
-    alert('Only Enterprise/Developers can add members.');
+    alert('Only Enterprise/Developers workspace owners can add members.');
     return;
   }
   const normalized = normalizeEmail(memberEmail);
-  const id = linkDocId(currentUser.uid, normalized);
+  const ownerUid = workspaceOwnerUid || currentUser.uid;
+
+  const id  = linkDocId(ownerUid, normalized);
   const ref = doc(db,'plan_links', id);
   const snap = await getDoc(ref);
 
@@ -1052,7 +1102,7 @@ async function addMember(memberEmail){
   } else {
     // Create path: keys must match rules exactly
     await setDoc(ref, {
-      ownerUid:    currentUser.uid,
+      ownerUid:    ownerUid,
       ownerEmail: (currentUser.email||'').toLowerCase(),
       memberEmail: normalized,
       plan:        currentPlan,
@@ -1072,7 +1122,6 @@ async function addMember(memberEmail){
 
   membersInput && (membersInput.value = '');
 }
-
 /** Soft-remove a member: just set isActive=false.
  *  Their plan will revert on NEXT login via maybeApplyInboundMembership().
  */
