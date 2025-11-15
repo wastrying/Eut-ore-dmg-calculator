@@ -989,8 +989,8 @@ async function addMember(memberEmail){
   membersInput && (membersInput.value = '');
 }
 async function removeMember(id){
-  // 🔥 Hard delete the member link doc
-  await deleteDoc(doc(db, 'plan_links', id));
+  await setDoc(doc(db,'plan_links', id), { isActive:false }, { merge:true });
+
 }
 
 document.addEventListener('click', (e)=>{
@@ -1400,19 +1400,20 @@ async function cleanupUserOwnedData() {
     console.warn("Couldn't delete user doc; continuing:", e);
   }
 
-    try {
+  try {
+    // Soft-delete plan_links you own (set isActive=false); allowed by rules since ownerUid == currentUser.uid.
     const qLinks = query(collection(db,'plan_links'), where('ownerUid','==', currentUser.uid));
     const snap = await getDocs(qLinks);
     const ops = [];
     snap.forEach(d => {
-      // 🔥 Hard delete every plan_links doc owned by this user
-      ops.push(deleteDoc(doc(db,'plan_links', d.id)));
+      ops.push(setDoc(doc(db,'plan_links', d.id), { isActive:false, deletedAt: serverTimestamp() }, { merge:true }));
+
     });
     await Promise.all(ops);
   } catch (e) {
-    console.warn("Couldn't delete plan_links; continuing:", e);
+    console.warn("Couldn't soft-delete plan_links; continuing:", e);
   }
-
+}
 
 async function performDeleteAccount() {
   await cleanupUserOwnedData();         // best-effort clean-up
