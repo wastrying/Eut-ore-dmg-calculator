@@ -239,137 +239,152 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-    // --- Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
-      authDomain: "remblyx-medisignal.firebaseapp.com",
-      projectId: "remblyx-medisignal",
-      storageBucket: "remblyx-medisignal.appspot.com",
-      messagingSenderId: "50711670199",
-      appId: "1:50711670199:web:0c9c2ff72cd77234ce0c32",
-      measurementId: "G-JQ3843RM4V"
-    };
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+  // --- Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
+    authDomain: "remblyx-medisignal.firebaseapp.com",
+    projectId: "remblyx-medisignal",
+    storageBucket: "remblyx-medisignal.appspot.com",
+    messagingSenderId: "50711670199",
+    appId: "1:50711670199:web:0c9c2ff72cd77234ce0c32",
+    measurementId: "G-JQ3843RM4V"
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-    // --- DOM
-    const statusEl = document.getElementById("status");
-    const closeBtn = document.getElementById("closeBtn");
-    const chooseBasicBtn = document.getElementById("choose-basic");
-    const choosePremiumBtn = document.getElementById("choose-premium");
-    const chooseEnterpriseBtn = document.getElementById("choose-enterprise");
+  // --- DOM
+  const statusEl = document.getElementById("status");
+  const closeBtn = document.getElementById("closeBtn");
+  const chooseBasicBtn = document.getElementById("choose-basic");
+  const choosePremiumBtn = document.getElementById("choose-premium");
+  const chooseEnterpriseBtn = document.getElementById("choose-enterprise");
 
-    const badgeBasic = document.getElementById("badge-basic");
-    const badgePremium = document.getElementById("badge-premium");
-    const badgeEnterprise = document.getElementById("badge-enterprise");
+  const badgeBasic = document.getElementById("badge-basic");
+  const badgePremium = document.getElementById("badge-premium");
+  const badgeEnterprise = document.getElementById("badge-enterprise");
 
-    const cardBasic = document.getElementById("card-basic");
-    const cardPremium = document.getElementById("card-premium");
-    const cardEnterprise = document.getElementById("card-enterprise");
+  const cardBasic = document.getElementById("card-basic");
+  const cardPremium = document.getElementById("card-premium");
+  const cardEnterprise = document.getElementById("card-enterprise");
 
-    const currentIndicator = document.getElementById("current-indicator");
-    const currentPlanNameEl = document.getElementById("current-plan-name");
+  const currentIndicator = document.getElementById("current-indicator");
+  const currentPlanNameEl = document.getElementById("current-plan-name");
 
-    const DASHBOARD_URL = "./dashboard.html";
-    const LOGIN_URL = "./login.html";
+  const LOGIN_URL = "./login.html";
 
-    function setStatus(msg){ if(statusEl){ statusEl.textContent = msg || ""; } }
+  function setStatus(msg){ if(statusEl){ statusEl.textContent = msg || ""; } }
 
-    function clearBadgesAndHighlights(){
-      badgeBasic.style.display = "none";
-      badgePremium.style.display = "none";
-      badgeEnterprise.style.display = "none";
-      cardBasic.classList.remove("current");
-      cardPremium.classList.remove("current");
-      cardEnterprise.classList.remove("current");
+  // === New: central redirect based on plan ===
+  function redirectToDashboard(plan) {
+    // Example after login, once you know the user's plan:
+    if (plan === "Basic")       window.location.href = "./basic_plan.html";
+    else if (plan === "Premium")    window.location.href = "./premium_plan.html";
+    else if (plan === "Enterprise") window.location.href = "./enterprise_plan.html";
+    else if (plan === "Developers") window.location.href = "./developer_plan.html";
+    else window.location.href = "./basic_plan.html"; // fallback
+  }
 
-      // remove 'current' styling from buttons & reset labels
-      [chooseBasicBtn, choosePremiumBtn, chooseEnterpriseBtn].forEach((btn) => {
-        btn.classList.remove("current");
-        btn.disabled = false;
-        btn.setAttribute('aria-pressed', 'false');
-      });
-      chooseBasicBtn.textContent = "Choose Basic";
-      choosePremiumBtn.textContent = "Choose Premium";
-      chooseEnterpriseBtn.textContent = "Choose Enterprise";
-    }
+  function clearBadgesAndHighlights(){
+    badgeBasic.style.display = "none";
+    badgePremium.style.display = "none";
+    badgeEnterprise.style.display = "none";
+    cardBasic.classList.remove("current");
+    cardPremium.classList.remove("current");
+    cardEnterprise.classList.remove("current");
 
-    function showCurrent(plan){
-      // top pill
-      currentIndicator.style.display = "inline-flex";
-      currentPlanNameEl.textContent = plan || "—";
-
-      // reset UI
-      clearBadgesAndHighlights();
-
-      // mark current across badges, card highlight, and button label/state
-      if (plan === "Basic"){
-        badgeBasic.style.display = "inline-block";
-        cardBasic.classList.add("current");
-        chooseBasicBtn.textContent = "Current";
-        chooseBasicBtn.classList.add("current");
-        chooseBasicBtn.disabled = true;
-        chooseBasicBtn.setAttribute('aria-pressed', 'true');
-      } else if (plan === "Premium"){
-        badgePremium.style.display = "inline-block";
-        cardPremium.classList.add("current");
-        choosePremiumBtn.textContent = "Current";
-        choosePremiumBtn.classList.add("current");
-        choosePremiumBtn.disabled = true;
-        choosePremiumBtn.setAttribute('aria-pressed', 'true');
-      } else if (plan === "Enterprise"){
-        badgeEnterprise.style.display = "inline-block";
-        cardEnterprise.classList.add("current");
-        chooseEnterpriseBtn.textContent = "Current";
-        chooseEnterpriseBtn.classList.add("current");
-        chooseEnterpriseBtn.disabled = true;
-        chooseEnterpriseBtn.setAttribute('aria-pressed', 'true');
-      }
-    }
-
-    async function writePlanAndGo(uid, plan){
-      try{
-        setStatus("Saving your selection…");
-        await setDoc(doc(db, "users", uid), { plan }, { merge: true });
-        try{ sessionStorage.setItem("rbx_last_nav", "from_selection"); }catch{}
-        window.location.replace(DASHBOARD_URL);
-      }catch(e){
-        console.error(e);
-        setStatus("Something went wrong while saving. Please try again.");
-      }
-    }
-
-    onAuthStateChanged(auth, async (user)=>{
-      if(!user){
-        window.location.replace(LOGIN_URL);
-        return;
-      }
-
-      // Load current plan and reflect in UI
-      try{
-        const ref = doc(db, "users", user.uid);
-        const snap = await getDoc(ref);
-        let plan = snap.exists() ? (snap.data().plan || null) : null;
-
-        // Fallback if missing (your app elsewhere defaults to Basic anyway)
-        if (!plan) plan = "Basic";
-
-        showCurrent(plan);
-      }catch(e){
-        console.warn("Could not load current plan:", e);
-      }
-
-      // Wire buttons
-      chooseBasicBtn.onclick = ()=> writePlanAndGo(user.uid, "Basic");
-      choosePremiumBtn.onclick = ()=> writePlanAndGo(user.uid, "Premium");
-      chooseEnterpriseBtn.onclick = ()=> writePlanAndGo(user.uid, "Enterprise");
-      closeBtn.onclick = ()=> window.location.replace(DASHBOARD_URL);
+    // remove 'current' styling from buttons & reset labels
+    [chooseBasicBtn, choosePremiumBtn, chooseEnterpriseBtn].forEach((btn) => {
+      btn.classList.remove("current");
+      btn.disabled = false;
+      btn.setAttribute('aria-pressed', 'false');
     });
-  </script>
+    chooseBasicBtn.textContent = "Choose Basic";
+    choosePremiumBtn.textContent = "Choose Premium";
+    chooseEnterpriseBtn.textContent = "Choose Enterprise";
+  }
+
+  function showCurrent(plan){
+    // top pill
+    currentIndicator.style.display = "inline-flex";
+    currentPlanNameEl.textContent = plan || "—";
+
+    // reset UI
+    clearBadgesAndHighlights();
+
+    // mark current across badges, card highlight, and button label/state
+    if (plan === "Basic"){
+      badgeBasic.style.display = "inline-block";
+      cardBasic.classList.add("current");
+      chooseBasicBtn.textContent = "Current";
+      chooseBasicBtn.classList.add("current");
+      chooseBasicBtn.disabled = true;
+      chooseBasicBtn.setAttribute('aria-pressed', 'true');
+    } else if (plan === "Premium"){
+      badgePremium.style.display = "inline-block";
+      cardPremium.classList.add("current");
+      choosePremiumBtn.textContent = "Current";
+      choosePremiumBtn.classList.add("current");
+      choosePremiumBtn.disabled = true;
+      choosePremiumBtn.setAttribute('aria-pressed', 'true');
+    } else if (plan === "Enterprise"){
+      badgeEnterprise.style.display = "inline-block";
+      cardEnterprise.classList.add("current");
+      chooseEnterpriseBtn.textContent = "Current";
+      chooseEnterpriseBtn.classList.add("current");
+      chooseEnterpriseBtn.disabled = true;
+      chooseEnterpriseBtn.setAttribute('aria-pressed', 'true');
+    }
+    // If plan is "Developers" or something else, we still show it in the top pill,
+    // but no card is highlighted (that's fine).
+  }
+
+  async function writePlanAndGo(uid, plan){
+    try{
+      setStatus("Saving your selection…");
+      await setDoc(doc(db, "users", uid), { plan }, { merge: true });
+      try{ sessionStorage.setItem("rbx_last_nav", "from_selection"); }catch{}
+      redirectToDashboard(plan);
+    }catch(e){
+      console.error(e);
+      setStatus("Something went wrong while saving. Please try again.");
+    }
+  }
+
+  onAuthStateChanged(auth, async (user)=>{
+    if(!user){
+      window.location.replace(LOGIN_URL);
+      return;
+    }
+
+    let currentPlan = "Basic";
+
+    // Load current plan and reflect in UI
+    try{
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+      if (snap.exists() && snap.data().plan) {
+        currentPlan = snap.data().plan;
+      }
+      showCurrent(currentPlan);
+    }catch(e){
+      console.warn("Could not load current plan:", e);
+      showCurrent(currentPlan);
+    }
+
+    // Wire buttons
+    chooseBasicBtn.onclick      = ()=> writePlanAndGo(user.uid, "Basic");
+    choosePremiumBtn.onclick    = ()=> writePlanAndGo(user.uid, "Premium");
+    chooseEnterpriseBtn.onclick = ()=> writePlanAndGo(user.uid, "Enterprise");
+
+    // Close X → go back to the dashboard for the *current* plan
+    closeBtn.onclick = ()=> redirectToDashboard(currentPlan);
+  });
+</script>
+
 </body>
 </html>
