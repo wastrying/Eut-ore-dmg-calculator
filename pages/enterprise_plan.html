@@ -820,19 +820,25 @@ searchInput?.addEventListener('input', ()=>renderList(searchInput.value));
    ====================== */
 const ROLE_KEYS = ['admin','manager','support'];
 
+/** Is this user the owner of the workspace they’re in? */
 function isWorkspaceOwner(){
-  return !!(currentUser && workspaceOwnerUid && currentUser.uid === workspaceOwnerUid);
+  if (!currentUser) return false;
+  const ownerUid = workspaceOwnerUid || currentUser.uid;
+  return currentUser.uid === ownerUid;
 }
 
+/** Who can open the Roles tab and manage roles? */
 function canManageRoles(){
-  // Only owners of an Enterprise/Developers workspace can open/manage roles
+  // Only owners of an Enterprise / Developers workspace
   return (currentPlan === 'Developers' || currentPlan === 'Enterprise') && isWorkspaceOwner();
 }
 
+/** Who can actually toggle the chips? */
 function canEditRoles(){
-  // Still only Developers can toggle roles
+  // Still only Developers can change the chips
   return currentPlan === 'Developers';
 }
+
 
 
 function roleChip(role, active){
@@ -867,10 +873,13 @@ async function saveRoles(uid, newMap){
   await updateDoc(ref, updates);
 }
 
-/* Build rolesUsers depending on plan */
-async function fetchLinkedEmailsForOwner(){
-  if (!currentUser) return new Set();
-  const qLinks = query(collection(db,'plan_links'), where('ownerUid','==', currentUser.uid));
+async function fetchLinkedEmailsForOwner(ownerUid){
+  if (!ownerUid) return new Set();
+
+  const qLinks = query(
+    collection(db,'plan_links'),
+    where('ownerUid','==', ownerUid)
+  );
   const snap = await getDocs(qLinks);
 
   const emails = new Set();
@@ -880,81 +889,59 @@ async function fetchLinkedEmailsForOwner(){
       emails.add(String(f.memberEmail).toLowerCase());
     }
   });
-  if (currentUser.email) emails.add(currentUser.email.toLowerCase());
+
+  // Include the owner's own email if we know it
+  if (currentUser && currentUser.email && currentUser.uid === ownerUid){
+    emails.add(currentUser.email.toLowerCase());
+  }
+
   return emails;
 }
 
+
 async function rebuildRolesUsersForPlan(){
-  if (currentPlan === 'Developers'){
-    await fetchAllUsers();
-    rolesUsers = [...allUsers];
+  if (!currentUser) {
+    rolesUsers = [];
     return;
   }
-  // Enterprise: only linked emails + self
-  const linked = await fetchLinkedEmailsForOwner();
-  rolesUsers = [];
 
-  try{
-    const snap = await getDoc(doc(db,'users', currentUser.uid));
-    const data = snap.exists() ? (snap.data()||{}) : {};
-    rolesUsers.push({ uid: currentUser.uid, email: currentUser.email || '(you)', roles: data.roles || {} });
-  }catch{}
+  const ownerUid = workspaceOwnerUid || currentUser.uid;
 
-  linked.forEach(email => {
-    if ((currentUser.email||'').toLowerCase() === email) return;
-    rolesUsers.push({ uid: null, email, roles: {} });
+  // Load all users so we can map emails -> { uid, roles }
+  await fetchAllUsers();
+
+  // Get the emails that belong to this owner’s plan (members + owner)
+  const linkedEmails = await fetchLinkedEmailsForOwner(ownerUid);
+
+  const rows = [];
+
+  allUsers.forEach(u=>{
+    const emailLower = (u.email || '').toLowerCase();
+    if (!emailLower) return;
+
+    // Include:
+    // - all plan members (from plan_links)
+    // - the workspace owner’s own user row
+    if (linkedEmails.has(emailLower) || u.uid === ownerUid){
+      rows.push({
+        uid: u.uid,
+        email: u.email || '(no email)',
+        roles: u.roles || {}
+      });
+    }
   });
+
+  // Fallback: if somehow owner wasn't in allUsers, still add a row
+  if (!rows.some(r => r.uid === ownerUid)){
+    rows.push({
+      uid: ownerUid,
+      email: currentUser.email || '(owner)',
+      roles: {}
+    });
+  }
+
+  rolesUsers = rows.sort((a,b)=>(a.email||'').localeCompare(b.email||''));
 }
-
-rolesSearch?.addEventListener('input', ()=>renderRoles(rolesSearch.value));
-rolesList?.addEventListener('click', async (e)=>{
-  const chip = e.target.closest('.role-chip');
-  if (!chip) return;
-  if (!canManageRoles()){
-    alert("Only Enterprise/Developers can access Roles.");
-    return;
-  }
-  if (!canEditRoles()){
-    alert("Only Developers can change roles (per current security rules).");
-    return;
-  }
-
-  const row  = chip.closest('.dev-grid-row');
-  const uid  = row?.getAttribute('data-uid') || null;
-  const role = chip.getAttribute('data-role');
-  if (!uid){
-    alert("This member hasn't linked an account yet, so roles can't be saved.");
-    return;
-  }
-  if (!role) return;
-
-  const newActive = !chip.classList.contains('active');
-  chip.classList.toggle('active', newActive);
-  chip.setAttribute('aria-pressed', newActive ? 'true':'false');
-
-  const newMap = {};
-  row.querySelectorAll('.role-chip').forEach(c=>{
-    const r = c.getAttribute('data-role');
-    if (c.classList.contains('active')) newMap[r] = true;
-  });
-
-  const badgeId = `save-${uid}`;
-  const badge = document.getElementById(badgeId);
-  if (badge){ badge.className='save-badge'; badge.textContent='Saving…'; }
-  try{
-    await saveRoles(uid,newMap);
-    const i = rolesUsers.findIndex(u=>u.uid===uid);
-    if (i>=0) rolesUsers[i].roles = newMap;
-    if (badge){ badge.className='save-badge ok'; badge.textContent='Saved'; }
-  }catch(err){
-    console.error('roles save error', err);
-    chip.classList.toggle('active', !newActive);
-    chip.setAttribute('aria-pressed', (!newActive) ? 'true':'false');
-    if (badge){ badge.className='save-badge err'; badge.textContent='Error'; }
-    alert('Could not save roles. Check Firestore rules & permissions.');
-  }
-});
-
 /* ======================
    Members (Enterprise + Developers)
    ====================== */
