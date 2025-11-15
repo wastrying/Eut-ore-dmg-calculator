@@ -669,7 +669,6 @@ async function maybeApplyInboundMembership(user, currentLoadedPlan){
   }
 }
 
-
 async function loadUserPlan(user){
   try {
     const ref  = doc(db,"users",user.uid);
@@ -697,7 +696,6 @@ async function loadUserPlan(user){
     return "Basic";
   }
 }
-
 
 /* ======================
    Developer users panel
@@ -833,7 +831,7 @@ async function fetchLinkedEmailsForOwner(){
 
   const emails = new Set();
   snap.forEach(d=>{
-    const f = d.data() || {};
+    const f = d.data()||{};
     if (f.isActive !== false && f.memberEmail) {
       emails.add(String(f.memberEmail).toLowerCase());
     }
@@ -919,7 +917,85 @@ rolesList?.addEventListener('click', async (e)=>{
 /* ======================
    Members (Enterprise + Developers)
    ====================== */
-function canManageMembers(){ return currentPlan === 'Developers' || currentPlan === 'Enterprise'; }
+function canManageMembers(){ 
+  return currentPlan === 'Developers' || currentPlan === 'Enterprise'; 
+}
+
+/* 🔧 Apply owner's plan to an existing member user (if user doc exists) */
+async function applyMembershipPlanToMember(memberEmail, membershipPlan){
+  const normalized = normalizeEmail(memberEmail);
+  try{
+    const q = query(collection(db,"users"), where("email","==", normalized));
+    const snap = await getDocs(q);
+
+    if (snap.empty){
+      console.log("[members] No user doc yet for", normalized, "– will apply on next login.");
+      return null;
+    }
+
+    let basePlanUsed = null;
+    const ops = [];
+
+    snap.forEach(docSnap=>{
+      const data = docSnap.data() || {};
+      const ref  = doc(db,"users", docSnap.id);
+
+      // Remember their original plan only once
+      const basePlan = data.basePlan || data.plan || "Basic";
+      if (!basePlanUsed) basePlanUsed = basePlan;
+
+      ops.push(
+        setDoc(ref, {
+          basePlan,          // original plan we can revert to later
+          plan: membershipPlan
+        }, { merge:true })
+      );
+    });
+
+    if (ops.length) await Promise.all(ops);
+    console.log("[members] Applied membership plan", membershipPlan, "to", normalized, "basePlan:", basePlanUsed);
+    return basePlanUsed;
+  }catch(err){
+    console.error("[members] applyMembershipPlanToMember error:", err);
+    return null;
+  }
+}
+
+/* 🔧 Restore member's original/base plan when removed */
+async function restoreOriginalPlanForMember(memberEmail, fallbackPlan){
+  const normalized = normalizeEmail(memberEmail);
+  try{
+    const q = query(collection(db,"users"), where("email","==", normalized));
+    const snap = await getDocs(q);
+
+    if (snap.empty){
+      console.log("[members] No user doc to restore for", normalized);
+      return;
+    }
+
+    const ops = [];
+
+    snap.forEach(docSnap=>{
+      const data = docSnap.data() || {};
+      const ref  = doc(db,"users", docSnap.id);
+
+      const basePlan = data.basePlan || fallbackPlan || data.plan || "Basic";
+
+      ops.push(
+        setDoc(ref, {
+          plan: basePlan      // go back to original plan
+          // keep basePlan as-is so we still remember it
+        }, { merge:true })
+      );
+    });
+
+    if (ops.length) await Promise.all(ops);
+    console.log("[members] Restored original/base plan for", normalized);
+  }catch(err){
+    console.error("[members] restoreOriginalPlanForMember error:", err);
+  }
+}
+
 function ensureMembersUi(show){
   // Create sidebar nav if missing
   if (!membersNavEl){
@@ -958,15 +1034,20 @@ function ensureMembersUi(show){
   // Toggle visibility of nav
   membersNavEl.style.display = show ? '' : 'none';
 }
+
 function onAddMemberClick(){
   const raw = membersInput?.value || '';
   const email = normalizeEmail(raw);
-  if (!isEmail(email)){ alert('Please enter a valid email.'); return; }
+  if (!isEmail(email)){ 
+    alert('Please enter a valid email.'); 
+    return; 
+  }
   addMember(email).catch(e=>{
     console.error('addMember failed', e);
     alert('Could not add member. Check your permissions.');
   });
 }
+
 function memberRow(item){
   const status = item.linkedUid ? `Linked${item.linkedPlan ? ' ('+item.linkedPlan+')' : ''}` : 'Pending';
   return `<div class="dev-grid-row" data-id="${item.id}">
@@ -977,16 +1058,25 @@ function memberRow(item){
     </div>
   </div>`;
 }
+
 function renderMembers(){
   if (!membersList) return;
   membersList.innerHTML = cachedMembers.length
     ? cachedMembers.map(memberRow).join('')
     : `<div class="dev-grid-row"><div>No members yet</div><div>—</div></div>`;
 }
-function stopMembersListener(){ if (unsubscribeMembers){ unsubscribeMembers(); unsubscribeMembers=null; } }
+
+function stopMembersListener(){ 
+  if (unsubscribeMembers){ 
+    unsubscribeMembers(); 
+    unsubscribeMembers=null; 
+  } 
+}
+
 function startMembersListener(){
   stopMembersListener();
   if (!currentUser) return;
+
   // Query ONLY this owner's links (satisfies security rules)
   const qLinks = query(collection(db,'plan_links'), where('ownerUid','==', currentUser.uid));
   unsubscribeMembers = onSnapshot(qLinks, async (snap)=>{
@@ -1002,12 +1092,17 @@ function startMembersListener(){
         });
       }
     });
+
     // Enrich with linkage to users list if we have it (Developers), else best-effort
     if (currentPlan === 'Developers' && !allUsers.length) await fetchAllUsers();
     rows.forEach(r=>{
       const u = allUsers.find(x => (x.email||'').toLowerCase() === r.memberEmail.toLowerCase());
-      if (u){ r.linkedUid = u.uid; r.linkedPlan = u.plan; }
+      if (u){ 
+        r.linkedUid = u.uid; 
+        r.linkedPlan = u.plan; 
+      }
     });
+
     cachedMembers = rows.sort((a,b)=> a.memberEmail.localeCompare(b.memberEmail));
     renderMembers();
 
@@ -1022,31 +1117,65 @@ function startMembersListener(){
     renderMembers();
   });
 }
+
+/* ⭐ NEW: addMember now also updates the user's plan & stores originalPlan */
 async function addMember(memberEmail){
-  if (!canManageMembers()) { alert('Only Enterprise/Developers can add members.'); return; }
-  const id = linkDocId(currentUser.uid, memberEmail);
+  if (!canManageMembers()) { 
+    alert('Only Enterprise/Developers can add members.'); 
+    return; 
+  }
+
+  const normalized = normalizeEmail(memberEmail);
+  const id = linkDocId(currentUser.uid, normalized);
+
+  // 1) Try to push the owner plan to any existing user doc for this email
+  const originalPlan = await applyMembershipPlanToMember(normalized, currentPlan);
+
+  // 2) Create/merge the plan_links doc with originalPlan recorded
   await setDoc(doc(db,'plan_links', id), {
-    ownerUid: currentUser.uid,
+    ownerUid:    currentUser.uid,
     ownerEmail: (currentUser.email||'').toLowerCase(),
-    memberEmail: memberEmail.toLowerCase(),
-    plan: currentPlan,            // same plan as owner
-    createdAt: serverTimestamp(),
-    isActive: true
+    memberEmail: normalized,
+    plan:        currentPlan,           // same plan as owner
+    originalPlan: originalPlan || null, // what they had before we changed them
+    createdAt:   serverTimestamp(),
+    isActive:    true
   }, { merge:true });
 
-  // If member already has an account (only Developers can see all users), push plan immediately
-  if (currentPlan === 'Developers'){
-    if (!allUsers.length) await fetchAllUsers();
-    const existing = allUsers.find(u => (u.email||'').toLowerCase() === memberEmail.toLowerCase());
-    if (existing){
-      await setDoc(doc(db,'users', existing.uid), { plan: currentPlan }, { merge:true });
-    }
-  }
+  console.log("[members] link created/updated for", normalized, "originalPlan:", originalPlan);
+
   membersInput && (membersInput.value = '');
 }
+
+/* ⭐ NEW: removeMember deactivates link AND restores original plan */
 async function removeMember(id){
-  await setDoc(doc(db,'plan_links', id), { isActive:false }, { merge:true });
+  try{
+    const ref  = doc(db,'plan_links', id);
+    const snap = await getDoc(ref);
+    const data = snap.exists() ? (snap.data() || {}) : {};
+
+    const memberEmail  = data.memberEmail || null;
+    const originalPlan = data.originalPlan || null;
+
+    // 1) Soft-deactivate the link
+    await setDoc(ref, {
+      isActive:  false,
+      deletedAt: serverTimestamp()
+    }, { merge:true });
+
+    console.log("[members] link deactivated for", memberEmail);
+
+    // 2) Restore their original/base plan if we know who they are
+    if (memberEmail){
+      await restoreOriginalPlanForMember(memberEmail, originalPlan);
+    }
+  }catch(err){
+    console.error("remove member error", err);
+    alert('Could not remove member / restore plan. Check console for details.');
+  }
 }
+
+/* click handler for ✕ */
 document.addEventListener('click', (e)=>{
   const btn = e.target.closest('.member-remove');
   if (!btn) return;
@@ -1056,7 +1185,7 @@ document.addEventListener('click', (e)=>{
   if (!confirm('Remove this member from your plan?')) return;
   removeMember(id).catch(err=>{
     console.error('remove member error', err);
-    alert('Could not remove member.');
+    alert('Could not remove member / restore plan.');
   });
 });
 
@@ -1531,7 +1660,5 @@ if (window.matchMedia('(max-width: 640px)').matches){
   });
 }
 </script>
-
-
 </body>
 </html>
