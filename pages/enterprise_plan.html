@@ -575,85 +575,76 @@ async function ensureDevelopersPlanIfAllowed(user){
  *  and remember their base / original plan in /users.
  */
 async function maybeApplyInboundMembership(user, currentLoadedPlan){
-  try{
+  try {
     const memberEmail = (user.email || "").toLowerCase();
 
-    // Read the user's current doc so we know their basePlan
+    // 1) Read the user's own doc (allowed by rules)
     const userRef  = doc(db, "users", user.uid);
     const userSnap = await getDoc(userRef);
     const userData = userSnap.exists() ? (userSnap.data() || {}) : {};
-    const existingBase = userData.basePlan || null;
 
-    // All plan_links where this user is the member
+    // What we consider their original plan if no membership is active
+    const basePlan =
+      userData.basePlan ||
+      currentLoadedPlan ||
+      userData.plan ||
+      "Basic";
+
+    // 2) Read all plan_links where this account is the member (READ is allowed)
     const qLinks = query(
-      collection(db,'plan_links'),
-      where('memberEmail','==', memberEmail)
+      collection(db, "plan_links"),
+      where("memberEmail", "==", memberEmail)
     );
     const snap = await getDocs(qLinks);
 
-    // No membership links at all -> just use basePlan
-    if (snap.empty){
-      const basePlan = existingBase || currentLoadedPlan || "Basic";
+    // Filter only active links (isActive !== false)
+    const activeLinks = snap.docs.filter(d => {
+      const f = d.data() || {};
+      return f.isActive !== false && !!f.plan;
+    });
 
-      if (userData.plan !== basePlan ||
-          userData.basePlan !== basePlan ||
-          userData.activeLinkId ||
-          userData.linkedByPlan) {
-        await setDoc(userRef, {
-          plan:       basePlan,
-          basePlan:   basePlan,
-          activeLinkId: deleteField(),
-          linkedByPlan: deleteField()
-        }, { merge:true });
+    // ❌ No active membership → restore original plan
+    if (activeLinks.length === 0) {
+      if (
+        userData.plan !== basePlan ||
+        userData.basePlan !== basePlan ||
+        userData.activeLinkId
+      ) {
+        await setDoc(
+          userRef,
+          {
+            plan: basePlan,
+            basePlan: basePlan,
+            activeLinkId: deleteField()
+          },
+          { merge: true }
+        );
       }
-
       return basePlan;
     }
 
-    // There ARE membership docs – find first active one
-    let activeLink = null;
-    snap.forEach(d => {
-      const f = d.data() || {};
-      if (f.isActive !== false && f.plan && !activeLink){
-        activeLink = { id: d.id, ...f };
-      }
-    });
+    // ✅ At least one active membership → apply the first link's plan
+    const first = activeLinks[0];
+    const f     = first.data() || {};
+    const membershipPlan = f.plan || basePlan;
 
-    const fallbackBase = existingBase || currentLoadedPlan || userData.plan || "Basic";
-
-    // No active memberships anymore → revert to base
-    if (!activeLink){
-      if (userData.plan !== fallbackBase ||
-          userData.basePlan !== fallbackBase ||
-          userData.activeLinkId ||
-          userData.linkedByPlan){
-        await setDoc(userRef, {
-          plan:       fallbackBase,
-          basePlan:   fallbackBase,
-          activeLinkId: deleteField(),
-          linkedByPlan: deleteField()
-        }, { merge:true });
-      }
-      return fallbackBase;
-    }
-
-    // At least one active membership → apply owner's plan
-    const membershipPlan = activeLink.plan || fallbackBase;
-
-    await setDoc(userRef, {
-      plan:         membershipPlan,     // what the app uses
-      basePlan:     fallbackBase,       // remembered original
-      activeLinkId: activeLink.id,
-      linkedByPlan: membershipPlan
-    }, { merge:true });
+    await setDoc(
+      userRef,
+      {
+        plan:         membershipPlan, // what your app checks
+        basePlan:     basePlan,       // remember original
+        activeLinkId: first.id        // which link they belong to
+      },
+      { merge: true }
+    );
 
     return membershipPlan;
-
-  } catch(err){
-    console.warn('inbound membership check failed', err);
+  } catch (err) {
+    console.warn("inbound membership check failed", err);
     return currentLoadedPlan;
   }
 }
+
 
 async function loadUserPlan(user){
   try {
