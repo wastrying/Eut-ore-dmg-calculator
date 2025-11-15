@@ -420,6 +420,7 @@
       try {
         await setDoc(doc(db, "users", user.uid), {
           email,
+          username,
           plan: "Basic",
           createdAt: serverTimestamp()
         }, { merge: true });
@@ -526,4 +527,5 @@
 
 </body>
 </html>
+
 
