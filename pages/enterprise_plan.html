@@ -557,19 +557,35 @@ function applyPlanUi(plan){
 }
 
 async function ensureDevelopersPlanIfAllowed(user){
-  const isDev = DEV_EMAILS.includes((user.email || "").toLowerCase());
+  const emailLower = (user.email || "").toLowerCase();
+  const isDev = DEV_EMAILS.includes(emailLower);
   if (!isDev) return null;
+
   try {
     const ref = doc(db,"users",user.uid);
     const snap = await getDoc(ref);
     const existing = snap.exists() ? (snap.data().plan || null) : null;
-    if (existing === "Developers") return "Developers";
-    await setDoc(ref, { email: user.email || null, plan: "Developers" }, { merge:true });
+
+    if (existing === "Developers") {
+      // make sure email is normalised
+      if (!snap.exists() || snap.data().email !== emailLower) {
+        await setDoc(ref, { email: emailLower }, { merge:true });
+      }
+      return "Developers";
+    }
+
+    await setDoc(ref, {
+      email: emailLower,
+      plan: "Developers",
+      basePlan: "Developers"
+    }, { merge:true });
+
     return "Developers";
   } catch {
     return null;
   }
 }
+
 
 /** If user is a member of someone’s plan, apply that plan on sign-in
  *  and remember their base / original plan in /users.
@@ -651,21 +667,26 @@ async function loadUserPlan(user){
     const ref  = doc(db,"users",user.uid);
     const snap = await getDoc(ref);
     const data = snap.exists() ? (snap.data() || {}) : {};
+    const emailLower = (user.email || "").toLowerCase();
 
     // Brand new / missing doc
     if (!data.plan){
       const base = data.basePlan || "Basic";
       await setDoc(ref, {
-        email: user.email || null,
+        email: emailLower,
         plan: base,
         basePlan: base
       }, { merge:true });
       return base;
     }
 
-    // If plan exists but basePlan missing, backfill once
-    if (!data.basePlan){
-      await setDoc(ref, { basePlan: data.plan }, { merge:true });
+    // Backfill basePlan/email if missing or not normalised
+    const updates = {};
+    if (!data.basePlan) updates.basePlan = data.plan;
+    if (data.email !== emailLower) updates.email = emailLower;
+
+    if (Object.keys(updates).length){
+      await setDoc(ref, updates, { merge:true });
     }
 
     return data.plan;
@@ -673,7 +694,6 @@ async function loadUserPlan(user){
     return "Basic";
   }
 }
-
 /* ======================
    Developer users panel
    ====================== */
@@ -988,11 +1008,13 @@ function startMembersListener(){
       }
     });
 
-    if (currentPlan === 'Developers' && !allUsers.length) await fetchAllUsers();
-    rows.forEach(r=>{
-      const u = allUsers.find(x => (x.email||'').toLowerCase() === r.memberEmail.toLowerCase());
-      if (u){ r.linkedUid = u.uid; r.linkedPlan = u.plan; }
-    });
+   if (!allUsers.length) await fetchAllUsers();  // works for both Enterprise and Developers
+
+rows.forEach(r=>{
+  const u = allUsers.find(x => (x.email||'').toLowerCase() === r.memberEmail.toLowerCase());
+  if (u){ r.linkedUid = u.uid; r.linkedPlan = u.plan; }
+});
+
     cachedMembers = rows.sort((a,b)=> a.memberEmail.localeCompare(b.memberEmail));
     renderMembers();
 
