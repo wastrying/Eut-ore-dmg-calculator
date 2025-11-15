@@ -116,7 +116,11 @@
     getFirestore,
     doc,
     getDoc,
-    setDoc
+    setDoc,
+    collection,
+    query,
+    where,
+    getDocs
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -153,7 +157,6 @@
   const goToSelection = async () => {
     const user = auth.currentUser;
     if (!user) {
-      // No logged-in user, stay on / back to login
       window.location.replace("./login.html");
       return;
     }
@@ -167,7 +170,6 @@
         plan = snap.data().plan;
       }
 
-      // Example after login, once you know the user's plan:
       if (plan === "Basic") {
         window.location.href = "./basic_plan.html";
       } else if (plan === "Premium") {
@@ -177,7 +179,6 @@
       } else if (plan === "Developers") {
         window.location.href = "./developer_plan.html";
       } else {
-        // Fallback
         window.location.href = "./basic_plan.html";
       }
     } catch (err) {
@@ -213,6 +214,7 @@
       showLogin();
       return;
     }
+
     const isPasswordUser = user.providerData.some(p => p.providerId === "password");
     if (isPasswordUser && !user.emailVerified) {
       showError("Please verify your email before logging in.");
@@ -220,7 +222,7 @@
       showLogin();
       return;
     }
-    // Verified or OAuth → ensure default plan then redirect based on plan
+
     await ensureDefaultPlanIfMissing(user);
     await goToSelection();
   };
@@ -236,12 +238,20 @@
       try {
         lastSelection.start = passwordInput.selectionStart;
         lastSelection.end = passwordInput.selectionEnd;
-      } catch { lastSelection.start = lastSelection.end = null; }
+      } catch {
+        lastSelection.start = lastSelection.end = null;
+      }
     };
     const restoreSelection = () => {
-      if (lastSelection.start !== null && lastSelection.end !== null && document.activeElement === passwordInput) {
+      if (
+        lastSelection.start !== null &&
+        lastSelection.end !== null &&
+        document.activeElement === passwordInput
+      ) {
         requestAnimationFrame(() => {
-          try { passwordInput.setSelectionRange(lastSelection.start, lastSelection.end); } catch {}
+          try {
+            passwordInput.setSelectionRange(lastSelection.start, lastSelection.end);
+          } catch {}
         });
       }
     };
@@ -262,37 +272,82 @@
       passwordEyeIcon.classList.add("fi-rr-eye-crossed");
     };
     ["mousedown", "touchstart"].forEach(evt => {
-      togglePasswordBtn.addEventListener(evt, (e) => { e.preventDefault(); showPassword(); }, { passive: false });
+      togglePasswordBtn.addEventListener(
+        evt,
+        (e) => { e.preventDefault(); showPassword(); },
+        { passive: false }
+      );
     });
     ["mouseup", "mouseleave", "touchend", "touchcancel"].forEach(evt => {
-      window.addEventListener(evt, () => { if (passwordInput.type === "text") hidePassword(); });
+      window.addEventListener(evt, () => {
+        if (passwordInput.type === "text") hidePassword();
+      });
     });
   }
 
-  // Email/password login
+  // Helper: resolve username → email if needed
+  async function resolveIdentifierToEmail(identifier) {
+    // If it looks like an email, just return it
+    if (identifier.includes("@")) return identifier;
+
+    // Otherwise treat as username: look up in Firestore
+    const usersCol = collection(db, "users");
+    const q = query(usersCol, where("username", "==", identifier));
+    const snap = await getDocs(q);
+
+    if (snap.empty) {
+      throw new Error("no-user-for-username");
+    }
+
+    const data = snap.docs[0].data();
+    if (!data.email) {
+      throw new Error("username-has-no-email");
+    }
+
+    return data.email;
+  }
+
+  // Email/Username + password login
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     clearError();
-    const email = document.getElementById("email").value.trim();
+
+    const identifier = document.getElementById("email").value.trim(); // username OR email
     const password = passwordInput.value.trim();
-    if (!email || !password) {
+
+    if (!identifier || !password) {
       showError("⚠ Please fill in all fields.");
       return;
     }
+
     try {
-      const { user } = await signInWithEmailAndPassword(auth, email, password);
+      const emailToUse = await resolveIdentifierToEmail(identifier);
+
+      const { user } = await signInWithEmailAndPassword(auth, emailToUse, password);
+
       const isPasswordUser = user.providerData.some(p => p.providerId === "password");
       if (isPasswordUser && !user.emailVerified) {
         showError("Please verify your email before logging in.");
         await signOut(auth);
         return;
       }
+
       await ensureDefaultPlanIfMissing(user);
       await goToSelection();
     } catch (error) {
       console.error("Login error:", error);
-      let message = "⚠ Invalid email or password.";
-      if (error.code === "auth/invalid-email") message = "⚠ Invalid email format.";
+
+      if (error.message === "no-user-for-username") {
+        showError("⚠ No account found with this username.");
+        return;
+      }
+      if (error.message === "username-has-no-email") {
+        showError("⚠ This username is not linked to an email. Contact support.");
+        return;
+      }
+
+      let message = "⚠ Invalid email/username or password.";
+      if (error.code === "auth/invalid-email")       message = "⚠ Invalid email format.";
       else if (error.code === "auth/user-not-found") message = "⚠ No account found with this email.";
       else if (error.code === "auth/wrong-password") message = "⚠ Incorrect password.";
       else if (error.code === "auth/too-many-requests") message = "⚠ Too many attempts. Try again later.";
@@ -352,15 +407,5 @@
     }
   });
 </script>
-
 </body>
 </html>
-
-
-
-
-
-
-
-
-
