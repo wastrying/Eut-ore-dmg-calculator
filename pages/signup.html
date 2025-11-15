@@ -214,12 +214,7 @@
     doc,
     setDoc,
     serverTimestamp,
-    getDoc,
-    collection,
-    getDocs,
-    query,
-    where,
-    deleteField
+    getDoc
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -260,161 +255,33 @@
   const facebookProvider = new FacebookAuthProvider();
   let popupInProgress = false;
 
-  // === SAME PLAN / MEMBERSHIP HELPERS AS login.html ===
-
-  const DEV_EMAILS = ["medisignal.remblyx@gmail.com"];
-  const normalizeEmail = (s) => (s || "").trim().toLowerCase();
-
-  function redirectByPlan(plan){
-    if (plan === "Basic")           window.location.href = "./basic_plan.html";
-    else if (plan === "Premium")    window.location.href = "./premium_plan.html";
-    else if (plan === "Enterprise") window.location.href = "./enterprise_plan.html";
-    else if (plan === "Developers") window.location.href = "./developer_plan.html";
-    else                            window.location.href = "./basic_plan.html"; // fallback
-  }
-
-  async function loadUserPlan(user){
-    try {
-      const ref  = doc(db,"users",user.uid);
-      const snap = await getDoc(ref);
-      const data = snap.exists() ? (snap.data() || {}) : {};
-      const emailLower = normalizeEmail(user.email);
-
-      // New / missing doc
-      if (!data.plan){
-        const base = data.basePlan || "Basic";
-        await setDoc(ref, {
-          email: emailLower,
-          plan: base,
-          basePlan: base
-        }, { merge:true });
-        return base;
-      }
-
-      // Backfill basePlan / normalised email
-      const updates = {};
-      if (!data.basePlan) updates.basePlan = data.plan;
-      if (data.email !== emailLower) updates.email = emailLower;
-
-      if (Object.keys(updates).length){
-        await setDoc(ref, updates, { merge:true });
-      }
-
-      return data.plan;
-    } catch (e){
-      console.warn("loadUserPlan failed, defaulting to Basic", e);
-      return "Basic";
+  // === Plan-based redirect helper (same as login) ===
+  async function goToSelection() {
+    const user = auth.currentUser;
+    if (!user) {
+      window.location.replace("./login.html");
+      return;
     }
-  }
-
-  async function ensureDevelopersPlanIfAllowed(user){
-    const emailLower = normalizeEmail(user.email);
-    const isDev = DEV_EMAILS.includes(emailLower);
-    if (!isDev) return null;
 
     try {
-      const ref  = doc(db,"users",user.uid);
+      const ref = doc(db, "users", user.uid);
       const snap = await getDoc(ref);
-      const data = snap.exists() ? (snap.data() || {}) : {};
 
-      if (data.plan === "Developers"){
-        if (data.email !== emailLower){
-          await setDoc(ref, { email: emailLower }, { merge:true });
-        }
-        return "Developers";
+      let plan = "Basic";
+      if (snap.exists() && snap.data().plan) {
+        plan = snap.data().plan;
       }
 
-      await setDoc(ref, {
-        email: emailLower,
-        plan: "Developers",
-        basePlan: "Developers"
-      }, { merge:true });
-
-      return "Developers";
-    } catch (e){
-      console.warn("ensureDevelopersPlanIfAllowed failed", e);
-      return null;
-    }
-  }
-
-  async function maybeApplyInboundMembership(user, currentLoadedPlan){
-    try {
-      const memberEmail = normalizeEmail(user.email);
-
-      const userRef  = doc(db, "users", user.uid);
-      const userSnap = await getDoc(userRef);
-      const userData = userSnap.exists() ? (userSnap.data() || {}) : {};
-
-      const basePlan =
-        userData.basePlan ||
-        currentLoadedPlan ||
-        userData.plan ||
-        "Basic";
-
-      const qLinks = query(
-        collection(db, "plan_links"),
-        where("memberEmail", "==", memberEmail)
-      );
-      const snap = await getDocs(qLinks);
-
-      const activeLinks = snap.docs.filter(d => {
-        const f = d.data() || {};
-        return f.isActive !== false && !!f.plan;
-      });
-
-      // No active membership → restore base plan
-      if (activeLinks.length === 0) {
-        if (
-          userData.plan !== basePlan ||
-          userData.basePlan !== basePlan ||
-          userData.activeLinkId
-        ) {
-          await setDoc(
-            userRef,
-            {
-              plan: basePlan,
-              basePlan: basePlan,
-              activeLinkId: deleteField()
-            },
-            { merge: true }
-          );
-        }
-        return basePlan;
-      }
-
-      // Use first membership link
-      const first = activeLinks[0];
-      const f     = first.data() || {};
-      const membershipPlan = f.plan || basePlan;
-
-      await setDoc(
-        userRef,
-        {
-          plan:         membershipPlan,
-          basePlan:     basePlan,
-          activeLinkId: first.id
-        },
-        { merge: true }
-      );
-
-      return membershipPlan;
+      if (plan === "Basic")       window.location.href = "./basic_plan.html";
+      else if (plan === "Premium")    window.location.href = "./premium_plan.html";
+      else if (plan === "Enterprise") window.location.href = "./enterprise_plan.html";
+      else if (plan === "Developers") window.location.href = "./developer_plan.html";
+      else window.location.href = "./basic_plan.html"; // fallback
     } catch (err) {
-      console.warn("inbound membership check failed", err);
-      return currentLoadedPlan;
+      console.error("Plan routing failed:", err);
+      window.location.href = "./basic_plan.html";
     }
   }
-
-  /** Main entry used on OAuth sign-up / login */
-  async function ensurePlanOnLogin(user){
-    const forced = await ensureDevelopersPlanIfAllowed(user);
-    let plan = forced || await loadUserPlan(user);
-    if (!forced){
-      plan = await maybeApplyInboundMembership(user, plan);
-    }
-    return plan;
-  }
-
-  // === UI helpers ===
 
   const showError = (msg) => {
     errorText.textContent = msg;
@@ -504,8 +371,22 @@
     });
   }
 
-  // === EMAIL / PASSWORD SIGN-UP (same UX, but email is normalised + basePlan) ===
+  async function ensureDefaultPlanIfMissing(user) {
+    try {
+      const ref = doc(db, "users", user.uid);
+      const s = await getDoc(ref);
+      if (!s.exists() || !s.data().plan) {
+        await setDoc(ref, {
+          email: user.email || null,
+          plan: "Basic"
+        }, { merge: true });
+      }
+    } catch (e) {
+      console.warn("ensureDefaultPlanIfMissing:", e);
+    }
+  }
 
+  // Email/password signup (EMAIL ONLY)
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     clearError();
@@ -528,21 +409,18 @@
       return showError("⚠ Please fill in all fields.");
     }
 
-    const emailLower = normalizeEmail(email);
-
     try {
-      const { user } = await createUserWithEmailAndPassword(auth, emailLower, password);
+      const { user } = await createUserWithEmailAndPassword(auth, email, password);
 
-      // Create/merge the user's doc with default plan + basePlan
+      // Create/merge the user's doc with default plan
       try {
         await setDoc(doc(db, "users", user.uid), {
-          email: emailLower,
+          email,
           plan: "Basic",
-          basePlan: "Basic",
           createdAt: serverTimestamp()
         }, { merge: true });
       } catch (e) {
-        console.warn("default plan write failed (will be fixed on login):", e);
+        console.warn("default plan write failed (will be retried at login):", e);
       }
 
       // Send verification, then sign out to prevent unverified access
@@ -554,12 +432,12 @@
 
       // Show instructions + "Open my email" button
       showSuccess(
-        `Account created! We've sent a verification link to ${emailLower}. ` +
+        `Account created! We've sent a verification link to ${email}. ` +
         `Check your inbox or spam folder and click the link to activate your account.`
       );
 
       if (openEmailBtn) {
-        const providerUrl = getEmailProviderUrl(emailLower);
+        const providerUrl = getEmailProviderUrl(email);
         openEmailBtn.onclick = () => window.open(providerUrl, "_blank");
         openEmailBtn.style.display = "inline-block";
       }
@@ -579,7 +457,7 @@
     }
   });
 
-  // === GOOGLE OAUTH (from signup page) ===
+  // Google OAuth → ensure plan then go to correct plan page
   googleBtn.addEventListener("click", async (e) => {
     e.preventDefault();
     if (popupInProgress) return;
@@ -589,8 +467,11 @@
     if (openEmailBtn) openEmailBtn.style.display = "none";
 
     try {
-      await signInWithPopup(auth, googleProvider);
-      // onAuthStateChanged will handle plan + membership + redirect
+      await signInWithPopup(auth, new GoogleAuthProvider());
+      if (auth.currentUser) {
+        await ensureDefaultPlanIfMissing(auth.currentUser);
+        await goToSelection();
+      }
     } catch (error) {
       if (error.code !== "auth/cancelled-popup-request") {
         showError("⚠ Google sign-in failed. Check Firebase/Google config.");
@@ -600,7 +481,7 @@
     }
   });
 
-  // === FACEBOOK OAUTH (from signup page) ===
+  // Facebook OAuth → ensure plan then go to correct plan page
   facebookBtn.addEventListener("click", async (e) => {
     e.preventDefault();
     if (popupInProgress) return;
@@ -610,8 +491,11 @@
     if (openEmailBtn) openEmailBtn.style.display = "none";
 
     try {
-      await signInWithPopup(auth, facebookProvider);
-      // onAuthStateChanged will handle plan + membership + redirect
+      await signInWithPopup(auth, new FacebookAuthProvider());
+      if (auth.currentUser) {
+        await ensureDefaultPlanIfMissing(auth.currentUser);
+        await goToSelection();
+      }
     } catch (error) {
       if (error.code !== "auth/cancelled-popup-request") {
         showError("⚠ Facebook sign-in failed. Check Facebook + Firebase config.");
@@ -621,29 +505,19 @@
     }
   });
 
-  // If user somehow lands on signup already logged-in (e.g., OAuth return),
-  // route them to the correct plan using the same logic as login.html
+  // If user somehow lands here already logged-in (e.g., OAuth return), route appropriately
   onAuthStateChanged(auth, async (user) => {
     if (!user) return;
-
     const isPasswordUser = user.providerData.some(p => p.providerId === "password");
     if (!isPasswordUser) {
-      try {
-        const finalPlan = await ensurePlanOnLogin(user);
-        redirectByPlan(finalPlan);
-      } catch (e) {
-        console.error("Signup auth-state plan flow failed:", e);
-        redirectByPlan("Basic");
-      }
+      await ensureDefaultPlanIfMissing(user);
+      await goToSelection();
     }
-    // Password users must verify via email first – login.html handles them after verification
+    // Password users must verify via email first (handled on login page)
   });
 
+  // Ensure "Open my email" hidden initially
   if (openEmailBtn) openEmailBtn.style.display = "none";
 </script>
 </body>
 </html>
-
-
-
-
