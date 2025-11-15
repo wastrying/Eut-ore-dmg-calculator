@@ -148,28 +148,26 @@
   <button id="open-email-btn" class="submit-btn" style="display:none;">Open my email</button>
 
   <form id="signup-form">
-    <input type="text" name="username" placeholder="Username" required>
-    <input type="email" name="email" placeholder="Email" required>
+  <input type="email" name="email" placeholder="Email" required>
 
-    <!-- Password with press & hold eye -->
-    <div class="password-wrapper">
-      <input type="password" id="password" name="password" placeholder="Password" required>
-      <button type="button" id="toggle-password" class="toggle-password" aria-label="Hold to show password">
-        <i id="password-eye-icon" class="fi fi-rr-eye-crossed"></i>
-      </button>
-    </div>
+  <!-- Password with press & hold eye -->
+  <div class="password-wrapper">
+    <input type="password" id="password" name="password" placeholder="Password" required>
+    <button type="button" id="toggle-password" class="toggle-password" aria-label="Hold to show password">
+      <i id="password-eye-icon" class="fi fi-rr-eye-crossed"></i>
+    </button>
+  </div>
 
-    <div class="terms-inline" id="terms-wrapper">
-      <label>
-        <input type="checkbox" id="terms">
-        I agree to the <a id="terms-link">Terms &amp; Conditions</a>
-      </label>
-      <div id="terms-error" class="error-message">⚠ Please check this box to continue.</div>
-    </div>
+  <div class="terms-inline" id="terms-wrapper">
+    <label>
+      <input type="checkbox" id="terms">
+      I agree to the <a id="terms-link">Terms &amp; Conditions</a>
+    </label>
+    <div id="terms-error" class="error-message">⚠ Please check this box to continue.</div>
+  </div>
 
-    <button type="submit" class="submit-btn">Sign Up</button>
-  </form>
-
+  <button type="submit" class="submit-btn">Sign Up</button>
+</form>
   <a href="../pages/login.html" class="sign-in-link">Already have an account? <span>Sign In</span></a>
 </div>
 
@@ -257,7 +255,7 @@
   const facebookProvider = new FacebookAuthProvider();
   let popupInProgress = false;
 
-  // === Plan-based redirect helper (same logic as login/selection) ===
+  // === Plan-based redirect helper (same as login) ===
   async function goToSelection() {
     const user = auth.currentUser;
     if (!user) {
@@ -274,7 +272,6 @@
         plan = snap.data().plan;
       }
 
-      // Example after login, once you know the user's plan:
       if (plan === "Basic")       window.location.href = "./basic_plan.html";
       else if (plan === "Premium")    window.location.href = "./premium_plan.html";
       else if (plan === "Enterprise") window.location.href = "./enterprise_plan.html";
@@ -389,7 +386,7 @@
     }
   }
 
-  // Email/password signup
+  // Email/password signup (EMAIL ONLY)
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     clearError();
@@ -405,11 +402,10 @@
       termsWrapper.classList.remove("terms-error");
     }
 
-    const username = form.username.value.trim();
     const email = form.email.value.trim();
     const password = form.password.value.trim();
 
-    if (!username || !email || !password) {
+    if (!email || !password) {
       return showError("⚠ Please fill in all fields.");
     }
 
@@ -420,7 +416,6 @@
       try {
         await setDoc(doc(db, "users", user.uid), {
           email,
-          username,
           plan: "Basic",
           createdAt: serverTimestamp()
         }, { merge: true });
@@ -454,10 +449,10 @@
       terms.checked = false;
     } catch (error) {
       let message = "⚠ Something went wrong. Please try again.";
-      if (error.code === "auth/email-already-in-use") message = "⚠ Email already registered!";
-      else if (error.code === "auth/invalid-email") message = "⚠ Invalid email address.";
-      else if (error.code === "auth/weak-password") message = "⚠ Password should be at least 6 characters.";
-      else if (error.code === "auth/unauthorized-domain") message = "⚠ Unauthorized domain. Add this domain in Firebase.";
+      if (error.code === "auth/email-already-in-use")      message = "⚠ Email already registered!";
+      else if (error.code === "auth/invalid-email")        message = "⚠ Invalid email address.";
+      else if (error.code === "auth/weak-password")        message = "⚠ Password should be at least 6 characters.";
+      else if (error.code === "auth/unauthorized-domain")  message = "⚠ Unauthorized domain. Add this domain in Firebase.";
       showError(message);
     }
   });
@@ -524,8 +519,8 @@
   // Ensure "Open my email" hidden initially
   if (openEmailBtn) openEmailBtn.style.display = "none";
 </script>
-
 </body>
 </html>
+
 
 
