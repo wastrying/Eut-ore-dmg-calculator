@@ -135,11 +135,8 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
       <label>Number of Times to Take Medicine:</label>
       <input type="number" id="numTimes" min="0" value="0" required />
 
-      <!-- Container for single time picker -->
-      <div id="timesContainer" style="display:none; margin-top:8px;">
-        <label>Time to Take Medicine:</label>
-        <input type="time" id="singleTime" style="width:100%;" />
-      </div>
+      <!-- Container for dynamic time pickers -->
+      <div id="timesContainer" style="margin-top:8px;"></div>
 
       <label>Additional Notes:</label>
       <input type="text" id="depNotes" placeholder="Enter 'NA' if none" required />
@@ -192,7 +189,6 @@ const dosageNumberInput=document.getElementById('depDosageNumber');
 const depDosageUnit=document.getElementById('depDosageUnit');
 const numTimesInput=document.getElementById('numTimes');
 const timesContainer=document.getElementById('timesContainer');
-const singleTimeInput=document.getElementById('singleTime');
 const deletePopup=document.getElementById('deletePopup');
 const confirmDeleteBtn=document.getElementById('confirmDeleteBtn');
 const cancelDeleteBtn=document.getElementById('cancelDeleteBtn');
@@ -202,13 +198,25 @@ const phoneInput=document.getElementById('depPhone');
 const phoneNote=document.getElementById('phoneNote');
 const remindersList=document.getElementById('remindersList');
 
-// Show/hide single time picker based on numTimes
-timesContainer.style.display='none';
+// Show/hide dynamic time pickers
 numTimesInput.addEventListener('input', ()=>{
     let val=parseInt(numTimesInput.value);
     if(isNaN(val)||val<0) val=0;
-    if(val===1){ timesContainer.style.display='block'; }
-    else { timesContainer.style.display='none'; singleTimeInput.value=''; }
+    timesContainer.innerHTML='';
+    if(val>0){
+        for(let i=1;i<=val;i++){
+            const label=document.createElement('label');
+            label.textContent=`Time ${i}:`;
+            label.style.display='block';
+            const input=document.createElement('input');
+            input.type='time';
+            input.required=true;
+            input.style.width='100%';
+            input.classList.add('timeInput');
+            timesContainer.appendChild(label);
+            timesContainer.appendChild(input);
+        }
+    }
 });
 
 // Open modal
@@ -227,7 +235,7 @@ addBtn.addEventListener('click', ()=>{
 closeModalBtn.addEventListener('click', ()=>{
     modal.classList.remove('active');
     form.reset();
-    timesContainer.style.display='none';
+    timesContainer.innerHTML='';
 });
 
 // Validate dosage and phone
@@ -256,10 +264,12 @@ form.addEventListener('submit', function(e){
     const dosageNumber=parseInt(dosageNumberInput.value);
     const dosageUnit=depDosageUnit.value;
     const notes=depNotes.value.trim();
+    const timeInputs=document.querySelectorAll('.timeInput');
     let times=[];
-    if(numTimesInput.value==1 && singleTimeInput.value){ times.push(singleTimeInput.value); }
-    if(!name || !medicine || !dosageUnit || !notes || (numTimesInput.value==1 && times.length===0) || dosageNumber<1 || !/^\d{8}$/.test(phone) || !/^[689]/.test(phone)){
-        errorMsg.textContent="Please fill all fields correctly: Dosage ≥1, valid time if 1, and valid 8-digit phone number.";
+    timeInputs.forEach(t=>{ if(t.value) times.push(t.value); });
+    
+    if(!name || !medicine || !dosageUnit || !notes || (numTimesInput.value>0 && times.length!==parseInt(numTimesInput.value)) || dosageNumber<1 || !/^\d{8}$/.test(phone) || !/^[689]/.test(phone)){
+        errorMsg.textContent="Please fill all fields correctly: Dosage ≥1, valid times, and valid 8-digit phone number.";
         return;
     }
 
@@ -284,7 +294,7 @@ form.addEventListener('submit', function(e){
     editing=false;
     modal.classList.remove('active');
     form.reset();
-    timesContainer.style.display='none';
+    timesContainer.innerHTML='';
 });
 
 // Edit
@@ -297,8 +307,23 @@ editBtn.addEventListener('click', ()=>{
     dosageNumberInput.value=parseInt(dispDosage.textContent);
     depDosageUnit.value=dispDosage.textContent.split(' ')[1];
     depNotes.value=dispNotes.textContent;
-    if(dispTimes.textContent){ numTimesInput.value=1; singleTimeInput.value=dispTimes.textContent; timesContainer.style.display='block'; }
-    else{ numTimesInput.value=0; timesContainer.style.display='none'; }
+
+    let existingTimes = dispTimes.textContent.split(',').filter(t=>t);
+    numTimesInput.value=existingTimes.length;
+    timesContainer.innerHTML='';
+    existingTimes.forEach((t,i)=>{
+        const label=document.createElement('label');
+        label.textContent=`Time ${i+1}:`;
+        label.style.display='block';
+        const input=document.createElement('input');
+        input.type='time';
+        input.required=true;
+        input.style.width='100%';
+        input.classList.add('timeInput');
+        input.value=t.trim();
+        timesContainer.appendChild(label);
+        timesContainer.appendChild(input);
+    });
 });
 
 // Remove
