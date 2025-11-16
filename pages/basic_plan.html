@@ -132,13 +132,10 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
             </div>
             <div id="dosageNote" class="dosage-note">Dosage must be at least 1.</div>
 
-            <div id="timePickerContainer" class="time-picker-container">
-                <label>Time to Take Medicine:</label>
-                <div id="timesList">
-                    <input type="time" class="depTimeInput" required />
-                </div>
-                <button type="button" id="addTimeBtn" style="margin-top:4px;background:#3b82f6;">Add Another Time</button>
-            </div>
+            <!-- Number of times -->
+            <label>Number of Times to Take Medicine:</label>
+            <input type="number" id="numTimes" min="1" value="1" required />
+            <div id="timesList"></div>
 
             <label>Additional Notes:</label>
             <input type="text" id="depNotes" placeholder="Enter 'NA' if none" required />
@@ -157,9 +154,22 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
 </div>
 
 <script>
+// --- Navigation ---
+const navItems = document.querySelectorAll('.nav-item');
+const sections = document.querySelectorAll('.dashboard-section');
+navItems.forEach(item => {
+    item.addEventListener('click', () => {
+        navItems.forEach(i=>i.classList.remove('active'));
+        item.classList.add('active');
+        const target = item.getAttribute('data-nav');
+        sections.forEach(sec => sec.style.display = (sec.id === target ? 'block' : 'none'));
+    });
+});
+
+// --- Dependant logic ---
 let dependantAdded=false;
 let editing=false;
-
+let currentDependant=null;
 const addBtn=document.getElementById('addDependantBtn');
 const editBtn=document.getElementById('editDependantBtn');
 const removeBtn=document.getElementById('removeDependantBtn');
@@ -176,7 +186,10 @@ const dispTimes=document.getElementById('dispTimes');
 const dispDosage=document.getElementById('dispDosage');
 const dispNotes=document.getElementById('dispNotes');
 const dosageNumberInput=document.getElementById('depDosageNumber');
-const depTime=document.getElementById('depTime');
+const depDosageUnit=document.getElementById('depDosageUnit');
+const numTimesInput=document.getElementById('numTimes');
+const timesListDiv=document.getElementById('timesList');
+const depTimeInputClass='depTimeInput';
 const deletePopup=document.getElementById('deletePopup');
 const confirmDeleteBtn=document.getElementById('confirmDeleteBtn');
 const cancelDeleteBtn=document.getElementById('cancelDeleteBtn');
@@ -185,11 +198,31 @@ const dosageNote=document.getElementById('dosageNote');
 const phoneInput=document.getElementById('depPhone');
 const phoneNote=document.getElementById('phoneNote');
 const remindersList=document.getElementById('remindersList');
-const timesList = document.getElementById('timesList');
-const addTimeBtn = document.getElementById('addTimeBtn');
 
-function resetDosageNote(){dosageNote.style.display='none';dosageNumberInput.style.border='1px solid #ccc';}
-function resetPhoneNote(){phoneNote.style.display='none';phoneInput.style.border='1px solid #ccc';}
+dosageNote.style.display='none';
+phoneNote.style.display='none';
+
+// Helper: generate time inputs
+function generateTimeInputs(count, values=[]){
+    timesListDiv.innerHTML='';
+    for(let i=0;i<count;i++){
+        const tInput=document.createElement('input');
+        tInput.type='time';
+        tInput.className=depTimeInputClass;
+        tInput.required=true;
+        if(values[i]) tInput.value=values[i];
+        timesListDiv.appendChild(tInput);
+    }
+}
+
+// init
+generateTimeInputs(parseInt(numTimesInput.value));
+
+numTimesInput.addEventListener('input', ()=>{
+    let val=parseInt(numTimesInput.value);
+    if(val<1) val=1;
+    generateTimeInputs(val);
+});
 
 addBtn.addEventListener('click', ()=>{
     if(dependantAdded && !editing){
@@ -205,16 +238,14 @@ addBtn.addEventListener('click', ()=>{
 closeModalBtn.addEventListener('click', ()=>{
     modal.classList.remove('active');
     form.reset();
-    timesList.innerHTML='<input type="time" class="depTimeInput" required />';
-    resetDosageNote();
-    resetPhoneNote();
+    generateTimeInputs(1);
 });
 
 dosageNumberInput.addEventListener('input', ()=>{
     if(parseInt(dosageNumberInput.value)<1){
         dosageNumberInput.style.border='2px solid red';
         dosageNote.style.display='block';
-    } else resetDosageNote();
+    } else {dosageNote.style.display='none';dosageNumberInput.style.border='1px solid #ccc';}
 });
 
 phoneInput.addEventListener('input', ()=>{
@@ -224,24 +255,8 @@ phoneInput.addEventListener('input', ()=>{
     if(val.length!==8 || !/^[689]/.test(val)){
         phoneInput.style.border='2px solid red';
         phoneNote.style.display='block';
-    } else resetPhoneNote();
+    } else {phoneNote.style.display='none';phoneInput.style.border='1px solid #ccc';}
 });
-
-addTimeBtn.addEventListener('click', () => {
-    const newTimeInput = document.createElement('input');
-    newTimeInput.type = 'time';
-    newTimeInput.className = 'depTimeInput';
-    newTimeInput.required = true;
-    newTimeInput.style.marginTop='4px';
-    timesList.appendChild(newTimeInput);
-});
-
-function addReminder(name, medicine, time){
-    const row=document.createElement('div');
-    row.className='board-row';
-    row.innerHTML=`<div>${name}</div><div>${medicine}</div><div>${time}</div><div><span class="status-pill status-green">Pending</span></div>`;
-    remindersList.appendChild(row);
-}
 
 form.addEventListener('submit', function(e){
     e.preventDefault();
@@ -251,16 +266,15 @@ form.addEventListener('submit', function(e){
     const dosageNumber=parseInt(dosageNumberInput.value);
     const dosageUnit=depDosageUnit.value;
     const notes=depNotes.value.trim();
-
-    const timeInputs = document.querySelectorAll('.depTimeInput');
-    const times = [];
-    timeInputs.forEach(t => { if(t.value) times.push(t.value); });
-
-    if(!name || !medicine || !dosageUnit || !notes || times.length === 0 || dosageNumber<1 || !/^\d{8}$/.test(phone) || !/^[689]/.test(phone)){
-        errorMsg.textContent="Please fill all fields correctly: Dosage ≥1, at least one valid time, and valid 8-digit phone number.";
+    const timeInputs=document.querySelectorAll('.'+depTimeInputClass);
+    const times=[];
+    timeInputs.forEach(t=>{if(t.value) times.push(t.value);});
+    if(!name || !medicine || !dosageUnit || !notes || times.length!==timeInputs.length || dosageNumber<1 || !/^\d{8}$/.test(phone) || !/^[689]/.test(phone)){
+        errorMsg.textContent="Please fill all fields correctly: Dosage ≥1, valid time, and valid 8-digit phone number.";
         return;
     }
 
+    // Save to display
     dispName.textContent=name;
     dispPhone.textContent=phone;
     dispMedicine.textContent=medicine;
@@ -268,18 +282,24 @@ form.addEventListener('submit', function(e){
     dispTimes.textContent=times.join(', ');
     dispNotes.textContent=notes;
     infoBox.style.display='block';
+
+    // Update reminders
+    remindersList.innerHTML='';
+    times.forEach(time=>{
+        const row=document.createElement('div');
+        row.className='board-row';
+        row.innerHTML=`<div>${name}</div><div>${medicine}</div><div>${time}</div><div><span class="status-pill status-green">Pending</span></div>`;
+        remindersList.appendChild(row);
+    });
+
     dependantAdded=true;
     editing=false;
     modal.classList.remove('active');
     form.reset();
-    timesList.innerHTML='<input type="time" class="depTimeInput" required />';
-    resetDosageNote();
-    resetPhoneNote();
-
-    // Add multiple reminders
-    times.forEach(timeValue => addReminder(name, medicine, timeValue));
+    generateTimeInputs(1);
 });
 
+// Edit
 editBtn.addEventListener('click', ()=>{
     editing=true;
     addBtn.click();
@@ -289,16 +309,12 @@ editBtn.addEventListener('click', ()=>{
     dosageNumberInput.value=parseInt(dispDosage.textContent);
     depDosageUnit.value=dispDosage.textContent.split(' ')[1];
     depNotes.value=dispNotes.textContent;
-
-    // Split multiple times back into inputs
-    timesList.innerHTML='';
-    dispTimes.textContent.split(', ').forEach(t=>{
-        const inp=document.createElement('input');
-        inp.type='time'; inp.className='depTimeInput'; inp.required=true; inp.value=t;
-        timesList.appendChild(inp);
-    });
+    const timesArr=dispTimes.textContent.split(', ');
+    numTimesInput.value=timesArr.length;
+    generateTimeInputs(timesArr.length, timesArr);
 });
 
+// Remove
 removeBtn.addEventListener('click', ()=>{if(!dependantAdded) return; deletePopup.style.display='block';});
 confirmDeleteBtn.addEventListener('click', ()=>{
     infoBox.style.display='none'; dependantAdded=false;
@@ -307,19 +323,6 @@ confirmDeleteBtn.addEventListener('click', ()=>{
     deletePopup.style.display='none';
 });
 cancelDeleteBtn.addEventListener('click', ()=>{deletePopup.style.display='none';});
-
-// Dashboard Navigation
-const navItems = document.querySelectorAll('.nav-item');
-const sections = document.querySelectorAll('.dashboard-section');
-
-navItems.forEach(item => {
-    item.addEventListener('click', () => {
-        navItems.forEach(i=>i.classList.remove('active'));
-        item.classList.add('active');
-        const target = item.getAttribute('data-nav');
-        sections.forEach(sec => sec.style.display = (sec.id === target ? 'block' : 'none'));
-    });
-});
 </script>
 </body>
 </html>
