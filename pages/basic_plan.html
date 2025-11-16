@@ -150,11 +150,11 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
     <button class="btn-confirm" id="confirmDeleteBtn">Yes, Delete</button>
     <button class="btn-cancel" id="cancelDeleteBtn">Cancel</button>
 </div>
+
 <script>
+// Variables
 let dependantAdded=false;
 let editing=false;
-
-// Elements
 const addBtn=document.getElementById('addDependantBtn');
 const editBtn=document.getElementById('editDependantBtn');
 const removeBtn=document.getElementById('removeDependantBtn');
@@ -171,23 +171,18 @@ const dispTimes=document.getElementById('dispTimes');
 const dispDosage=document.getElementById('dispDosage');
 const dispNotes=document.getElementById('dispNotes');
 const dosageNumberInput=document.getElementById('depDosageNumber');
-const depTimeInput=document.getElementById('depTime');
-const deletePopup=document.getElementById('deletePopup');
-const confirmDeleteBtn=document.getElementById('confirmDeleteBtn');
-const cancelDeleteBtn=document.getElementById('cancelDeleteBtn');
-const mainError=document.getElementById('mainError');
-const dosageNote=document.getElementById('dosageNote');
+const depDosageUnit=document.getElementById('depDosageUnit');
 const phoneInput=document.getElementById('depPhone');
 const phoneNote=document.getElementById('phoneNote');
+const dosageNote=document.getElementById('dosageNote');
 const numTimesInput=document.getElementById('numTimes');
 const timesContainer=document.getElementById('timesContainer');
 const duplicateNote=document.getElementById('duplicateNote');
+const mainError=document.getElementById('mainError');
 const remindersList=document.getElementById('remindersList');
-
-// Reset helpers
-function resetDosageNote(){dosageNote.style.display='none';dosageNumberInput.style.border='1px solid #ccc';}
-function resetPhoneNote(){phoneNote.style.display='none';phoneInput.style.border='1px solid #ccc';}
-function resetDuplicateNote(){duplicateNote.style.display='none';}
+const deletePopup=document.getElementById('deletePopup');
+const confirmDeleteBtn=document.getElementById('confirmDeleteBtn');
+const cancelDeleteBtn=document.getElementById('cancelDeleteBtn');
 
 // Navigation
 const navItems=document.querySelectorAll('.nav-item');
@@ -201,7 +196,12 @@ navItems.forEach(item=>{
     });
 });
 
-// Modal open/close
+// Helpers
+function resetDosageNote(){dosageNote.style.display='none';dosageNumberInput.style.border='1px solid #ccc';}
+function resetPhoneNote(){phoneNote.style.display='none';phoneInput.style.border='1px solid #ccc';}
+function resetDuplicateNote(){duplicateNote.style.display='none';}
+
+// Open modal
 addBtn.addEventListener('click', ()=>{
     if(dependantAdded && !editing){
         mainError.textContent="You can only add one dependant in the Basic plan.";
@@ -213,12 +213,13 @@ addBtn.addEventListener('click', ()=>{
     modal.classList.add('active');
 });
 
+// Close modal
 closeModalBtn.addEventListener('click', ()=>{
     modal.classList.remove('active');
     form.reset();
-    resetDosageNote(); resetPhoneNote(); resetDuplicateNote();
     timesContainer.innerHTML='';
     numTimesInput.value=0;
+    resetDosageNote(); resetPhoneNote(); resetDuplicateNote();
 });
 
 // Dosage validation
@@ -240,37 +241,51 @@ phoneInput.addEventListener('input', ()=>{
     } else resetPhoneNote();
 });
 
-// Dynamic time inputs
-numTimesInput.addEventListener('input', ()=>{
-    let val=parseInt(numTimesInput.value);
-    if(isNaN(val) || val<0) val=0;
-    timesContainer.innerHTML='';
-    resetDuplicateNote();
-    for(let i=1;i<=val;i++){
+// Generate time inputs
+function generateTimeInputs(){
+    const count = parseInt(numTimesInput.value)||0;
+    const existingInputs = timesContainer.querySelectorAll('input.timeInput');
+    // Remove excess
+    while(existingInputs.length>count){
+        timesContainer.removeChild(timesContainer.lastChild);
+        timesContainer.removeChild(timesContainer.lastChild);
+    }
+    // Add new inputs
+    for(let i=existingInputs.length;i<count;i++){
         const label=document.createElement('label');
-        label.textContent=`Time ${i}:`;
+        label.textContent=`Time ${i+1}:`;
         label.style.display='block';
         const input=document.createElement('input');
         input.type='time';
         input.required=true;
         input.style.width='100%';
         input.classList.add('timeInput');
-        input.addEventListener('input', checkDuplicateTimes);
+        input.addEventListener('input', checkDuplicates);
         timesContainer.appendChild(label);
         timesContainer.appendChild(input);
     }
-});
-
-// Check for duplicate times
-function checkDuplicateTimes(){
-    const values=Array.from(document.querySelectorAll('.timeInput')).map(i=>i.value).filter(v=>v!=='');
-    const duplicates=values.some((v,i)=>values.indexOf(v)!==i);
-    if(duplicates){
-        duplicateNote.style.display='block';
-    } else resetDuplicateNote();
+    checkDuplicates();
 }
 
-// Form submission
+numTimesInput.addEventListener('input', generateTimeInputs);
+
+// Duplicate check
+function checkDuplicates(){
+    const inputs=Array.from(document.querySelectorAll('.timeInput'));
+    const values=inputs.map(i=>i.value).filter(v=>v!=='');
+    inputs.forEach(input=>{
+        const val=input.value;
+        if(val && values.filter(v=>v===val).length>1){
+            input.style.border='2px solid red';
+            duplicateNote.style.display='block';
+        } else {
+            input.style.border='1px solid #ccc';
+            if(values.length===new Set(values).size) duplicateNote.style.display='none';
+        }
+    });
+}
+
+// Form submit
 form.addEventListener('submit', function(e){
     e.preventDefault();
     const name=depName.value.trim();
@@ -281,7 +296,7 @@ form.addEventListener('submit', function(e){
     const notes=depNotes.value.trim();
     const times=Array.from(document.querySelectorAll('.timeInput')).map(i=>i.value);
 
-    if(!name || !medicine || !dosageUnit || !notes || dosageNumber<1 || !/^\d{8}$/.test(phone) || !/^[689]/.test(phone)){
+    if(!name||!medicine||!dosageUnit||!notes||dosageNumber<1||!/^\d{8}$/.test(phone)||!/^[689]/.test(phone)){
         errorMsg.textContent="Please fill all fields correctly: Dosage ≥1 and valid phone.";
         return;
     }
@@ -331,10 +346,9 @@ editBtn.addEventListener('click', ()=>{
     depDosageUnit.value=dispDosage.textContent.split(' ')[1];
     depNotes.value=dispNotes.textContent;
 
-    // Pre-fill time inputs
     const timeArr=dispTimes.textContent.split(', ').filter(t=>t!=='');
     numTimesInput.value=timeArr.length;
-    numTimesInput.dispatchEvent(new Event('input'));
+    generateTimeInputs();
     const timeInputs=document.querySelectorAll('.timeInput');
     timeInputs.forEach((inp,i)=>{inp.value=timeArr[i];});
 });
@@ -349,5 +363,6 @@ confirmDeleteBtn.addEventListener('click', ()=>{
 });
 cancelDeleteBtn.addEventListener('click', ()=>{deletePopup.style.display='none';});
 </script>
+
 </body>
 </html>
