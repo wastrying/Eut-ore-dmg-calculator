@@ -5,11 +5,11 @@
 <title>Remblyx Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-/* Basic Reset & Fullscreen */
+/* Fullscreen & Reset */
 *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
 html, body{height:100%;width:100%;margin:0;padding:0;}
 body{background:#f5f5f5;display:flex;overflow:hidden;}
-#main-dashboard{display:grid;grid-template-columns:220px 1fr;gap:0;height:100vh;width:100vw;background:#fff;border-radius:0;}
+#main-dashboard{display:grid;grid-template-columns:220px 1fr;gap:0;height:100vh;width:100vw;background:#fff;}
 .sidebar{background:#111827;color:#e5e7eb;padding:16px;display:flex;flex-direction:column;gap:12px;}
 .sidebar-title{font-size:14px;font-weight:600;color:#9ca3af;text-transform:uppercase;}
 .nav-item{display:flex;align-items:center;gap:8px;padding:10px;border-radius:8px;cursor:pointer;color:#d1d5db;transition:.2s;}
@@ -30,7 +30,7 @@ body{background:#f5f5f5;display:flex;overflow:hidden;}
 .status-green{background:#bbf7d0;color:#166534;}
 .status-red{background:#fee2e2;color:#991b1b;}
 
-/* Basic Plan Dependant Section */
+/* Dependant Section */
 button{padding:8px 12px;border:none;border-radius:6px;background:#4CAF50;color:white;cursor:pointer;}
 button:hover{background:#45a049;}
 .dependant-info{margin-top:12px;padding:12px;background:#fff;border-left:4px solid #4CAF50;border-radius:6px; display:none;}
@@ -54,6 +54,7 @@ button:hover{background:#45a049;}
 .btn-confirm{background:#f87171;color:white;}
 .btn-cancel{background:#9ca3af;color:white;}
 input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:auto;margin:0;}
+.depTimeInput{margin-top:4px;width:100%;}
 </style>
 </head>
 <body>
@@ -112,11 +113,14 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
         <form id="dependantForm">
             <label>Name:</label>
             <input type="text" id="depName" required />
+
             <label>Phone Number:</label>
             <input type="text" id="depPhone" placeholder="Enter 8-digit phone number" required />
             <div id="phoneNote" class="phone-note">Phone number must be exactly 8 digits and start with 6, 8, or 9.</div>
+
             <label>Type of Medicine:</label>
             <input type="text" id="depMedicine" required />
+
             <label>Dosage:</label>
             <div class="dosage-row">
                 <input type="number" id="depDosageNumber" min="0" value="0" required />
@@ -127,12 +131,18 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
                 </select>
             </div>
             <div id="dosageNote" class="dosage-note">Dosage must be at least 1.</div>
+
             <div id="timePickerContainer" class="time-picker-container">
                 <label>Time to Take Medicine:</label>
-                <input type="time" id="depTime" required />
+                <div id="timesList">
+                    <input type="time" class="depTimeInput" required />
+                </div>
+                <button type="button" id="addTimeBtn" style="margin-top:4px;background:#3b82f6;">Add Another Time</button>
             </div>
+
             <label>Additional Notes:</label>
             <input type="text" id="depNotes" placeholder="Enter 'NA' if none" required />
+
             <button type="submit">Save Dependant</button>
             <button type="button" id="closeModalBtn" style="background:#9ca3af;margin-top:4px;">Cancel</button>
         </form>
@@ -175,6 +185,8 @@ const dosageNote=document.getElementById('dosageNote');
 const phoneInput=document.getElementById('depPhone');
 const phoneNote=document.getElementById('phoneNote');
 const remindersList=document.getElementById('remindersList');
+const timesList = document.getElementById('timesList');
+const addTimeBtn = document.getElementById('addTimeBtn');
 
 function resetDosageNote(){dosageNote.style.display='none';dosageNumberInput.style.border='1px solid #ccc';}
 function resetPhoneNote(){phoneNote.style.display='none';phoneInput.style.border='1px solid #ccc';}
@@ -193,6 +205,7 @@ addBtn.addEventListener('click', ()=>{
 closeModalBtn.addEventListener('click', ()=>{
     modal.classList.remove('active');
     form.reset();
+    timesList.innerHTML='<input type="time" class="depTimeInput" required />';
     resetDosageNote();
     resetPhoneNote();
 });
@@ -214,6 +227,15 @@ phoneInput.addEventListener('input', ()=>{
     } else resetPhoneNote();
 });
 
+addTimeBtn.addEventListener('click', () => {
+    const newTimeInput = document.createElement('input');
+    newTimeInput.type = 'time';
+    newTimeInput.className = 'depTimeInput';
+    newTimeInput.required = true;
+    newTimeInput.style.marginTop='4px';
+    timesList.appendChild(newTimeInput);
+});
+
 function addReminder(name, medicine, time){
     const row=document.createElement('div');
     row.className='board-row';
@@ -229,10 +251,13 @@ form.addEventListener('submit', function(e){
     const dosageNumber=parseInt(dosageNumberInput.value);
     const dosageUnit=depDosageUnit.value;
     const notes=depNotes.value.trim();
-    const timeValue=depTime.value;
 
-    if(!name || !medicine || !dosageUnit || !notes || !timeValue || dosageNumber<1 || !/^\d{8}$/.test(phone) || !/^[689]/.test(phone)){
-        errorMsg.textContent="Please fill all fields correctly: Dosage ≥1, valid time, and valid 8-digit phone number.";
+    const timeInputs = document.querySelectorAll('.depTimeInput');
+    const times = [];
+    timeInputs.forEach(t => { if(t.value) times.push(t.value); });
+
+    if(!name || !medicine || !dosageUnit || !notes || times.length === 0 || dosageNumber<1 || !/^\d{8}$/.test(phone) || !/^[689]/.test(phone)){
+        errorMsg.textContent="Please fill all fields correctly: Dosage ≥1, at least one valid time, and valid 8-digit phone number.";
         return;
     }
 
@@ -240,18 +265,19 @@ form.addEventListener('submit', function(e){
     dispPhone.textContent=phone;
     dispMedicine.textContent=medicine;
     dispDosage.textContent=`${dosageNumber} ${dosageUnit}`;
-    dispTimes.textContent=timeValue;
+    dispTimes.textContent=times.join(', ');
     dispNotes.textContent=notes;
     infoBox.style.display='block';
     dependantAdded=true;
     editing=false;
     modal.classList.remove('active');
     form.reset();
+    timesList.innerHTML='<input type="time" class="depTimeInput" required />';
     resetDosageNote();
     resetPhoneNote();
 
-    // Add reminder
-    addReminder(name, medicine, timeValue);
+    // Add multiple reminders
+    times.forEach(timeValue => addReminder(name, medicine, timeValue));
 });
 
 editBtn.addEventListener('click', ()=>{
@@ -263,14 +289,21 @@ editBtn.addEventListener('click', ()=>{
     dosageNumberInput.value=parseInt(dispDosage.textContent);
     depDosageUnit.value=dispDosage.textContent.split(' ')[1];
     depNotes.value=dispNotes.textContent;
-    depTime.value=dispTimes.textContent;
+
+    // Split multiple times back into inputs
+    timesList.innerHTML='';
+    dispTimes.textContent.split(', ').forEach(t=>{
+        const inp=document.createElement('input');
+        inp.type='time'; inp.className='depTimeInput'; inp.required=true; inp.value=t;
+        timesList.appendChild(inp);
+    });
 });
 
 removeBtn.addEventListener('click', ()=>{if(!dependantAdded) return; deletePopup.style.display='block';});
 confirmDeleteBtn.addEventListener('click', ()=>{
     infoBox.style.display='none'; dependantAdded=false;
     dispName.textContent=''; dispPhone.textContent=''; dispMedicine.textContent=''; dispTimes.textContent=''; dispDosage.textContent=''; dispNotes.textContent='';
-    remindersList.innerHTML=''; // Remove reminder
+    remindersList.innerHTML='';
     deletePopup.style.display='none';
 });
 cancelDeleteBtn.addEventListener('click', ()=>{deletePopup.style.display='none';});
