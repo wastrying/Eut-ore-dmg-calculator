@@ -107,43 +107,44 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
 
 <!-- Dependant Modal -->
 <div id="dependantModal" class="modal">
-    <div class="modal-content">
-        <h2 id="modalTitle">Add Dependant</h2>
-        <p class="error" id="modalError"></p>
-        <form id="dependantForm">
-            <label>Name:</label>
-            <input type="text" id="depName" required />
+  <div class="modal-content">
+    <h2 id="modalTitle">Add Dependant</h2>
+    <p class="error" id="modalError"></p>
+    <form id="dependantForm">
+      <label>Name:</label>
+      <input type="text" id="depName" required />
 
-            <label>Phone Number:</label>
-            <input type="text" id="depPhone" placeholder="Enter 8-digit phone number" required />
-            <div id="phoneNote" class="phone-note">Phone number must be exactly 8 digits and start with 6, 8, or 9.</div>
+      <label>Phone Number:</label>
+      <input type="text" id="depPhone" placeholder="Enter 8-digit phone number" required />
+      <div id="phoneNote" class="phone-note">Phone number must be exactly 8 digits and start with 6, 8, or 9.</div>
 
-            <label>Type of Medicine:</label>
-            <input type="text" id="depMedicine" required />
+      <label>Type of Medicine:</label>
+      <input type="text" id="depMedicine" required />
 
-            <label>Dosage:</label>
-            <div class="dosage-row">
-                <input type="number" id="depDosageNumber" min="0" value="0" required />
-                <select id="depDosageUnit" required>
-                    <option value="">Unit</option>
-                    <option value="mg">mg</option>
-                    <option value="g">g</option>
-                </select>
-            </div>
-            <div id="dosageNote" class="dosage-note">Dosage must be at least 1.</div>
+      <!-- Dosage -->
+      <label>Dosage:</label>
+      <div class="dosage-row">
+        <input type="number" id="depDosageNumber" min="0" value="0" required />
+        <select id="depDosageUnit" required>
+          <option value="">Unit</option>
+          <option value="mg">mg</option>
+          <option value="g">g</option>
+        </select>
+      </div>
+      <div id="dosageNote" class="dosage-note">Dosage must be at least 1.</div>
 
-            <!-- Number of times -->
-            <label>Number of Times to Take Medicine:</label>
-            <input type="number" id="numTimes" min="1" value="1" required />
-            <div id="timesList"></div>
+      <!-- Number of times -->
+      <label>Number of Times to Take Medicine:</label>
+      <input type="number" id="numTimes" min="1" value="1" required />
+      <div id="timesList" style="margin-top:8px;"></div>
 
-            <label>Additional Notes:</label>
-            <input type="text" id="depNotes" placeholder="Enter 'NA' if none" required />
+      <label>Additional Notes:</label>
+      <input type="text" id="depNotes" placeholder="Enter 'NA' if none" required />
 
-            <button type="submit">Save Dependant</button>
-            <button type="button" id="closeModalBtn" style="background:#9ca3af;margin-top:4px;">Cancel</button>
-        </form>
-    </div>
+      <button type="submit">Save Dependant</button>
+      <button type="button" id="closeModalBtn" style="background:#9ca3af;margin-top:4px;">Cancel</button>
+    </form>
+  </div>
 </div>
 
 <!-- Delete Popup -->
@@ -169,7 +170,6 @@ navItems.forEach(item => {
 // --- Dependant logic ---
 let dependantAdded=false;
 let editing=false;
-let currentDependant=null;
 const addBtn=document.getElementById('addDependantBtn');
 const editBtn=document.getElementById('editDependantBtn');
 const removeBtn=document.getElementById('removeDependantBtn');
@@ -189,7 +189,6 @@ const dosageNumberInput=document.getElementById('depDosageNumber');
 const depDosageUnit=document.getElementById('depDosageUnit');
 const numTimesInput=document.getElementById('numTimes');
 const timesListDiv=document.getElementById('timesList');
-const depTimeInputClass='depTimeInput';
 const deletePopup=document.getElementById('deletePopup');
 const confirmDeleteBtn=document.getElementById('confirmDeleteBtn');
 const cancelDeleteBtn=document.getElementById('cancelDeleteBtn');
@@ -199,31 +198,28 @@ const phoneInput=document.getElementById('depPhone');
 const phoneNote=document.getElementById('phoneNote');
 const remindersList=document.getElementById('remindersList');
 
-dosageNote.style.display='none';
-phoneNote.style.display='none';
-
-// Helper: generate time inputs
+// Initialize first time picker
 function generateTimeInputs(count, values=[]){
     timesListDiv.innerHTML='';
     for(let i=0;i<count;i++){
         const tInput=document.createElement('input');
         tInput.type='time';
-        tInput.className=depTimeInputClass;
+        tInput.className='depTimeInput';
         tInput.required=true;
+        tInput.style.marginBottom='4px';
+        tInput.style.width='100%';
         if(values[i]) tInput.value=values[i];
         timesListDiv.appendChild(tInput);
     }
 }
-
-// init
 generateTimeInputs(parseInt(numTimesInput.value));
-
 numTimesInput.addEventListener('input', ()=>{
     let val=parseInt(numTimesInput.value);
     if(val<1) val=1;
     generateTimeInputs(val);
 });
 
+// Open modal
 addBtn.addEventListener('click', ()=>{
     if(dependantAdded && !editing){
         mainError.textContent="You can only add one dependant in the Basic plan.";
@@ -235,19 +231,20 @@ addBtn.addEventListener('click', ()=>{
     modal.classList.add('active');
 });
 
+// Close modal
 closeModalBtn.addEventListener('click', ()=>{
     modal.classList.remove('active');
     form.reset();
     generateTimeInputs(1);
 });
 
+// Validate dosage and phone
 dosageNumberInput.addEventListener('input', ()=>{
     if(parseInt(dosageNumberInput.value)<1){
         dosageNumberInput.style.border='2px solid red';
         dosageNote.style.display='block';
     } else {dosageNote.style.display='none';dosageNumberInput.style.border='1px solid #ccc';}
 });
-
 phoneInput.addEventListener('input', ()=>{
     let val=phoneInput.value.replace(/\D/g,'');
     if(val.length>8) val=val.slice(0,8);
@@ -258,6 +255,7 @@ phoneInput.addEventListener('input', ()=>{
     } else {phoneNote.style.display='none';phoneInput.style.border='1px solid #ccc';}
 });
 
+// Submit form
 form.addEventListener('submit', function(e){
     e.preventDefault();
     const name=depName.value.trim();
@@ -266,7 +264,7 @@ form.addEventListener('submit', function(e){
     const dosageNumber=parseInt(dosageNumberInput.value);
     const dosageUnit=depDosageUnit.value;
     const notes=depNotes.value.trim();
-    const timeInputs=document.querySelectorAll('.'+depTimeInputClass);
+    const timeInputs=document.querySelectorAll('.depTimeInput');
     const times=[];
     timeInputs.forEach(t=>{if(t.value) times.push(t.value);});
     if(!name || !medicine || !dosageUnit || !notes || times.length!==timeInputs.length || dosageNumber<1 || !/^\d{8}$/.test(phone) || !/^[689]/.test(phone)){
@@ -274,7 +272,6 @@ form.addEventListener('submit', function(e){
         return;
     }
 
-    // Save to display
     dispName.textContent=name;
     dispPhone.textContent=phone;
     dispMedicine.textContent=medicine;
