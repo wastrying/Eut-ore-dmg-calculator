@@ -137,6 +137,7 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 let dependantAdded = false;
 let editing = false;
 let currentDependant = null;
+let duplicateTimeout;
 
 const addBtn = document.getElementById('addDependantBtn');
 const editBtn = document.getElementById('editDependantBtn');
@@ -154,19 +155,20 @@ const dispTimes = document.getElementById('dispTimes');
 const dispDosage = document.getElementById('dispDosage');
 const dispNotes = document.getElementById('dispNotes');
 const dosageNumberInput = document.getElementById('depDosageNumber');
-const depTime = document.getElementById('depTime');
-const deletePopup = document.getElementById('deletePopup');
-const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
-const mainError = document.getElementById('mainError');
-const dosageNote = document.getElementById('dosageNote');
+const depDosageUnit = document.getElementById('depDosageUnit');
 const phoneInput = document.getElementById('depPhone');
 const phoneNote = document.getElementById('phoneNote');
+const dosageNote = document.getElementById('dosageNote');
 
 const numTimesInput = document.getElementById('numTimesInput');
 const timesSection = document.getElementById('timesSection');
 const timesContainer = document.getElementById('timesContainer');
 const duplicateNote = document.getElementById('duplicateNote');
+
+const deletePopup = document.getElementById('deletePopup');
+const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+const mainError = document.getElementById('mainError');
 
 const remindersList = document.getElementById('remindersList');
 
@@ -231,18 +233,20 @@ phoneInput.addEventListener('input', ()=>{
     } else resetPhoneNote();
 });
 
-// Number of times -> render inputs
+// Render dynamic time inputs
 numTimesInput.addEventListener('input', ()=>{
-    let n = parseInt(numTimesInput.value) || 0;
+    const n = parseInt(numTimesInput.value) || 0;
     renderTimeInputs(Array(n).fill(''));
 });
 
 function renderTimeInputs(existingTimes){
     timesContainer.innerHTML = '';
-    const n = existingTimes.length;
-    if(n===0){ timesSection.style.display='none'; return; }
-    timesSection.style.display='block';
-    existingTimes.forEach((time,i)=>{
+    if(existingTimes.length === 0){ 
+        timesSection.style.display = 'none'; 
+        return; 
+    }
+    timesSection.style.display = 'block';
+    existingTimes.forEach(time=>{
         const input = document.createElement('input');
         input.type = 'time';
         input.classList.add('timeInput');
@@ -252,12 +256,13 @@ function renderTimeInputs(existingTimes){
     });
 }
 
-// Check for duplicate times
+// Duplicate checking
 function checkDuplicates(){
     const inputs = Array.from(timesContainer.querySelectorAll('.timeInput'));
     const values = inputs.map(i=>i.value).filter(v=>v!=='');
     let hasDuplicate = false;
     inputs.forEach(i=>i.style.border='1px solid #ccc');
+
     values.forEach(val=>{
         const firstIndex = inputs.findIndex(i=>i.value===val);
         inputs.forEach((input,j)=>{
@@ -267,11 +272,19 @@ function checkDuplicates(){
             }
         });
     });
-    duplicateNote.style.display = hasDuplicate ? 'block' : 'none';
+
+    if(hasDuplicate){
+        duplicateNote.style.display = 'block';
+        clearTimeout(duplicateTimeout);
+        duplicateTimeout = setTimeout(()=>{
+            duplicateNote.style.display='none';
+        }, 3000);
+    } else duplicateNote.style.display = 'none';
+
     return hasDuplicate;
 }
 
-// Submit form
+// Form submit
 form.addEventListener('submit', function(e){
     e.preventDefault();
     if(checkDuplicates()){
@@ -286,7 +299,7 @@ form.addEventListener('submit', function(e){
     const dosageUnit = depDosageUnit.value;
     const notes = depNotes.value.trim();
     const times = Array.from(timesContainer.querySelectorAll('.timeInput')).map(i=>i.value).filter(v=>v!=='');
-    
+
     if(!name || !medicine || !dosageUnit || !notes || dosageNumber<1 || !/^\d{8}$/.test(phone) || !/^[689]/.test(phone) || times.length!==parseInt(numTimesInput.value)){
         errorMsg.textContent="Please fill all fields correctly including times.";
         return;
@@ -305,7 +318,6 @@ form.addEventListener('submit', function(e){
     currentDependant={name,phone,medicine,dosageNumber,dosageUnit,notes,times};
 
     updateReminders();
-
     modal.classList.remove('active');
     form.reset();
     resetDosageNote();
@@ -316,14 +328,13 @@ form.addEventListener('submit', function(e){
     errorMsg.textContent='';
 });
 
-// Edit dependant
+// Edit & Delete
 editBtn.addEventListener('click', ()=>{
     if(!dependantAdded) return;
     editing=true;
     addBtn.click();
 });
 
-// Delete dependant
 removeBtn.addEventListener('click', ()=>{
     if(!dependantAdded) return;
     deletePopup.style.display='block';
@@ -337,7 +348,7 @@ confirmDeleteBtn.addEventListener('click', ()=>{
 });
 cancelDeleteBtn.addEventListener('click', ()=>{deletePopup.style.display='none';});
 
-// Update Upcoming Reminders
+// Upcoming Reminders
 function updateReminders(){
     remindersList.innerHTML='';
     if(!currentDependant) return;
