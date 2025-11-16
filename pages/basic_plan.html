@@ -45,7 +45,6 @@ button:hover{background:#45a049;}
 .modal-content .dosage-row{display:flex;gap:6px;}
 .modal-content .dosage-row input{flex:1;}
 .modal-content .dosage-row select{flex:1;}
-.time-picker-container{margin-top:10px;}
 .dosage-note{font-size:12px;color:red;margin-top:2px;display:none;}
 .phone-note{font-size:12px;color:red;margin-top:2px;display:none;}
 .delete-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;padding:24px;box-shadow:0 8px 24px rgba(0,0,0,0.3);display:none;z-index:2000;text-align:center;}
@@ -54,7 +53,6 @@ button:hover{background:#45a049;}
 .btn-confirm{background:#f87171;color:white;}
 .btn-cancel{background:#9ca3af;color:white;}
 input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:auto;margin:0;}
-.depTimeInput{margin-top:4px;width:100%;}
 </style>
 </head>
 <body>
@@ -135,12 +133,12 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
 
       <!-- Number of times -->
       <label>Number of Times to Take Medicine:</label>
-      <input type="number" id="numTimes" min="1" value="1" required />
+      <input type="number" id="numTimes" min="0" value="0" required />
 
-      <!-- Container for dynamic time pickers -->
+      <!-- Container for single time picker -->
       <div id="timesContainer" style="display:none; margin-top:8px;">
-        <label>Times to Take Medicine:</label>
-        <div id="timesList"></div>
+        <label>Time to Take Medicine:</label>
+        <input type="time" id="singleTime" style="width:100%;" />
       </div>
 
       <label>Additional Notes:</label>
@@ -194,7 +192,7 @@ const dosageNumberInput=document.getElementById('depDosageNumber');
 const depDosageUnit=document.getElementById('depDosageUnit');
 const numTimesInput=document.getElementById('numTimes');
 const timesContainer=document.getElementById('timesContainer');
-const timesListDiv=document.getElementById('timesList');
+const singleTimeInput=document.getElementById('singleTime');
 const deletePopup=document.getElementById('deletePopup');
 const confirmDeleteBtn=document.getElementById('confirmDeleteBtn');
 const cancelDeleteBtn=document.getElementById('cancelDeleteBtn');
@@ -204,26 +202,13 @@ const phoneInput=document.getElementById('depPhone');
 const phoneNote=document.getElementById('phoneNote');
 const remindersList=document.getElementById('remindersList');
 
-// Initialize time pickers
-function generateTimeInputs(count, values=[]){
-    timesListDiv.innerHTML='';
-    for(let i=0;i<count;i++){
-        const tInput=document.createElement('input');
-        tInput.type='time';
-        tInput.className='depTimeInput';
-        tInput.required=true;
-        tInput.style.marginBottom='4px';
-        tInput.style.width='100%';
-        if(values[i]) tInput.value=values[i];
-        timesListDiv.appendChild(tInput);
-    }
-    timesContainer.style.display = count>0 ? 'block' : 'none';
-}
-generateTimeInputs(parseInt(numTimesInput.value));
+// Show/hide single time picker based on numTimes
+timesContainer.style.display='none';
 numTimesInput.addEventListener('input', ()=>{
     let val=parseInt(numTimesInput.value);
-    if(val<1) val=1;
-    generateTimeInputs(val);
+    if(isNaN(val)||val<0) val=0;
+    if(val===1){ timesContainer.style.display='block'; }
+    else { timesContainer.style.display='none'; singleTimeInput.value=''; }
 });
 
 // Open modal
@@ -242,7 +227,7 @@ addBtn.addEventListener('click', ()=>{
 closeModalBtn.addEventListener('click', ()=>{
     modal.classList.remove('active');
     form.reset();
-    generateTimeInputs(1);
+    timesContainer.style.display='none';
 });
 
 // Validate dosage and phone
@@ -271,11 +256,10 @@ form.addEventListener('submit', function(e){
     const dosageNumber=parseInt(dosageNumberInput.value);
     const dosageUnit=depDosageUnit.value;
     const notes=depNotes.value.trim();
-    const timeInputs=document.querySelectorAll('.depTimeInput');
-    const times=[];
-    timeInputs.forEach(t=>{if(t.value) times.push(t.value);});
-    if(!name || !medicine || !dosageUnit || !notes || times.length!==timeInputs.length || dosageNumber<1 || !/^\d{8}$/.test(phone) || !/^[689]/.test(phone)){
-        errorMsg.textContent="Please fill all fields correctly: Dosage ≥1, valid time, and valid 8-digit phone number.";
+    let times=[];
+    if(numTimesInput.value==1 && singleTimeInput.value){ times.push(singleTimeInput.value); }
+    if(!name || !medicine || !dosageUnit || !notes || (numTimesInput.value==1 && times.length===0) || dosageNumber<1 || !/^\d{8}$/.test(phone) || !/^[689]/.test(phone)){
+        errorMsg.textContent="Please fill all fields correctly: Dosage ≥1, valid time if 1, and valid 8-digit phone number.";
         return;
     }
 
@@ -300,7 +284,7 @@ form.addEventListener('submit', function(e){
     editing=false;
     modal.classList.remove('active');
     form.reset();
-    generateTimeInputs(1);
+    timesContainer.style.display='none';
 });
 
 // Edit
@@ -313,9 +297,8 @@ editBtn.addEventListener('click', ()=>{
     dosageNumberInput.value=parseInt(dispDosage.textContent);
     depDosageUnit.value=dispDosage.textContent.split(' ')[1];
     depNotes.value=dispNotes.textContent;
-    const timesArr=dispTimes.textContent.split(', ');
-    numTimesInput.value=timesArr.length;
-    generateTimeInputs(timesArr.length, timesArr);
+    if(dispTimes.textContent){ numTimesInput.value=1; singleTimeInput.value=dispTimes.textContent; timesContainer.style.display='block'; }
+    else{ numTimesInput.value=0; timesContainer.style.display='none'; }
 });
 
 // Remove
