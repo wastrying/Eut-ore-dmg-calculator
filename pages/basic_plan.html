@@ -4,26 +4,25 @@
 <meta charset="UTF-8">
 <title>Remblyx Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" type="image/png" sizes="32x32" href="../images/medisignal.png">
-<link rel="apple-touch-icon" href="../images/medisignal.png">
 <style>
-/* Basic Reset & Dashboard Layout */
+/* Basic Reset & Fullscreen */
 *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
-body{background:#f5f5f5;display:flex;min-height:100vh;}
-#main-dashboard{display:grid;grid-template-columns:220px 1fr;gap:0;height:100vh;overflow:hidden;background:#fff;border-radius:18px;box-shadow:0 10px 26px rgba(0,0,0,0.2);}
+html, body{height:100%;width:100%;margin:0;padding:0;}
+body{background:#f5f5f5;display:flex;overflow:hidden;}
+#main-dashboard{display:grid;grid-template-columns:220px 1fr;gap:0;height:100vh;width:100vw;background:#fff;border-radius:0;}
 .sidebar{background:#111827;color:#e5e7eb;padding:16px;display:flex;flex-direction:column;gap:12px;}
 .sidebar-title{font-size:14px;font-weight:600;color:#9ca3af;text-transform:uppercase;}
 .nav-item{display:flex;align-items:center;gap:8px;padding:10px;border-radius:8px;cursor:pointer;color:#d1d5db;transition:.2s;}
 .nav-item:hover{background:rgba(249,250,251,.06);}
 .nav-item.active{background:#1f2937;color:#fff;border-left:3px solid #667eea;padding-left:7px;}
 .icon-dot{width:7px;height:7px;border-radius:999px;background:#4ade80;}
-.main-area{padding:16px;display:flex;flex-direction:column;gap:16px;overflow:auto;}
+.main-area{padding:16px;display:flex;flex-direction:column;gap:16px;overflow:auto;height:100vh;width:100%;}
 
 /* Section Titles */
 .section-title{font-weight:600;font-size:16px;color:#111827;margin-bottom:8px;}
 
 /* Upcoming Reminders Table */
-.board-wrapper{background:#f9fafb;border-radius:12px;padding:12px;overflow:auto;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.board-wrapper{background:#f9fafb;border-radius:12px;padding:16px;overflow:auto;box-shadow:0 1px 3px rgba(0,0,0,.06);}
 .board-header-row, .board-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;padding:6px;border-radius:8px;align-items:center;}
 .board-header-row{font-weight:600;background:#f3f4f6;color:#6b7280;position:sticky;top:0;z-index:2;}
 .board-row{background:#fff;margin-top:4px;box-shadow:0 1px 2px rgba(0,0,0,.06);}
@@ -32,7 +31,6 @@ body{background:#f5f5f5;display:flex;min-height:100vh;}
 .status-red{background:#fee2e2;color:#991b1b;}
 
 /* Basic Plan Dependant Section */
-.wrapper{width:100%;display:flex;flex-direction:column;gap:16px;}
 button{padding:8px 12px;border:none;border-radius:6px;background:#4CAF50;color:white;cursor:pointer;}
 button:hover{background:#45a049;}
 .dependant-info{margin-top:12px;padding:12px;background:#fff;border-left:4px solid #4CAF50;border-radius:6px; display:none;}
@@ -55,7 +53,7 @@ button:hover{background:#45a049;}
 .delete-popup button{margin:0 8px;padding:8px 14px;border:none;border-radius:6px;cursor:pointer;}
 .btn-confirm{background:#f87171;color:white;}
 .btn-cancel{background:#9ca3af;color:white;}
-input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:auto;margin:0;}
+input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:auto;margin:0;}
 </style>
 </head>
 <body>
@@ -100,15 +98,9 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
         <div class="board-header-row">
           <div>Dependant</div><div>Medicine</div><div>Time</div><div>Status</div>
         </div>
-        <div class="board-row">
-          <div>John Doe</div><div>Vitamin D</div><div>09:00 AM</div><div><span class="status-pill status-green">Taken</span></div>
-        </div>
-        <div class="board-row">
-          <div>Jane Smith</div><div>Ibuprofen</div><div>10:00 AM</div><div><span class="status-pill status-red">Missed</span></div>
-        </div>
+        <div id="remindersList"></div>
       </div>
     </div>
-
   </div>
 </div>
 
@@ -120,14 +112,11 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
         <form id="dependantForm">
             <label>Name:</label>
             <input type="text" id="depName" required />
-
             <label>Phone Number:</label>
             <input type="text" id="depPhone" placeholder="Enter 8-digit phone number" required />
             <div id="phoneNote" class="phone-note">Phone number must be exactly 8 digits and start with 6, 8, or 9.</div>
-
             <label>Type of Medicine:</label>
             <input type="text" id="depMedicine" required />
-
             <label>Dosage:</label>
             <div class="dosage-row">
                 <input type="number" id="depDosageNumber" min="0" value="0" required />
@@ -138,15 +127,12 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
                 </select>
             </div>
             <div id="dosageNote" class="dosage-note">Dosage must be at least 1.</div>
-
             <div id="timePickerContainer" class="time-picker-container">
                 <label>Time to Take Medicine:</label>
                 <input type="time" id="depTime" required />
             </div>
-
             <label>Additional Notes:</label>
             <input type="text" id="depNotes" placeholder="Enter 'NA' if none" required />
-
             <button type="submit">Save Dependant</button>
             <button type="button" id="closeModalBtn" style="background:#9ca3af;margin-top:4px;">Cancel</button>
         </form>
@@ -161,7 +147,6 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 </div>
 
 <script>
-// --- Javascript: Basic Plan Dependant Management ---
 let dependantAdded=false;
 let editing=false;
 
@@ -189,9 +174,7 @@ const mainError=document.getElementById('mainError');
 const dosageNote=document.getElementById('dosageNote');
 const phoneInput=document.getElementById('depPhone');
 const phoneNote=document.getElementById('phoneNote');
-
-dosageNote.style.display='none';
-phoneNote.style.display='none';
+const remindersList=document.getElementById('remindersList');
 
 function resetDosageNote(){dosageNote.style.display='none';dosageNumberInput.style.border='1px solid #ccc';}
 function resetPhoneNote(){phoneNote.style.display='none';phoneInput.style.border='1px solid #ccc';}
@@ -231,6 +214,13 @@ phoneInput.addEventListener('input', ()=>{
     } else resetPhoneNote();
 });
 
+function addReminder(name, medicine, time){
+    const row=document.createElement('div');
+    row.className='board-row';
+    row.innerHTML=`<div>${name}</div><div>${medicine}</div><div>${time}</div><div><span class="status-pill status-green">Pending</span></div>`;
+    remindersList.appendChild(row);
+}
+
 form.addEventListener('submit', function(e){
     e.preventDefault();
     const name=depName.value.trim();
@@ -259,6 +249,9 @@ form.addEventListener('submit', function(e){
     form.reset();
     resetDosageNote();
     resetPhoneNote();
+
+    // Add reminder
+    addReminder(name, medicine, timeValue);
 });
 
 editBtn.addEventListener('click', ()=>{
@@ -277,11 +270,12 @@ removeBtn.addEventListener('click', ()=>{if(!dependantAdded) return; deletePopup
 confirmDeleteBtn.addEventListener('click', ()=>{
     infoBox.style.display='none'; dependantAdded=false;
     dispName.textContent=''; dispPhone.textContent=''; dispMedicine.textContent=''; dispTimes.textContent=''; dispDosage.textContent=''; dispNotes.textContent='';
+    remindersList.innerHTML=''; // Remove reminder
     deletePopup.style.display='none';
 });
 cancelDeleteBtn.addEventListener('click', ()=>{deletePopup.style.display='none';});
 
-// --- Dashboard Navigation ---
+// Dashboard Navigation
 const navItems = document.querySelectorAll('.nav-item');
 const sections = document.querySelectorAll('.dashboard-section');
 
