@@ -136,7 +136,12 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
       <!-- Number of times -->
       <label>Number of Times to Take Medicine:</label>
       <input type="number" id="numTimes" min="1" value="1" required />
-      <div id="timesList" style="margin-top:8px;"></div>
+
+      <!-- Container for dynamic time pickers -->
+      <div id="timesContainer" style="display:none; margin-top:8px;">
+        <label>Times to Take Medicine:</label>
+        <div id="timesList"></div>
+      </div>
 
       <label>Additional Notes:</label>
       <input type="text" id="depNotes" placeholder="Enter 'NA' if none" required />
@@ -188,6 +193,7 @@ const dispNotes=document.getElementById('dispNotes');
 const dosageNumberInput=document.getElementById('depDosageNumber');
 const depDosageUnit=document.getElementById('depDosageUnit');
 const numTimesInput=document.getElementById('numTimes');
+const timesContainer=document.getElementById('timesContainer');
 const timesListDiv=document.getElementById('timesList');
 const deletePopup=document.getElementById('deletePopup');
 const confirmDeleteBtn=document.getElementById('confirmDeleteBtn');
@@ -198,7 +204,7 @@ const phoneInput=document.getElementById('depPhone');
 const phoneNote=document.getElementById('phoneNote');
 const remindersList=document.getElementById('remindersList');
 
-// Initialize first time picker
+// Initialize time pickers
 function generateTimeInputs(count, values=[]){
     timesListDiv.innerHTML='';
     for(let i=0;i<count;i++){
@@ -211,6 +217,7 @@ function generateTimeInputs(count, values=[]){
         if(values[i]) tInput.value=values[i];
         timesListDiv.appendChild(tInput);
     }
+    timesContainer.style.display = count>0 ? 'block' : 'none';
 }
 generateTimeInputs(parseInt(numTimesInput.value));
 numTimesInput.addEventListener('input', ()=>{
