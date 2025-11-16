@@ -68,7 +68,7 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
             <p><strong>Phone Number:</strong> <span id="dispPhone"></span></p>
             <p><strong>Medicine Type:</strong> <span id="dispMedicine"></span></p>
             <p><strong>Dosage:</strong> <span id="dispDosage"></span></p>
-            <p><strong>Times to Take Medicine:</strong>
+            <p><strong>Time to Take Medicine:</strong>
               <span id="dispTimes"></span>
             </p>
             <p><strong>Additional Notes:</strong> <span id="dispNotes"></span></p>
@@ -117,10 +117,12 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
             </div>
             <div id="dosageNote" class="dosage-note">Dosage must be at least 1.</div>
 
-            <label>Number of Times to Take Medicine:</label>
-            <input type="number" id="numTimes" min="0" value="0" />
+            <label>Time to Take Medicine:</label>
             <div id="timesContainer" style="margin-top:8px;"></div>
             <div id="duplicateNote" class="duplicate-note">Duplicate times are not allowed!</div>
+
+            <label>Number of Times:</label>
+            <input type="number" id="numTimes" min="0" value="0" />
 
             <label>Additional Notes:</label>
             <input type="text" id="depNotes" placeholder="Enter 'NA' if none" required />
@@ -158,7 +160,7 @@ const dispDosage=document.getElementById('dispDosage');
 const dispTimes=document.getElementById('dispTimes');
 const dispNotes=document.getElementById('dispNotes');
 const dosageNumberInput=document.getElementById('depDosageNumber');
-const depTime=document.getElementById('depTime');
+const depDosageUnit=document.getElementById('depDosageUnit');
 const deletePopup=document.getElementById('deletePopup');
 const confirmDeleteBtn=document.getElementById('confirmDeleteBtn');
 const cancelDeleteBtn=document.getElementById('cancelDeleteBtn');
@@ -169,6 +171,9 @@ const phoneNote=document.getElementById('phoneNote');
 const numTimesInput=document.getElementById('numTimes');
 const timesContainer=document.getElementById('timesContainer');
 const duplicateNote=document.getElementById('duplicateNote');
+const depName=document.getElementById('depName');
+const depMedicine=document.getElementById('depMedicine');
+const depNotes=document.getElementById('depNotes');
 const remindersList=document.getElementById('remindersList');
 
 dosageNote.style.display='none';
@@ -328,6 +333,20 @@ confirmDeleteBtn.addEventListener('click', ()=>{
     remindersList.innerHTML='';
 });
 cancelDeleteBtn.addEventListener('click', ()=>{deletePopup.style.display='none';});
+
+// Sidebar Navigation
+const navItems = document.querySelectorAll('.nav-item');
+const sections = document.querySelectorAll('.dashboard-section');
+
+navItems.forEach(item => {
+    item.addEventListener('click', () => {
+        navItems.forEach(i=>i.classList.remove('active'));
+        item.classList.add('active');
+
+        const target = item.getAttribute('data-nav');
+        sections.forEach(sec => sec.style.display = (sec.id === target ? 'block' : 'none'));
+    });
+});
 </script>
 
 </body>
