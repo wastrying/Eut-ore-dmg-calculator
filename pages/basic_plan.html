@@ -42,7 +42,7 @@ button:hover{background:#45a049;}
 .btn-cancel{background:#9ca3af;color:white;}
 input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: auto; margin: 0; }
 
-/* Reminders 3-column static Pending */
+/* Reminders 3-column with Status on top and Pending below */
 .reminders-header {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -68,7 +68,9 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 }
 .reminder-name{font-weight:600; display:flex; align-items:center;}
 .reminder-time{font-size:14px;color:#555; display:flex; align-items:center;}
-.reminder-status{font-size:12px;color:#10b981; text-align:center; display:flex; justify-content:center; align-items:center; pointer-events:none;}
+.reminder-status{font-size:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none;}
+.reminder-status div:first-child { font-weight:600; color:#111827; }
+.reminder-status div:last-child { font-size:12px; color:#10b981; } /* Pending green */
 </style>
 </head>
 <body>
@@ -310,6 +312,7 @@ function checkDuplicates(){
 
     return hasDuplicate;
 }
+<script>
 // Form submit
 form.addEventListener('submit', function(e){
     e.preventDefault();
@@ -374,7 +377,7 @@ confirmDeleteBtn.addEventListener('click', ()=>{
 });
 cancelDeleteBtn.addEventListener('click', ()=>{deletePopup.style.display='none';});
 
-// Upcoming Reminders — static 3-column Pending
+// Upcoming Reminders — 3-column Pending, Status on top
 function updateReminders(){
     remindersList.innerHTML='';
 
@@ -400,7 +403,7 @@ function updateReminders(){
 
         const statusSpan = document.createElement('span');
         statusSpan.className='reminder-status';
-        statusSpan.textContent = 'Pending'; // always Pending
+        statusSpan.innerHTML = '<div>Status</div><div>Pending</div>'; // Status on top, Pending below
 
         div.appendChild(nameSpan);
         div.appendChild(timeSpan);
