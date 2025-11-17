@@ -42,6 +42,7 @@ button:hover{background:#45a049;}
 .btn-cancel{background:#9ca3af;color:white;}
 input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: auto; margin: 0; }
 
+/* Reminders 3-column */
 .reminders-header {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -51,6 +52,7 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
     background: #f3f4f6;
     border-radius: 6px;
     margin-bottom: 4px;
+    text-align: left;
 }
 .reminder-item {
     padding: 6px;
@@ -62,11 +64,11 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap:8px;
-    align-items:center;
+    align-items: center;
 }
-.reminder-name{font-weight:600;}
-.reminder-time{font-size:14px;color:#555;}
-.reminder-status{font-size:12px;color:#10b981;text-align:right;}
+.reminder-name{font-weight:600; display:flex; align-items:center;}
+.reminder-time{font-size:14px;color:#555; display:flex; align-items:center;}
+.reminder-status{font-size:12px;color:#10b981; text-align:center; display:flex; justify-content:center; align-items:center;}
 </style>
 </head>
 <body>
@@ -372,7 +374,7 @@ confirmDeleteBtn.addEventListener('click', ()=>{
 });
 cancelDeleteBtn.addEventListener('click', ()=>{deletePopup.style.display='none';});
 
-// Upcoming Reminders — 3-column display
+// Upcoming Reminders — 3-column with dynamic status
 function updateReminders(){
     remindersList.innerHTML='';
 
@@ -384,29 +386,54 @@ function updateReminders(){
     header.innerHTML='<span>Name</span><span>Time</span><span>Status</span>';
     remindersList.appendChild(header);
 
-    // Reminder items
     currentDependant.times.forEach(time=>{
         const div = document.createElement('div');
-        div.className = 'reminder-item';
+        div.className='reminder-item';
 
         const nameSpan = document.createElement('span');
-        nameSpan.className = 'reminder-name';
+        nameSpan.className='reminder-name';
         nameSpan.textContent = currentDependant.name;
 
         const timeSpan = document.createElement('span');
-        timeSpan.className = 'reminder-time';
+        timeSpan.className='reminder-time';
         timeSpan.textContent = time;
 
         const statusSpan = document.createElement('span');
-        statusSpan.className = 'reminder-status';
-        statusSpan.textContent = 'Pending'; // default status
+        statusSpan.className='reminder-status';
+        statusSpan.textContent = 'Pending'; // default
 
         div.appendChild(nameSpan);
         div.appendChild(timeSpan);
         div.appendChild(statusSpan);
-
         remindersList.appendChild(div);
     });
+
+    // Start interval to update statuses
+    updateStatusInterval();
+}
+
+// Convert HH:MM string to Date today
+function timeStringToDate(timeStr){
+    const [h,m] = timeStr.split(':').map(Number);
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
+}
+
+// Update status based on current time
+let statusInterval = null;
+function updateStatusInterval(){
+    if(statusInterval) clearInterval(statusInterval);
+    statusInterval = setInterval(()=>{
+        const now = new Date();
+        const items = remindersList.querySelectorAll('.reminder-item');
+        items.forEach(item=>{
+            const timeText = item.querySelector('.reminder-time').textContent;
+            const statusSpan = item.querySelector('.reminder-status');
+            const reminderTime = timeStringToDate(timeText);
+            statusSpan.textContent = (now >= reminderTime) ? 'Completed' : 'Pending';
+            statusSpan.style.color = (now >= reminderTime) ? '#6b7280' : '#10b981';
+        });
+    }, 30000); // update every 30 seconds
 }
 
 // Sidebar navigation
