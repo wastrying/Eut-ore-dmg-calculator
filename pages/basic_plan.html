@@ -41,8 +41,32 @@ button:hover{background:#45a049;}
 .btn-confirm{background:#f87171;color:white;}
 .btn-cancel{background:#9ca3af;color:white;}
 input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: auto; margin: 0; }
-.reminder-item{padding:6px;margin:4px 0;background:#fff;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.06);cursor:pointer;}
-.reminder-item:hover{background:#eef2ff;}
+
+.reminders-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    font-weight: 600;
+    padding: 6px;
+    background: #f3f4f6;
+    border-radius: 6px;
+    margin-bottom: 4px;
+}
+.reminder-item {
+    padding: 6px;
+    margin: 2px 0;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow:0 1px 2px rgba(0,0,0,.06);
+    pointer-events:none;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap:8px;
+    align-items:center;
+}
+.reminder-name{font-weight:600;}
+.reminder-time{font-size:14px;color:#555;}
+.reminder-status{font-size:12px;color:#10b981;text-align:right;}
 </style>
 </head>
 <body>
@@ -133,6 +157,7 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
   <button class="btn-confirm" id="confirmDeleteBtn">Yes, Delete</button>
   <button class="btn-cancel" id="cancelDeleteBtn">Cancel</button>
 </div>
+
 <script>
 let dependantAdded = false;
 let editing = false;
@@ -277,13 +302,12 @@ function checkDuplicates(){
         duplicateNote.style.display = 'block';
         clearTimeout(duplicateTimeout);
         duplicateTimeout = setTimeout(()=>{
-            duplicateNote.style.display='none';
+            duplicateNote.style.display = 'none';
         }, 3000);
     } else duplicateNote.style.display = 'none';
 
     return hasDuplicate;
 }
-
 // Form submit
 form.addEventListener('submit', function(e){
     e.preventDefault();
@@ -348,18 +372,39 @@ confirmDeleteBtn.addEventListener('click', ()=>{
 });
 cancelDeleteBtn.addEventListener('click', ()=>{deletePopup.style.display='none';});
 
-// Upcoming Reminders
+// Upcoming Reminders — 3-column display
 function updateReminders(){
     remindersList.innerHTML='';
+
     if(!currentDependant) return;
+
+    // Header row
+    const header = document.createElement('div');
+    header.className='reminders-header';
+    header.innerHTML='<span>Name</span><span>Time</span><span>Status</span>';
+    remindersList.appendChild(header);
+
+    // Reminder items
     currentDependant.times.forEach(time=>{
         const div = document.createElement('div');
-        div.className='reminder-item';
-        div.textContent=`${currentDependant.name} - ${currentDependant.medicine} at ${time}`;
-        div.addEventListener('click', ()=>{
-            editing=true;
-            addBtn.click();
-        });
+        div.className = 'reminder-item';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'reminder-name';
+        nameSpan.textContent = currentDependant.name;
+
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'reminder-time';
+        timeSpan.textContent = time;
+
+        const statusSpan = document.createElement('span');
+        statusSpan.className = 'reminder-status';
+        statusSpan.textContent = 'Pending'; // default status
+
+        div.appendChild(nameSpan);
+        div.appendChild(timeSpan);
+        div.appendChild(statusSpan);
+
         remindersList.appendChild(div);
     });
 }
