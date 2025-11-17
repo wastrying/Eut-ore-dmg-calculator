@@ -268,4 +268,10 @@ function updateReminders(){
 // Sidebar nav
 document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click', ()=>{
-    document.querySelectorAll('.nav-item').for
+    document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active')); item.classList.add('active');
+    const target=item.getAttribute('data-nav'); document.querySelectorAll('.dashboard-section').forEach(sec=>sec.style.display=(sec.id===target?'block':'none'));
+  });
+});
+</script>
+</body>
+</html>
