@@ -4,10 +4,51 @@
 <meta charset="UTF-8">
 <title>Remblyx Advanced Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="style.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
+body{background:#f5f5f5;min-height:100vh;color:#222;display:flex;}
+#main-dashboard{display:grid;grid-template-columns:220px 1fr;gap:0;height:100vh;width:100vw;overflow:hidden;background:#fff;}
+.sidebar{background:#111827;color:#e5e7eb;padding:16px;display:flex;flex-direction:column;gap:12px;}
+.sidebar-title{font-size:14px;font-weight:600;color:#9ca3af;text-transform:uppercase;}
+.nav-item{display:flex;align-items:center;gap:8px;padding:10px;border-radius:8px;cursor:pointer;color:#d1d5db;transition:.2s;}
+.nav-item:hover{background:rgba(249,250,251,.06);}
+.nav-item.active{background:#1f2937;color:#fff;border-left:3px solid #667eea;padding-left:7px;}
+.icon-dot{width:7px;height:7px;border-radius:999px;background:#4ade80;}
+.main-area{padding:16px;display:flex;flex-direction:column;gap:16px;overflow:auto;}
+.section-title{font-weight:600;font-size:16px;color:#111827;margin-bottom:8px;}
+.board-wrapper{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:16px;max-width:100%;overflow:auto;}
+button{padding:8px 12px;border:none;border-radius:6px;background:#4CAF50;color:white;cursor:pointer;}
+button:hover{background:#45a049;}
+.dependant-info{margin-top:12px;padding:12px;background:#fff;border-left:4px solid #4CAF50;border-radius:6px; display:none;}
+.dependant-actions{display:flex;gap:8px;margin-top:10px;}
+.error{color:red;font-weight:bold;margin-bottom:8px;}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;z-index:1000;}
+.modal.active{display:flex;}
+.modal-content{background:#fff;padding:20px;border-radius:12px;width:90%;max-width:400px;box-shadow:0 8px 24px rgba(0,0,0,0.3);max-height:80vh;overflow-y:auto;}
+.modal-content h2{margin-top:0;}
+.modal-content label{display:block;margin:8px 0 4px;font-weight:600;}
+.modal-content input,.modal-content select{width:100%;padding:6px 8px;margin-bottom:10px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;}
+.modal-content .dosage-row{display:flex;gap:6px;}
+.modal-content .dosage-row input{flex:1;}
+.modal-content .dosage-row select{flex:1;}
+.time-picker-container{margin-top:10px;}
+.dosage-note,.phone-note,.duplicate-note{font-size:12px;color:red;margin-top:2px;display:none;}
+.delete-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;padding:24px;box-shadow:0 8px 24px rgba(0,0,0,0.3);display:none;z-index:2000;max-width:400px;text-align:center;}
+.delete-popup p{margin-bottom:20px;font-weight:600;}
+.delete-popup button{margin:0 8px;padding:8px 14px;border:none;border-radius:6px;cursor:pointer;}
+.btn-confirm{background:#f87171;color:white;}
+.btn-cancel{background:#9ca3af;color:white;}
+input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance:auto;margin:0; }
+
+/* Reminders 3-column static Pending */
+.reminders-header { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; font-weight:600; padding:6px; background:#f3f4f6; border-radius:6px; margin-bottom:4px; text-align:left; }
+.reminder-item { padding:6px; margin:2px 0; background:#fff; border-radius:6px; box-shadow:0 1px 2px rgba(0,0,0,.06); pointer-events:none; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; align-items:center; }
+.reminder-name{font-weight:600; display:flex; align-items:center;}
+.reminder-time{font-size:14px;color:#555; display:flex; align-items:center;}
+.reminder-status{font-size:12px;color:#10b981; text-align:center; display:flex; justify-content:center; align-items:center; pointer-events:none;}
+</style>
 </head>
 <body>
-
 <div id="main-dashboard">
   <aside class="sidebar">
     <div class="sidebar-title">Dashboard</div>
@@ -16,7 +57,6 @@
   </aside>
 
   <div class="main-area">
-    <!-- Dependants Section -->
     <div id="dependants" class="dashboard-section">
       <div class="section-title">Your Dependants</div>
       <div class="board-wrapper">
@@ -38,7 +78,6 @@
       </div>
     </div>
 
-    <!-- Reminders Section -->
     <div id="reminders" class="dashboard-section" style="display:none;">
       <div class="section-title">Upcoming Reminders</div>
       <div class="board-wrapper" id="remindersList"></div>
@@ -90,113 +129,143 @@
   <button class="btn-confirm" id="confirmDeleteBtn">Yes, Delete</button>
   <button class="btn-cancel" id="cancelDeleteBtn">Cancel</button>
 </div>
-
-<script src="script.js"></script>
-</body>
-</html>
-*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
-body{background:#f5f5f5;min-height:100vh;color:#222;display:flex;}
-#main-dashboard{display:grid;grid-template-columns:220px 1fr;gap:0;height:100vh;width:100vw;overflow:hidden;background:#fff;}
-.sidebar{background:#111827;color:#e5e7eb;padding:16px;display:flex;flex-direction:column;gap:12px;}
-.sidebar-title{font-size:14px;font-weight:600;color:#9ca3af;text-transform:uppercase;}
-.nav-item{display:flex;align-items:center;gap:8px;padding:10px;border-radius:8px;cursor:pointer;color:#d1d5db;transition:.2s;}
-.nav-item:hover{background:rgba(249,250,251,.06);}
-.nav-item.active{background:#1f2937;color:#fff;border-left:3px solid #667eea;padding-left:7px;}
-.icon-dot{width:7px;height:7px;border-radius:999px;background:#4ade80;}
-.main-area{padding:16px;display:flex;flex-direction:column;gap:16px;overflow:auto;}
-.section-title{font-weight:600;font-size:16px;color:#111827;margin-bottom:8px;}
-.board-wrapper{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:16px;max-width:100%;overflow:auto;}
-button{padding:8px 12px;border:none;border-radius:6px;background:#4CAF50;color:white;cursor:pointer;}
-button:hover{background:#45a049;}
-.dependant-info{margin-top:12px;padding:12px;background:#fff;border-left:4px solid #4CAF50;border-radius:6px; display:none;}
-.dependant-actions{display:flex;gap:8px;margin-top:10px;}
-.error{color:red;font-weight:bold;margin-bottom:8px;}
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;z-index:1000;}
-.modal.active{display:flex;}
-.modal-content{background:#fff;padding:20px;border-radius:12px;width:90%;max-width:400px;box-shadow:0 8px 24px rgba(0,0,0,0.3);max-height:80vh;overflow-y:auto;}
-.modal-content h2{margin-top:0;}
-.modal-content label{display:block;margin:8px 0 4px;font-weight:600;}
-.modal-content input,.modal-content select{width:100%;padding:6px 8px;margin-bottom:10px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;}
-.modal-content .dosage-row{display:flex;gap:6px;}
-.modal-content .dosage-row input{flex:1;}
-.modal-content .dosage-row select{flex:1;}
-.time-picker-container{margin-top:10px;}
-.dosage-note,.phone-note,.duplicate-note{font-size:12px;color:red;margin-top:2px;display:none;}
-.delete-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;padding:24px;box-shadow:0 8px 24px rgba(0,0,0,0.3);display:none;z-index:2000;max-width:400px;text-align:center;}
-.delete-popup p{margin-bottom:20px;font-weight:600;}
-.delete-popup button{margin:0 8px;padding:8px 14px;border:none;border-radius:6px;cursor:pointer;}
-.btn-confirm{background:#f87171;color:white;}
-.btn-cancel{background:#9ca3af;color:white;}
-input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: auto; margin: 0; }
-
-/* Reminders 3-column alignment */
-.reminders-header,.reminder-item{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:center;}
-.reminders-header{font-weight:600;padding:6px;background:#f3f4f6;border-radius:6px;margin-bottom:4px;justify-items:start;}
-.reminder-item{padding:6px;margin:2px 0;background:#fff;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.06);pointer-events:none;justify-items:start;}
-.reminder-name,.reminder-time{justify-self:start;}
-.reminder-status{justify-self:center;font-size:12px;color:#10b981;}
+<script>
 let dependantAdded=false, editing=false, currentDependant=null, duplicateTimeout;
-
-const addBtn=document.getElementById('addDependantBtn');
-const editBtn=document.getElementById('editDependantBtn');
-const removeBtn=document.getElementById('removeDependantBtn');
-const modal=document.getElementById('dependantModal');
-const closeModalBtn=document.getElementById('closeModalBtn');
-const form=document.getElementById('dependantForm');
-const errorMsg=document.getElementById('modalError');
-const modalTitle=document.getElementById('modalTitle');
-const infoBox=document.getElementById('dependantInfo');
-const dispName=document.getElementById('dispName');
-const dispPhone=document.getElementById('dispPhone');
-const dispMedicine=document.getElementById('dispMedicine');
-const dispTimes=document.getElementById('dispTimes');
-const dispDosage=document.getElementById('dispDosage');
-const dispNotes=document.getElementById('dispNotes');
-const dosageNumberInput=document.getElementById('depDosageNumber');
-const depDosageUnit=document.getElementById('depDosageUnit');
-const phoneInput=document.getElementById('depPhone');
-const phoneNote=document.getElementById('phoneNote');
-const dosageNote=document.getElementById('dosageNote');
-const numTimesInput=document.getElementById('numTimesInput');
-const timesSection=document.getElementById('timesSection');
-const timesContainer=document.getElementById('timesContainer');
-const duplicateNote=document.getElementById('duplicateNote');
-const deletePopup=document.getElementById('deletePopup');
-const confirmDeleteBtn=document.getElementById('confirmDeleteBtn');
-const cancelDeleteBtn=document.getElementById('cancelDeleteBtn');
-const mainError=document.getElementById('mainError');
-const remindersList=document.getElementById('remindersList');
+const addBtn=document.getElementById('addDependantBtn'),
+      editBtn=document.getElementById('editDependantBtn'),
+      removeBtn=document.getElementById('removeDependantBtn'),
+      modal=document.getElementById('dependantModal'),
+      closeModalBtn=document.getElementById('closeModalBtn'),
+      form=document.getElementById('dependantForm'),
+      errorMsg=document.getElementById('modalError'),
+      modalTitle=document.getElementById('modalTitle'),
+      infoBox=document.getElementById('dependantInfo'),
+      dispName=document.getElementById('dispName'),
+      dispPhone=document.getElementById('dispPhone'),
+      dispMedicine=document.getElementById('dispMedicine'),
+      dispTimes=document.getElementById('dispTimes'),
+      dispDosage=document.getElementById('dispDosage'),
+      dispNotes=document.getElementById('dispNotes'),
+      dosageNumberInput=document.getElementById('depDosageNumber'),
+      depDosageUnit=document.getElementById('depDosageUnit'),
+      phoneInput=document.getElementById('depPhone'),
+      phoneNote=document.getElementById('phoneNote'),
+      dosageNote=document.getElementById('dosageNote'),
+      numTimesInput=document.getElementById('numTimesInput'),
+      timesSection=document.getElementById('timesSection'),
+      timesContainer=document.getElementById('timesContainer'),
+      duplicateNote=document.getElementById('duplicateNote'),
+      deletePopup=document.getElementById('deletePopup'),
+      confirmDeleteBtn=document.getElementById('confirmDeleteBtn'),
+      cancelDeleteBtn=document.getElementById('cancelDeleteBtn'),
+      mainError=document.getElementById('mainError'),
+      remindersList=document.getElementById('remindersList');
 
 dosageNote.style.display='none'; phoneNote.style.display='none'; duplicateNote.style.display='none';
 
 function resetDosageNote(){dosageNote.style.display='none'; dosageNumberInput.style.border='1px solid #ccc';}
 function resetPhoneNote(){phoneNote.style.display='none'; phoneInput.style.border='1px solid #ccc';}
 
-addBtn.addEventListener('click',()=>{
-  if(dependantAdded && !editing){mainError.textContent="You can only add one dependant in the Basic plan."; setTimeout(()=>{mainError.textContent='';},5000); return;}
+// Show modal
+addBtn.addEventListener('click', ()=>{
+  if(dependantAdded&&!editing){ mainError.textContent="You can only add one dependant in the Basic plan."; setTimeout(()=>{mainError.textContent='';},5000); return; }
   errorMsg.textContent=''; modalTitle.textContent=editing?"Edit Dependant":"Add Dependant"; modal.classList.add('active');
-  if(editing && currentDependant){ depName.value=currentDependant.name; phoneInput.value=currentDependant.phone; depMedicine.value=currentDependant.medicine; dosageNumberInput.value=currentDependant.dosageNumber; depDosageUnit.value=currentDependant.dosageUnit; depNotes.value=currentDependant.notes; numTimesInput.value=currentDependant.times.length; renderTimeInputs(currentDependant.times);}
+  if(editing && currentDependant){
+    depName.value=currentDependant.name;
+    phoneInput.value=currentDependant.phone;
+    depMedicine.value=currentDependant.medicine;
+    dosageNumberInput.value=currentDependant.dosageNumber;
+    depDosageUnit.value=currentDependant.dosageUnit;
+    depNotes.value=currentDependant.notes;
+    numTimesInput.value=currentDependant.times.length;
+    renderTimeInputs(currentDependant.times);
+  }
 });
 
-closeModalBtn.addEventListener('click',()=>{modal.classList.remove('active');form.reset();resetDosageNote();resetPhoneNote();timesContainer.innerHTML='';timesSection.style.display='none';duplicateNote.style.display='none';errorMsg.textContent='';});
+// Close modal
+closeModalBtn.addEventListener('click', ()=>{
+  modal.classList.remove('active'); form.reset(); resetDosageNote(); resetPhoneNote();
+  timesContainer.innerHTML=''; timesSection.style.display='none'; duplicateNote.style.display='none'; errorMsg.textContent='';
+});
 
-dosageNumberInput.addEventListener('input',()=>{parseInt(dosageNumberInput.value)<1?(dosageNumberInput.style.border='2px solid red',dosageNote.style.display='block'):resetDosageNote();});
-phoneInput.addEventListener('input',()=>{let val=phoneInput.value.replace(/\D/g,'');if(val.length>8) val=val.slice(0,8); phoneInput.value=val; (val.length!==8 || !/^[689]/.test(val))?(phoneInput.style.border='2px solid red',phoneNote.style.display='block'):resetPhoneNote();});
-numTimesInput.addEventListener('input',()=>{const n=parseInt(numTimesInput.value)||0; renderTimeInputs(Array(n).fill(''));});
+// Dosage validation
+dosageNumberInput.addEventListener('input', ()=>{
+  if(parseInt(dosageNumberInput.value)<1){ dosageNumberInput.style.border='2px solid red'; dosageNote.style.display='block'; }
+  else resetDosageNote();
+});
 
-function renderTimeInputs(existingTimes){timesContainer.innerHTML=''; if(existingTimes.length===0){timesSection.style.display='none'; return;} timesSection.style.display='block'; existingTimes.forEach(time=>{const input=document.createElement('input'); input.type='time'; input.classList.add('timeInput'); input.value=time||''; input.addEventListener('input',checkDuplicates); timesContainer.appendChild(input);});}
+// Phone validation
+phoneInput.addEventListener('input', ()=>{
+  let val=phoneInput.value.replace(/\D/g,''); if(val.length>8) val=val.slice(0,8); phoneInput.value=val;
+  if(val.length!==8||!/^[689]/.test(val)){ phoneInput.style.border='2px solid red'; phoneNote.style.display='block'; }
+  else resetPhoneNote();
+});
 
-function checkDuplicates(){const inputs=Array.from(timesContainer.querySelectorAll('.timeInput')); const values=inputs.map(i=>i.value).filter(v=>v!==''); let hasDuplicate=false; inputs.forEach(i=>i.style.border='1px solid #ccc'); values.forEach(val=>{const firstIndex=inputs.findIndex(i=>i.value===val); inputs.forEach((input,j)=>{if(input.value===val && j!==firstIndex){input.style.border='2px solid red'; hasDuplicate=true;}});}); if(hasDuplicate){duplicateNote.style.display='block'; clearTimeout(duplicateTimeout); duplicateTimeout=setTimeout(()=>{duplicateNote.style.display='none';},3000);} else duplicateNote.style.display='none'; return hasDuplicate;}
+// Time inputs
+numTimesInput.addEventListener('input', ()=>{ renderTimeInputs(Array(parseInt(numTimesInput.value)||0).fill('')); });
 
-form.addEventListener('submit',function(e){e.preventDefault(); if(checkDuplicates()){errorMsg.textContent="Duplicate times found. Fix them before saving."; return;} const name=depName.value.trim(), phone=phoneInput.value.trim(), medicine=depMedicine.value.trim(), dosageNumber=parseInt(dosageNumberInput.value), dosageUnit=depDosageUnit.value, notes=depNotes.value.trim(), times=Array.from(timesContainer.querySelectorAll('.timeInput')).map(i=>i.value).filter(v=>v!==''); if(!name||!medicine||!dosageUnit||!notes||dosageNumber<1||!/^\d{8}$/.test(phone)||!/^[689]/.test(phone)||times.length!==parseInt(numTimesInput.value)){errorMsg.textContent="Please fill all fields correctly including times."; return;} dispName.textContent=name; dispPhone.textContent=phone; dispMedicine.textContent=medicine; dispDosage.textContent=`${dosageNumber} ${dosageUnit}`; dispTimes.textContent=times.join(', '); dispNotes.textContent=notes; infoBox.style.display='block'; dependantAdded=true; editing=false; currentDependant={name,phone,medicine,dosageNumber,dosageUnit,notes,times}; updateReminders(); modal.classList.remove('active'); form.reset(); resetDosageNote(); resetPhoneNote(); timesContainer.innerHTML=''; timesSection.style.display='none'; duplicateNote.style.display='none'; errorMsg.textContent='';});
+function renderTimeInputs(existingTimes){
+  timesContainer.innerHTML=''; if(existingTimes.length===0){timesSection.style.display='none'; return;}
+  timesSection.style.display='block';
+  existingTimes.forEach(time=>{
+    const input=document.createElement('input'); input.type='time'; input.classList.add('timeInput'); input.value=time||'';
+    input.addEventListener('input', checkDuplicates); timesContainer.appendChild(input);
+  });
+}
 
-editBtn.addEventListener('click',()=>{if(!dependantAdded)return; editing=true; addBtn.click();});
-removeBtn.addEventListener('click',()=>{if(!dependantAdded)return; deletePopup.style.display='block';});
-confirmDeleteBtn.addEventListener('click'=>{infoBox.style.display='none'; dependantAdded=false; dispName.textContent=''; dispPhone.textContent=''; dispMedicine.textContent=''; dispDosage.textContent=''; dispTimes.textContent=''; dispNotes.textContent=''; deletePopup.style.display='none'; remindersList.innerHTML='';});
-cancelDeleteBtn.addEventListener('click',()=>{deletePopup.style.display='none';});
+function checkDuplicates(){
+  const inputs=Array.from(timesContainer.querySelectorAll('.timeInput'));
+  const values=inputs.map(i=>i.value).filter(v=>v!==''); let hasDuplicate=false; inputs.forEach(i=>i.style.border='1px solid #ccc');
+  values.forEach(val=>{
+    const firstIndex=inputs.findIndex(i=>i.value===val);
+    inputs.forEach((input,j)=>{ if(input.value===val && j!==firstIndex){ input.style.border='2px solid red'; hasDuplicate=true; } });
+  });
+  if(hasDuplicate){ duplicateNote.style.display='block'; clearTimeout(duplicateTimeout); duplicateTimeout=setTimeout(()=>{duplicateNote.style.display='none';},3000);}
+  else duplicateNote.style.display='none';
+  return hasDuplicate;
+}
 
-function updateReminders(){remindersList.innerHTML=''; if(!currentDependant)return; const header=document.createElement('div'); header.className='reminders-header'; header.innerHTML='<span>Name</span><span>Time</span><span>Status</span>'; remindersList.appendChild(header); currentDependant.times.forEach(time=>{const div=document.createElement('div'); div.className='reminder-item'; const nameSpan=document.createElement('span'); nameSpan.className='reminder-name'; nameSpan.textContent=currentDependant.name; const timeSpan=document.createElement('span'); timeSpan.className='reminder-time'; timeSpan.textContent=time; const statusSpan=document.createElement('span'); statusSpan.className='reminder-status'; statusSpan.textContent='Pending'; div.appendChild(nameSpan); div.appendChild(timeSpan); div.appendChild(statusSpan); remindersList.appendChild(div);});}
+// Form submit
+form.addEventListener('submit', function(e){
+  e.preventDefault();
+  if(checkDuplicates()){ errorMsg.textContent="Duplicate times found. Fix them before saving."; return; }
+  const name=depName.value.trim(), phone=phoneInput.value.trim(), medicine=depMedicine.value.trim(),
+        dosageNumber=parseInt(dosageNumberInput.value), dosageUnit=depDosageUnit.value,
+        notes=depNotes.value.trim(),
+        times=Array.from(timesContainer.querySelectorAll('.timeInput')).map(i=>i.value).filter(v=>v!=='');
+  if(!name||!medicine||!dosageUnit||!notes||dosageNumber<1||!/^\d{8}$/.test(phone)||!/^[689]/.test(phone)||times.length!==parseInt(numTimesInput.value)){
+    errorMsg.textContent="Please fill all fields correctly including times."; return;
+  }
+  dispName.textContent=name; dispPhone.textContent=phone; dispMedicine.textContent=medicine;
+  dispDosage.textContent=`${dosageNumber} ${dosageUnit}`; dispTimes.textContent=times.join(', '); dispNotes.textContent=notes;
+  infoBox.style.display='block'; dependantAdded=true; editing=false; currentDependant={name,phone,medicine,dosageNumber,dosageUnit,notes,times};
+  updateReminders(); modal.classList.remove('active'); form.reset(); resetDosageNote(); resetPhoneNote(); timesContainer.innerHTML=''; timesSection.style.display='none'; duplicateNote.style.display='none'; errorMsg.textContent='';
+});
 
-const navItems=document.querySelectorAll('.nav-item');
-const sections=document.querySelectorAll('.dashboard-section');
-navItems.forEach(item=>{item.addEventListener('click',()=>{navItems.forEach(i=>i.classList.remove('active')); item.classList.add('active'); const target=item.getAttribute('data-nav'); sections.forEach(sec=>sec.style.display=(sec.id===target?'block':'none'));});});
+// Edit & Delete
+editBtn.addEventListener('click', ()=>{ if(!dependantAdded)return; editing=true; addBtn.click(); });
+removeBtn.addEventListener('click', ()=>{ if(!dependantAdded)return; deletePopup.style.display='block'; });
+confirmDeleteBtn.addEventListener('click', ()=>{
+  infoBox.style.display='none'; dependantAdded=false; dispName.textContent=''; dispPhone.textContent=''; dispMedicine.textContent='';
+  dispDosage.textContent=''; dispTimes.textContent=''; dispNotes.textContent=''; deletePopup.style.display='none'; remindersList.innerHTML='';
+});
+cancelDeleteBtn.addEventListener('click', ()=>{deletePopup.style.display='none';});
+
+// Reminders
+function updateReminders(){
+  remindersList.innerHTML=''; if(!currentDependant)return;
+  const header=document.createElement('div'); header.className='reminders-header';
+  header.innerHTML='<span>Name</span><span>Time</span><span>Status</span>'; remindersList.appendChild(header);
+  currentDependant.times.forEach(time=>{
+    const div=document.createElement('div'); div.className='reminder-item';
+    const nameSpan=document.createElement('span'); nameSpan.className='reminder-name'; nameSpan.textContent=currentDependant.name;
+    const timeSpan=document.createElement('span'); timeSpan.className='reminder-time'; timeSpan.textContent=time;
+    const statusSpan=document.createElement('span'); statusSpan.className='reminder-status'; statusSpan.textContent='Pending';
+    div.appendChild(nameSpan); div.appendChild(timeSpan); div.appendChild(statusSpan); remindersList.appendChild(div);
+  });
+}
+
+// Sidebar nav
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav-item').for
