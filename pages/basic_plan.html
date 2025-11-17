@@ -42,7 +42,7 @@ button:hover{background:#45a049;}
 .btn-cancel{background:#9ca3af;color:white;}
 input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: auto; margin: 0; }
 
-/* Reminders 3-column */
+/* Reminders 3-column static Pending */
 .reminders-header {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -68,7 +68,7 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 }
 .reminder-name{font-weight:600; display:flex; align-items:center;}
 .reminder-time{font-size:14px;color:#555; display:flex; align-items:center;}
-.reminder-status{font-size:12px;color:#10b981; text-align:center; display:flex; justify-content:center; align-items:center;}
+.reminder-status{font-size:12px;color:#10b981; text-align:center; display:flex; justify-content:center; align-items:center; pointer-events:none;}
 </style>
 </head>
 <body>
@@ -374,7 +374,7 @@ confirmDeleteBtn.addEventListener('click', ()=>{
 });
 cancelDeleteBtn.addEventListener('click', ()=>{deletePopup.style.display='none';});
 
-// Upcoming Reminders — 3-column with dynamic status
+// Upcoming Reminders — static 3-column Pending
 function updateReminders(){
     remindersList.innerHTML='';
 
@@ -400,40 +400,14 @@ function updateReminders(){
 
         const statusSpan = document.createElement('span');
         statusSpan.className='reminder-status';
-        statusSpan.textContent = 'Pending'; // default
+        statusSpan.textContent = 'Pending'; // always Pending
 
         div.appendChild(nameSpan);
         div.appendChild(timeSpan);
         div.appendChild(statusSpan);
+
         remindersList.appendChild(div);
     });
-
-    // Start interval to update statuses
-    updateStatusInterval();
-}
-
-// Convert HH:MM string to Date today
-function timeStringToDate(timeStr){
-    const [h,m] = timeStr.split(':').map(Number);
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
-}
-
-// Update status based on current time
-let statusInterval = null;
-function updateStatusInterval(){
-    if(statusInterval) clearInterval(statusInterval);
-    statusInterval = setInterval(()=>{
-        const now = new Date();
-        const items = remindersList.querySelectorAll('.reminder-item');
-        items.forEach(item=>{
-            const timeText = item.querySelector('.reminder-time').textContent;
-            const statusSpan = item.querySelector('.reminder-status');
-            const reminderTime = timeStringToDate(timeText);
-            statusSpan.textContent = (now >= reminderTime) ? 'Completed' : 'Pending';
-            statusSpan.style.color = (now >= reminderTime) ? '#6b7280' : '#10b981';
-        });
-    }, 30000); // update every 30 seconds
 }
 
 // Sidebar navigation
