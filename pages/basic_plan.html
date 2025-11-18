@@ -19,7 +19,7 @@ body{background:#f5f5f5;min-height:100vh;color:#222;display:flex;}
 .board-wrapper{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:16px;max-width:100%;overflow:auto;}
 button{padding:8px 12px;border:none;border-radius:6px;background:#4CAF50;color:white;cursor:pointer;}
 button:hover{background:#45a049;}
-.dependant-info{margin-top:12px;padding:12px;background:#fff;border-left:4px solid #4CAF50;border-radius:6px;display:none;}
+.dependant-info{margin-top:12px;padding:12px;background:#fff;border-left:4px solid #4CAF50;border-radius:6px; display:none;}
 .dependant-actions{display:flex;gap:8px;margin-top:10px;}
 .error{color:red;font-weight:bold;margin-bottom:8px;}
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;z-index:1000;}
@@ -49,29 +49,29 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 }
 
 /* Reminders 3-column static Pending */
-.reminders-header {
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:6px;
-  font-weight:600;
-  padding:6px;
-  background:#f3f4f6;
-  border-radius:6px;
-  margin-bottom:4px;
-  text-align:left;
-}
-.reminder-item {
-  padding:6px;
-  margin:2px 0;
-  background:#fff;
-  border-radius:6px;
-  box-shadow:0 1px 2px rgba(0,0,0,.06);
-  pointer-events:none;
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:8px;
-  align-items:center;
-}
+.reminders-header { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; font-weight:600; padding:6px; background:#f3f4f6; border-radius:6px; margin-bottom:4px; text-align:left; }
+.reminder-item { padding:6px; margin:2px 0; background:#fff; border-radius:6px; box-shadow:0 1px 2px rgba(0,0,0,.06); pointer-events:none; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; align-items:center; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .reminder-name{font-weight:600; display:flex; align-items:center;}
 .reminder-time{font-size:14px;color:#555; display:flex; align-items:center;}
 .reminder-status{
@@ -82,7 +82,7 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
   justify-content:flex-start;
   align-items:center;
   pointer-events:none;
-  padding-left:2px;
+  padding-left:2px; /* optional */
 }
 </style>
 </head>
@@ -158,25 +158,44 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
         <div id="timesContainer" style="display:flex; flex-direction:column; gap:6px;"></div>
         <div id="duplicateNote" class="duplicate-note">Duplicate times are not allowed!</div>
       </div>
-
-      <label>Additional Notes:</label>
-      <input type="text" id="depNotes" placeholder="Enter 'NA' if none" required />
-
-      <!-- Checkbox to use a different WhatsApp number -->
       <label class="checkbox-row">
-        <input type="checkbox" id="enableReminders">
-        <span>Send reminders to a different WhatsApp number</span>
-      </label>
+  <input type="checkbox" id="enableReminders" checked>
+  <span></span>
+</label>
 
-      <!-- Extra WhatsApp number (hidden by default) -->
-      <div id="waNumberWrapper" style="display:none; margin-top:4px;">
-        <label>WhatsApp Phone Number:</label>
-        <input type="text" id="waPhone" placeholder="Enter 8-digit WhatsApp number" />
-        <div id="waPhoneNote" class="phone-note">Phone must be 8 digits starting with 6, 8, or 9.</div>
-      </div>
+<button type="submit">Save Users</button>
+<button type="button" id="closeModalBtn" style="background:#9ca3af;margin-top:4px;">Cancel</button>
+      <label>Additional Notes:</label>
+<input type="text" id="depNotes" placeholder="Enter 'NA' if none" required />
 
-      <button type="submit">Save Users</button>
-      <button type="button" id="closeModalBtn" style="background:#9ca3af;margin-top:4px;">Cancel</button>
+<!-- ✅ NEW CHECKBOX -->
+<label class="checkbox-row">
+  <input type="checkbox" id="enableReminders">
+  <span>Send reminders to a different WhatsApp number</span>
+</label>
+
+<!-- ✅ NEW WHATSAPP NUMBER FIELD (hidden by default) -->
+<div id="waNumberWrapper" style="display:none; margin-top:4px;">
+  <label>WhatsApp Phone Number:</label>
+  <input type="text" id="waPhone" placeholder="Enter 8-digit WhatsApp number" />
+  <div id="waPhoneNote" class="phone-note">Phone must be 8 digits starting with 6, 8, or 9.</div>
+</div>
+
+<button type="submit">Save Users</button>
+<button type="button" id="closeModalBtn" style="background:#9ca3af;margin-top:4px;">Cancel</button>
+
+
+
+
+
+
+
+
+
+
+
+
+
     </form>
   </div>
 </div>
@@ -187,10 +206,10 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
   <button class="btn-confirm" id="confirmDeleteBtn">Yes, Delete</button>
   <button class="btn-cancel" id="cancelDeleteBtn">Cancel</button>
 </div>
+<!-- Firebase SDKs (put these before your main script) -->
 
-<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
@@ -251,17 +270,17 @@ const addBtn           = document.getElementById('addDependantBtn'),
       confirmDeleteBtn = document.getElementById('confirmDeleteBtn'),
       cancelDeleteBtn  = document.getElementById('cancelDeleteBtn'),
       mainError        = document.getElementById('mainError'),
-      remindersList    = document.getElementById('remindersList'),
-      enableRemindersCheckbox = document.getElementById('enableReminders'),
-      waNumberWrapper  = document.getElementById('waNumberWrapper'),
-      waPhoneInput     = document.getElementById('waPhone'),
-      waPhoneNote      = document.getElementById('waPhoneNote');
+      remindersList    = document.getElementById('remindersList');
+      enableRemindersCheckbox = document.getElementById('enableReminders'),  // ✅ NEW
+      waNumberWrapper  = document.getElementById('waNumberWrapper'),        // ✅ NEW
+      waPhoneInput     = document.getElementById('waPhone'),                // ✅ NEW
+      waPhoneNote      = document.getElementById('waPhoneNote'); 
 
 dosageNote.style.display    = 'none';
 phoneNote.style.display     = 'none';
 duplicateNote.style.display = 'none';
-waPhoneNote.style.display   = 'none';
-waNumberWrapper.style.display = 'none';
+
+
 
 function resetDosageNote(){
   dosageNote.style.display = 'none';
@@ -290,14 +309,15 @@ function saveDependantToUser(dep) {
     return;
   }
 
-  const uid       = user.uid;
-  const basePhone = dep.whatsappPhone || dep.phone;   // use extra number if provided
+    const uid          = user.uid;
+  const basePhone    = dep.whatsappPhone || dep.phone;   // use extra number if provided
   const fullWaNumber = buildWhatsappNumber(basePhone);
+
 
   db.collection("users").doc(uid)
     .set({
       whatsappNumber: fullWaNumber, // used by Apps Script to match senderWaId
-      medWhatsAppPhone: basePhone,  // optional: store raw 8-digit used for WA
+      medWhatsAppPhone: basePhone,
       medName: dep.name,
       medPhone: dep.phone,                // 8-digit SG phone (for UI)
       medMedicine: dep.medicine,
@@ -320,6 +340,7 @@ function saveDependantToUser(dep) {
 // --------------------
 function applyCurrentDependantToUI() {
   if (!currentDependant || !currentDependant.name) {
+    // no data → hide panel
     infoBox.style.display = 'none';
     dependantAdded = false;
     remindersList.innerHTML = '';
@@ -370,6 +391,7 @@ function listenToUserMedStatus() {
       const data = doc.data();
       console.log("User doc update:", data);
 
+      // If this user has never set med info, hide panel
       if (!data.medName) {
         currentDependant = null;
         applyCurrentDependantToUI();
@@ -409,6 +431,8 @@ auth.onAuthStateChanged(user => {
 // --------------------
 // Modal open / close
 // --------------------
+
+// Show modal
 addBtn.addEventListener('click', () => {
   if (dependantAdded && !editing) {
     mainError.textContent = "You can only add one dependant in the Basic plan.";
@@ -430,16 +454,17 @@ addBtn.addEventListener('click', () => {
     const times = currentDependant.times || [];
     numTimesInput.value     = times.length;
     renderTimeInputs(times);
-  } else {
-    // new user: reset WA checkbox/field
-    enableRemindersCheckbox.checked = false;
-    waNumberWrapper.style.display = 'none';
-    waPhoneInput.value = '';
-    waPhoneNote.style.display = 'none';
-    waPhoneInput.style.border = '1px solid #ccc';
+
+
+
+
+
+
+
   }
 });
 
+// Close modal
 closeModalBtn.addEventListener('click', () => {
   modal.classList.remove('active');
   form.reset();
@@ -450,16 +475,18 @@ closeModalBtn.addEventListener('click', () => {
   duplicateNote.style.display = 'none';
   errorMsg.textContent = '';
 
-  enableRemindersCheckbox.checked = false;
-  waNumberWrapper.style.display = 'none';
-  waPhoneInput.value = '';
-  waPhoneNote.style.display = 'none';
-  waPhoneInput.style.border = '1px solid #ccc';
+
+
+
+
+
 });
 
 // --------------------
 // Validation
 // --------------------
+
+// Dosage validation
 dosageNumberInput.addEventListener('input', () => {
   if (parseInt(dosageNumberInput.value) < 1) {
     dosageNumberInput.style.border = '2px solid red';
@@ -558,10 +585,10 @@ form.addEventListener('submit', function(e) {
         notes        = depNotes.value.trim(),
         times        = Array.from(timesContainer.querySelectorAll('.timeInput'))
                            .map(i => i.value)
-                           .filter(v => v !== ''),
-        waPhone      = waPhoneInput.value.trim();
+                           .filter(v => v !== '');
+        waPhone      = waPhoneInput.value.trim();  // ✅ NEW
 
-  // validate override WA number only if checkbox is checked
+
   if (enableRemindersCheckbox.checked &&
       (!/^\d{8}$/.test(waPhone) || !/^[689]/.test(waPhone))) {
     errorMsg.textContent = "Please enter a valid 8-digit WhatsApp number or uncheck the reminders box.";
@@ -585,7 +612,7 @@ form.addEventListener('submit', function(e) {
     dosageUnit,
     notes,
     times,
-    status: "pending", // default until WhatsApp reply
+    status: "pending"   // default until WhatsApp reply
     remindersEnabled: enableRemindersCheckbox.checked,
     whatsappPhone: enableRemindersCheckbox.checked ? waPhone : phone
   };
@@ -602,11 +629,11 @@ form.addEventListener('submit', function(e) {
   duplicateNote.style.display = 'none';
   errorMsg.textContent = '';
 
-  enableRemindersCheckbox.checked = false;
-  waNumberWrapper.style.display = 'none';
-  waPhoneInput.value = '';
-  waPhoneNote.style.display = 'none';
-  waPhoneInput.style.border = '1px solid #ccc';
+
+
+
+
+
 });
 
 // --------------------
@@ -629,7 +656,7 @@ confirmDeleteBtn.addEventListener('click', () => {
     db.collection("users").doc(user.uid)
       .update({
         whatsappNumber: firebase.firestore.FieldValue.delete(),
-        medWhatsAppPhone: firebase.firestore.FieldValue.delete(),
+
         medName:        firebase.firestore.FieldValue.delete(),
         medPhone:       firebase.firestore.FieldValue.delete(),
         medMedicine:    firebase.firestore.FieldValue.delete(),
