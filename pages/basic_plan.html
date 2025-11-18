@@ -39,12 +39,20 @@ button:hover{background:#45a049;}
 .btn-confirm{background:#f87171;color:white;}
 .btn-cancel{background:#9ca3af;color:white;}
 input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance:auto;margin:0; }
-  .modal-content .checkbox-label {
-  display:flex !important;
-  align-items:left;
-  gap:1px;
-    margin-top:8px;
-  margin-bottom:18px;
+/* Checkbox row */
+.modal-content label.checkbox-label {
+  display:flex;              /* block-level flex row */
+  align-items:center;        /* vertical centering of checkbox + text */
+  justify-content:flex-start;
+  gap:4px;                   /* small horizontal space */
+  margin-top:8px;
+  margin-bottom:12px;        /* space before Save/Cancel */
+  font-weight:normal;        /* optional: so "Add Dependant" isn't bold */
+}
+
+/* Remove browser's default extra margin around the checkbox */
+.modal-content .checkbox-label input[type="checkbox"] {
+  margin:0;
 }
 
 /* Reminders 3-column static Pending */
