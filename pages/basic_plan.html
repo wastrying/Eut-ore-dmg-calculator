@@ -576,7 +576,7 @@ form.addEventListener('submit', function(e) {
     return;
   }
 
-    const name         = depName.value.trim(),
+  const name         = depName.value.trim(),
         phone        = phoneInput.value.trim(),
         medicine     = depMedicine.value.trim(),
         dosageNumber = parseInt(dosageNumberInput.value),
@@ -587,20 +587,21 @@ form.addEventListener('submit', function(e) {
                            .filter(v => v !== ''),
         extraDetails = extraDepInput.value.trim();
 
+  const numTimes = parseInt(numTimesInput.value) || 0;
 
-
-
-
-
-
-
-    if (!name || !medicine || !dosageUnit || !notes ||
+  // ✅ Full validation, including extra dependant phone when checkbox is checked
+  if (!name || !medicine || !dosageUnit || !notes ||
       dosageNumber < 1 ||
       !/^\d{8}$/.test(phone) || !/^[689]/.test(phone) ||
-      times.length !== parseInt(numTimesInput.value) ||
+      times.length !== numTimes ||
       (addDepCheckbox.checked &&
        (!/^\d{8}$/.test(extraDetails) || !/^[689]/.test(extraDetails)))) {
-    currentDependant = {
+    errorMsg.textContent = "Please fill all fields correctly including times.";
+    return;
+  }
+
+  // ✅ Only runs if everything is valid
+  currentDependant = {
     name,
     phone,
     medicine,
@@ -611,19 +612,24 @@ form.addEventListener('submit', function(e) {
     extraDetails: addDepCheckbox.checked ? extraDetails : '',
     status: "pending"   // default until WhatsApp reply
   };
+
   applyCurrentDependantToUI();
   saveDependantToUser(currentDependant);
 
   modal.classList.remove('active');
   form.reset();
+  addDepCheckbox.checked = false;
+  extraDepField.style.display = 'none';
+  extraDepInput.value = '';
   resetDosageNote();
   resetPhoneNote();
+  resetExtraDepNote();
   timesContainer.innerHTML = '';
   timesSection.style.display = 'none';
   duplicateNote.style.display = 'none';
   errorMsg.textContent = '';
+  editing = false;
 });
-
 // --------------------
 // Edit & Delete
 // --------------------
