@@ -150,7 +150,7 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db   = firebase.firestore();
-const auth = firebase.auth();   // 👈 needed for users/{uid}
+const auth = firebase.auth();   // used to get users/{uid}
 
 // --------------------
 // Dashboard logic
@@ -177,6 +177,8 @@ const addBtn           = document.getElementById('addDependantBtn'),
       dispDosage       = document.getElementById('dispDosage'),
       dispNotes        = document.getElementById('dispNotes'),
       depName          = document.getElementById('depName'),
+      depMedicine      = document.getElementById('depMedicine'),
+      depNotes         = document.getElementById('depNotes'),
       dosageNumberInput= document.getElementById('depDosageNumber'),
       depDosageUnit    = document.getElementById('depDosageUnit'),
       phoneInput       = document.getElementById('depPhone'),
@@ -210,7 +212,6 @@ function resetPhoneNote(){
 // --------------------
 
 // Build full WhatsApp number (E.164-like) from 8-digit SG number.
-// WhatsApp will send something like "6591234567"
 function buildWhatsappNumber(phone8Digit) {
   return '65' + phone8Digit; // e.g. "91234567" -> "6591234567"
 }
@@ -229,7 +230,7 @@ function saveDependantToUser(dep) {
 
   db.collection("users").doc(uid)
     .set({
-      whatsappNumber: fullWaNumber,       // 👈 used by Apps Script to match senderWaId
+      whatsappNumber: fullWaNumber,       // used by Apps Script to match senderWaId
       medName: dep.name,
       medPhone: dep.phone,                // 8-digit SG phone (for UI)
       medMedicine: dep.medicine,
@@ -247,6 +248,38 @@ function saveDependantToUser(dep) {
     });
 }
 
+// --------------------
+// UI helper – apply currentDependant to screen
+// --------------------
+function applyCurrentDependantToUI() {
+  if (!currentDependant || !currentDependant.name) {
+    // no data → hide panel
+    infoBox.style.display = 'none';
+    dependantAdded = false;
+    remindersList.innerHTML = '';
+    return;
+  }
+
+  dispName.textContent     = currentDependant.name || '';
+  dispPhone.textContent    = currentDependant.phone || '';
+  dispMedicine.textContent = currentDependant.medicine || '';
+  if (currentDependant.dosageNumber && currentDependant.dosageUnit) {
+    dispDosage.textContent = `${currentDependant.dosageNumber} ${currentDependant.dosageUnit}`;
+  } else {
+    dispDosage.textContent = '';
+  }
+  dispTimes.textContent    = (currentDependant.times || []).join(', ');
+  dispNotes.textContent    = currentDependant.notes || '';
+
+  infoBox.style.display = 'block';
+  dependantAdded = true;
+
+  updateReminders();
+}
+
+// --------------------
+// Listen to user doc for med fields
+// --------------------
 function listenToUserMedStatus() {
   const user = auth.currentUser;
   if (!user) {
@@ -264,23 +297,32 @@ function listenToUserMedStatus() {
     (doc) => {
       if (!doc.exists) {
         console.log("User doc not found:", uid);
+        currentDependant = null;
+        applyCurrentDependantToUI();
         return;
       }
       const data = doc.data();
       console.log("User doc update:", data);
 
-      if (!currentDependant) currentDependant = {};
+      // If this user has never set med info, hide panel
+      if (!data.medName) {
+        currentDependant = null;
+        applyCurrentDependantToUI();
+        return;
+      }
 
-      currentDependant.status        = data.medStatus       || "pending";
-      currentDependant.name          = data.medName         || currentDependant.name;
-      currentDependant.phone         = data.medPhone        || currentDependant.phone;
-      currentDependant.medicine      = data.medMedicine     || currentDependant.medicine;
-      currentDependant.dosageNumber  = data.medDosageNumber || currentDependant.dosageNumber;
-      currentDependant.dosageUnit    = data.medDosageUnit   || currentDependant.dosageUnit;
-      currentDependant.notes         = data.medNotes        || currentDependant.notes;
-      currentDependant.times         = data.medTimes        || currentDependant.times;
+      currentDependant = {
+        name:         data.medName         || '',
+        phone:        data.medPhone        || '',
+        medicine:     data.medMedicine     || '',
+        dosageNumber: data.medDosageNumber || 0,
+        dosageUnit:   data.medDosageUnit   || '',
+        notes:        data.medNotes        || '',
+        times:        data.medTimes        || [],
+        status:       data.medStatus       || 'pending'
+      };
 
-      updateReminders();
+      applyCurrentDependantToUI();
     },
     (err) => {
       console.error("Error listening to user medStatus:", err);
@@ -288,11 +330,14 @@ function listenToUserMedStatus() {
   );
 }
 
-// Optionally start listening as soon as user is signed in
+// Start listening as soon as user is signed in
 auth.onAuthStateChanged(user => {
   if (user) {
     console.log("Auth state changed, user:", user.uid);
     listenToUserMedStatus();
+  } else {
+    currentDependant = null;
+    applyCurrentDependantToUI();
   }
 });
 
@@ -309,18 +354,19 @@ addBtn.addEventListener('click', () => {
   }
 
   errorMsg.textContent = '';
-  modalTitle.textContent = editing ? "Edit Dependant" : "Add Dependant";
+  modalTitle.textContent = editing ? "Edit Users" : "Add Users";
   modal.classList.add('active');
 
   if (editing && currentDependant) {
-    depName.value           = currentDependant.name;
-    phoneInput.value        = currentDependant.phone;
-    depMedicine.value       = currentDependant.medicine;
-    dosageNumberInput.value = currentDependant.dosageNumber;
-    depDosageUnit.value     = currentDependant.dosageUnit;
-    depNotes.value          = currentDependant.notes;
-    numTimesInput.value     = currentDependant.times.length;
-    renderTimeInputs(currentDependant.times);
+    depName.value           = currentDependant.name || '';
+    phoneInput.value        = currentDependant.phone || '';
+    depMedicine.value       = currentDependant.medicine || '';
+    dosageNumberInput.value = currentDependant.dosageNumber || 0;
+    depDosageUnit.value     = currentDependant.dosageUnit || '';
+    depNotes.value          = currentDependant.notes || '';
+    const times = currentDependant.times || [];
+    numTimesInput.value     = times.length;
+    renderTimeInputs(times);
   }
 });
 
@@ -374,7 +420,7 @@ numTimesInput.addEventListener('input', () => {
 
 function renderTimeInputs(existingTimes) {
   timesContainer.innerHTML = '';
-  if (existingTimes.length === 0) {
+  if (!existingTimes || existingTimes.length === 0) {
     timesSection.style.display = 'none';
     return;
   }
@@ -450,17 +496,6 @@ form.addEventListener('submit', function(e) {
     return;
   }
 
-  dispName.textContent     = name;
-  dispPhone.textContent    = phone;
-  dispMedicine.textContent = medicine;
-  dispDosage.textContent   = `${dosageNumber} ${dosageUnit}`;
-  dispTimes.textContent    = times.join(', ');
-  dispNotes.textContent    = notes;
-
-  infoBox.style.display = 'block';
-  dependantAdded = true;
-  editing = false;
-
   currentDependant = {
     name,
     phone,
@@ -472,9 +507,8 @@ form.addEventListener('submit', function(e) {
     status: "pending"   // default until WhatsApp reply
   };
 
-  updateReminders();
+  applyCurrentDependantToUI();
   saveDependantToUser(currentDependant);
-  listenToUserMedStatus();
 
   modal.classList.remove('active');
   form.reset();
@@ -501,7 +535,6 @@ removeBtn.addEventListener('click', () => {
 });
 
 confirmDeleteBtn.addEventListener('click', () => {
-  // Delete dependant fields from the current user doc (not from /dependants)
   const user = auth.currentUser;
   if (user) {
     db.collection("users").doc(user.uid)
@@ -523,17 +556,10 @@ confirmDeleteBtn.addEventListener('click', () => {
 
   if (unsubscribeDependant) unsubscribeDependant();
 
-  infoBox.style.display = 'none';
-  dependantAdded = false;
-  dispName.textContent = '';
-  dispPhone.textContent = '';
-  dispMedicine.textContent = '';
-  dispDosage.textContent = '';
-  dispTimes.textContent = '';
-  dispNotes.textContent = '';
-  deletePopup.style.display = 'none';
-  remindersList.innerHTML = '';
   currentDependant = null;
+  applyCurrentDependantToUI();
+
+  deletePopup.style.display = 'none';
 });
 
 cancelDeleteBtn.addEventListener('click', () => {
@@ -545,7 +571,7 @@ cancelDeleteBtn.addEventListener('click', () => {
 // --------------------
 function updateReminders() {
   remindersList.innerHTML = '';
-  if (!currentDependant) return;
+  if (!currentDependant || !currentDependant.times) return;
 
   const header = document.createElement('div');
   header.className = 'reminders-header';
