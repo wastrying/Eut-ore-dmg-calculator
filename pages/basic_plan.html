@@ -100,6 +100,7 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
           <h3>Users Profile</h3>
           <p><strong>Name:</strong> <span id="dispName"></span></p>
           <p><strong>Phone Number:</strong> <span id="dispPhone"></span></p>
+          <p id="extraDependantRow" style="display:none;"> <strong>Dependant Phone Number:</strong> <span id="dispExtraPhone"></span></p>
           <p><strong>Medicine Type:</strong> <span id="dispMedicine"></span></p>
           <p><strong>Dosage:</strong> <span id="dispDosage"></span></p>
           <p><strong>Times to Take Medicine:</strong> <span id="dispTimes"></span></p>
@@ -224,6 +225,8 @@ const addBtn           = document.getElementById('addDependantBtn'),
       dispTimes        = document.getElementById('dispTimes'),
       dispDosage       = document.getElementById('dispDosage'),
       dispNotes        = document.getElementById('dispNotes'),
+      extraDepRow      = document.getElementById('extraDependantRow'),
+      dispExtraPhone   = document.getElementById('dispExtraPhone'),
       depName          = document.getElementById('depName'),
       depMedicine      = document.getElementById('depMedicine'),
       depNotes         = document.getElementById('depNotes'),
@@ -331,6 +334,13 @@ function applyCurrentDependantToUI() {
 
   dispName.textContent     = currentDependant.name || '';
   dispPhone.textContent    = currentDependant.phone || '';
+  if (currentDependant.extraDetails) {
+    dispExtraPhone.textContent = currentDependant.extraDetails;
+    extraDepRow.style.display  = 'block';
+  } else {
+    dispExtraPhone.textContent = '';
+    extraDepRow.style.display  = 'none';
+  }
   dispMedicine.textContent = currentDependant.medicine || '';
   if (currentDependant.dosageNumber && currentDependant.dosageUnit) {
     dispDosage.textContent = `${currentDependant.dosageNumber} ${currentDependant.dosageUnit}`;
@@ -657,6 +667,7 @@ confirmDeleteBtn.addEventListener('click', () => {
         medDosageUnit:  firebase.firestore.FieldValue.delete(),
         medNotes:       firebase.firestore.FieldValue.delete(),
         medTimes:       firebase.firestore.FieldValue.delete(),
+        medExtraDetails:firebase.firestore.FieldValue.delete(),
         medStatus:      firebase.firestore.FieldValue.delete(),
         medLastTakenAt: firebase.firestore.FieldValue.delete()
       })
