@@ -27,6 +27,17 @@ button:hover{background:#45a049;}
 .modal-content{background:#fff;padding:20px;border-radius:12px;width:90%;max-width:400px;box-shadow:0 8px 24px rgba(0,0,0,0.3);max-height:90vh;overflow-y:auto;}
 .modal-content h2{margin-top:0;}
 .modal-content label{display:block;margin:8px 0 4px;font-weight:600;}
+/* Before: .modal-content input,.modal-content select */
+.modal-content input:not([type="checkbox"]), 
+.modal-content select {
+  width:100%;
+  padding:6px 8px;
+  margin-bottom:10px;
+  border:1px solid #ccc;
+  border-radius:6px;
+  box-sizing:border-box;
+}
+
 .modal-content input,.modal-content select{width:100%;padding:6px 8px;margin-bottom:10px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;}
 .modal-content .dosage-row{display:flex;gap:6px;}
 .modal-content .dosage-row input{flex:1;}
