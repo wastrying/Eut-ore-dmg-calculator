@@ -151,28 +151,21 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
       </div>
 
       <label>Additional Notes:</label>
-      <input type="text" id="depNotes" placeholder="Enter 'NA' if none" required />
+<input type="text" id="depNotes" placeholder="Enter 'NA' if none" required />
+
 <label class="checkbox-label">
-  <input type="checkbox" name="accept_terms">
+  <input type="checkbox" name="accept_terms" id="addDependantCheckbox">
   <span>Add Dependant</span>
 </label>
 
-      <button type="submit">Save Users</button>
-      <button type="button" id="closeModalBtn" style="background:#9ca3af;margin-top:16px;">Cancel</button>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+<!-- This box will appear only when checkbox is ticked -->
+<div id="extraDependantField" style="display:none; margin-top:4px;">
+  <label for="extraDependantName">Dependant Phone Number:</label>
+  <input type="text" id="extraDependantName" placeholder="Enter 8-digit phone number">
+  <div id="extraDepNote" class="phone-note">Phone must be 8 digits starting with 6, 8, or 9.</div>
+</div>
+<button type="submit">Save Users</button>
+<button type="button" id="closeModalBtn" style="background:#9ca3af;margin-top:16px;">Cancel</button>
 
     </form>
   </div>
@@ -247,15 +240,16 @@ const addBtn           = document.getElementById('addDependantBtn'),
       confirmDeleteBtn = document.getElementById('confirmDeleteBtn'),
       cancelDeleteBtn  = document.getElementById('cancelDeleteBtn'),
       mainError        = document.getElementById('mainError'),
-      remindersList    = document.getElementById('remindersList');
-
-
-
-
+      remindersList    = document.getElementById('remindersList'),
+      addDepCheckbox   = document.getElementById('addDependantCheckbox'),
+      extraDepField    = document.getElementById('extraDependantField'),
+      extraDepInput    = document.getElementById('extraDependantName'),
+      extraDepNote     = document.getElementById('extraDepNote');
 
 dosageNote.style.display    = 'none';
 phoneNote.style.display     = 'none';
 duplicateNote.style.display = 'none';
+extraDepNote.style.display  = 'none';
 
 function resetDosageNote(){
   dosageNote.style.display = 'none';
@@ -264,6 +258,19 @@ function resetDosageNote(){
 function resetPhoneNote(){
   phoneNote.style.display = 'none';
   phoneInput.style.border = '1px solid #ccc';
+}
+// Show/hide extra dependant field based on checkbox
+addDepCheckbox.addEventListener('change', () => {
+  if (addDepCheckbox.checked) {
+    extraDepField.style.display = 'block';
+  } else {
+    extraDepField.style.display = 'none';
+    extraDepInput.value = ''; // clear when hidden
+  }
+});
+function resetExtraDepNote(){
+  extraDepNote.style.display = 'none';
+  extraDepInput.style.border = '1px solid #ccc';
 }
 
 // --------------------
@@ -292,7 +299,6 @@ function saveDependantToUser(dep) {
   db.collection("users").doc(uid)
     .set({
       whatsappNumber: fullWaNumber,       // used by Apps Script to match senderWaId
-
       medName: dep.name,
       medPhone: dep.phone,                // 8-digit SG phone (for UI)
       medMedicine: dep.medicine,
@@ -300,6 +306,7 @@ function saveDependantToUser(dep) {
       medDosageUnit: dep.dosageUnit,
       medNotes: dep.notes,
       medTimes: dep.times,
+      medExtraDetails: dep.extraDetails || '',
       medStatus: dep.status || "pending"
     }, { merge: true })
     .then(() => {
@@ -381,8 +388,10 @@ function listenToUserMedStatus() {
         dosageUnit:   data.medDosageUnit   || '',
         notes:        data.medNotes        || '',
         times:        data.medTimes        || [],
+        extraDetails: data.medExtraDetails || '',
         status:       data.medStatus       || 'pending'
       };
+
 
       applyCurrentDependantToUI();
     },
@@ -418,8 +427,17 @@ addBtn.addEventListener('click', () => {
   errorMsg.textContent = '';
   modalTitle.textContent = editing ? "Edit Users" : "Add Users";
   modal.classList.add('active');
-
+    // default state
+  addDepCheckbox.checked = false;
+  extraDepField.style.display = 'none';
+  extraDepInput.value = '';
+  resetExtraDepNote();
   if (editing && currentDependant) {
+    if (currentDependant.extraDetails) {
+      addDepCheckbox.checked = true;
+      extraDepField.style.display = 'block';
+      extraDepInput.value = currentDependant.extraDetails;
+    }
     depName.value           = currentDependant.name || '';
     phoneInput.value        = currentDependant.phone || '';
     depMedicine.value       = currentDependant.medicine || '';
@@ -436,8 +454,12 @@ addBtn.addEventListener('click', () => {
 closeModalBtn.addEventListener('click', () => {
   modal.classList.remove('active');
   form.reset();
+  addDepCheckbox.checked = false;
+  extraDepField.style.display = 'none';
+  extraDepInput.value = '';
   resetDosageNote();
   resetPhoneNote();
+  resetExtraDepNote();
   timesContainer.innerHTML = '';
   timesSection.style.display = 'none';
   duplicateNote.style.display = 'none';
@@ -469,6 +491,21 @@ phoneInput.addEventListener('input', () => {
     phoneNote.style.display = 'block';
   } else {
     resetPhoneNote();
+  }
+});
+// Extra dependant "phone-like" field – same logic as phone
+extraDepInput.addEventListener('input', () => {
+  let val = extraDepInput.value.replace(/\D/g, '');
+  if (val.length > 8) val = val.slice(0, 8);
+  extraDepInput.value = val;
+
+  // Only enforce validity if checkbox is ticked
+  if (addDepCheckbox.checked &&
+      (val.length !== 8 || !/^[689]/.test(val))) {
+    extraDepInput.style.border = '2px solid red';
+    extraDepNote.style.display = 'block';
+  } else {
+    resetExtraDepNote();
   }
 });
 
@@ -539,7 +576,7 @@ form.addEventListener('submit', function(e) {
     return;
   }
 
-  const name         = depName.value.trim(),
+    const name         = depName.value.trim(),
         phone        = phoneInput.value.trim(),
         medicine     = depMedicine.value.trim(),
         dosageNumber = parseInt(dosageNumberInput.value),
@@ -547,7 +584,8 @@ form.addEventListener('submit', function(e) {
         notes        = depNotes.value.trim(),
         times        = Array.from(timesContainer.querySelectorAll('.timeInput'))
                            .map(i => i.value)
-                           .filter(v => v !== '');
+                           .filter(v => v !== ''),
+        extraDetails = extraDepInput.value.trim();
 
 
 
@@ -555,16 +593,14 @@ form.addEventListener('submit', function(e) {
 
 
 
-  if (!name || !medicine || !dosageUnit || !notes ||
+
+    if (!name || !medicine || !dosageUnit || !notes ||
       dosageNumber < 1 ||
       !/^\d{8}$/.test(phone) || !/^[689]/.test(phone) ||
-      times.length !== parseInt(numTimesInput.value)) {
-
-    errorMsg.textContent = "Please fill all fields correctly including times.";
-    return;
-  }
-
-  currentDependant = {
+      times.length !== parseInt(numTimesInput.value) ||
+      (addDepCheckbox.checked &&
+       (!/^\d{8}$/.test(extraDetails) || !/^[689]/.test(extraDetails)))) {
+    currentDependant = {
     name,
     phone,
     medicine,
@@ -572,11 +608,9 @@ form.addEventListener('submit', function(e) {
     dosageUnit,
     notes,
     times,
+    extraDetails: addDepCheckbox.checked ? extraDetails : '',
     status: "pending"   // default until WhatsApp reply
-
-
   };
-
   applyCurrentDependantToUI();
   saveDependantToUser(currentDependant);
 
@@ -635,35 +669,6 @@ confirmDeleteBtn.addEventListener('click', () => {
 cancelDeleteBtn.addEventListener('click', () => {
   deletePopup.style.display = 'none';
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // --------------------
 // Reminders rendering
 // --------------------
