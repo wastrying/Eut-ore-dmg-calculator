@@ -129,149 +129,431 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
   <button class="btn-confirm" id="confirmDeleteBtn">Yes, Delete</button>
   <button class="btn-cancel" id="cancelDeleteBtn">Cancel</button>
 </div>
+<!-- Firebase SDKs (put these before your main script) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <script>
-let dependantAdded=false, editing=false, currentDependant=null, duplicateTimeout;
-const addBtn=document.getElementById('addDependantBtn'),
-      editBtn=document.getElementById('editDependantBtn'),
-      removeBtn=document.getElementById('removeDependantBtn'),
-      modal=document.getElementById('dependantModal'),
-      closeModalBtn=document.getElementById('closeModalBtn'),
-      form=document.getElementById('dependantForm'),
-      errorMsg=document.getElementById('modalError'),
-      modalTitle=document.getElementById('modalTitle'),
-      infoBox=document.getElementById('dependantInfo'),
-      dispName=document.getElementById('dispName'),
-      dispPhone=document.getElementById('dispPhone'),
-      dispMedicine=document.getElementById('dispMedicine'),
-      dispTimes=document.getElementById('dispTimes'),
-      dispDosage=document.getElementById('dispDosage'),
-      dispNotes=document.getElementById('dispNotes'),
-      dosageNumberInput=document.getElementById('depDosageNumber'),
-      depDosageUnit=document.getElementById('depDosageUnit'),
-      phoneInput=document.getElementById('depPhone'),
-      phoneNote=document.getElementById('phoneNote'),
-      dosageNote=document.getElementById('dosageNote'),
-      numTimesInput=document.getElementById('numTimesInput'),
-      timesSection=document.getElementById('timesSection'),
-      timesContainer=document.getElementById('timesContainer'),
-      duplicateNote=document.getElementById('duplicateNote'),
-      deletePopup=document.getElementById('deletePopup'),
-      confirmDeleteBtn=document.getElementById('confirmDeleteBtn'),
-      cancelDeleteBtn=document.getElementById('cancelDeleteBtn'),
-      mainError=document.getElementById('mainError'),
-      remindersList=document.getElementById('remindersList');
+// --------------------
+// Firebase init
+// --------------------
+const firebaseConfig = {
+  apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
+  authDomain: "remblyx-medisignal.firebaseapp.com",
+  projectId: "remblyx-medisignal",
+  storageBucket: "remblyx-medisignal.appspot.com",
+  messagingSenderId: "50711670199",
+  appId: "1:50711670199:web:0c9c2ff72cd77234ce0c32",
+  measurementId: "G-JQ3843RM4V"
+};
 
-dosageNote.style.display='none'; phoneNote.style.display='none'; duplicateNote.style.display='none';
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-function resetDosageNote(){dosageNote.style.display='none'; dosageNumberInput.style.border='1px solid #ccc';}
-function resetPhoneNote(){phoneNote.style.display='none'; phoneInput.style.border='1px solid #ccc';}
+// --------------------
+// Dashboard logic
+// --------------------
+let dependantAdded = false,
+    editing = false,
+    currentDependant = null,
+    duplicateTimeout,
+    unsubscribeDependant = null;
+
+const addBtn           = document.getElementById('addDependantBtn'),
+      editBtn          = document.getElementById('editDependantBtn'),
+      removeBtn        = document.getElementById('removeDependantBtn'),
+      modal            = document.getElementById('dependantModal'),
+      closeModalBtn    = document.getElementById('closeModalBtn'),
+      form             = document.getElementById('dependantForm'),
+      errorMsg         = document.getElementById('modalError'),
+      modalTitle       = document.getElementById('modalTitle'),
+      infoBox          = document.getElementById('dependantInfo'),
+      dispName         = document.getElementById('dispName'),
+      dispPhone        = document.getElementById('dispPhone'),
+      dispMedicine     = document.getElementById('dispMedicine'),
+      dispTimes        = document.getElementById('dispTimes'),
+      dispDosage       = document.getElementById('dispDosage'),
+      dispNotes        = document.getElementById('dispNotes'),
+      depName          = document.getElementById('depName'),
+      dosageNumberInput= document.getElementById('depDosageNumber'),
+      depDosageUnit    = document.getElementById('depDosageUnit'),
+      phoneInput       = document.getElementById('depPhone'),
+      phoneNote        = document.getElementById('phoneNote'),
+      dosageNote       = document.getElementById('dosageNote'),
+      numTimesInput    = document.getElementById('numTimesInput'),
+      timesSection     = document.getElementById('timesSection'),
+      timesContainer   = document.getElementById('timesContainer'),
+      duplicateNote    = document.getElementById('duplicateNote'),
+      deletePopup      = document.getElementById('deletePopup'),
+      confirmDeleteBtn = document.getElementById('confirmDeleteBtn'),
+      cancelDeleteBtn  = document.getElementById('cancelDeleteBtn'),
+      mainError        = document.getElementById('mainError'),
+      remindersList    = document.getElementById('remindersList');
+
+dosageNote.style.display   = 'none';
+phoneNote.style.display    = 'none';
+duplicateNote.style.display= 'none';
+
+function resetDosageNote(){
+  dosageNote.style.display = 'none';
+  dosageNumberInput.style.border = '1px solid #ccc';
+}
+function resetPhoneNote(){
+  phoneNote.style.display = 'none';
+  phoneInput.style.border = '1px solid #ccc';
+}
+
+// --------------------
+// Firestore helpers
+// --------------------
+
+// Build Firestore doc ID that matches WhatsApp sender ID.
+// For Singapore, WhatsApp sends something like "6591234567" (65 + 8-digit number).
+function getDependantDocIdFromPhone(phone8Digit) {
+  // Adjust this if your country code / format is different.
+  return '65' + phone8Digit; // e.g. "91234567" -> "6591234567"
+}
+
+function saveDependantToFirestore(dep) {
+  if (!dep || !dep.phone) return;
+
+  const docId = getDependantDocIdFromPhone(dep.phone);
+
+  db.collection("dependants").doc(docId)
+    .set({
+      name: dep.name,
+      phone: dep.phone,
+      medicine: dep.medicine,
+      dosageNumber: dep.dosageNumber,
+      dosageUnit: dep.dosageUnit,
+      notes: dep.notes,
+      times: dep.times,
+      status: dep.status || "pending"
+    }, { merge: true })
+    .then(() => {
+      console.log("Dependant saved to Firestore with id:", docId);
+    })
+    .catch(err => {
+      console.error("Error saving dependant:", err);
+    });
+}
+
+function listenToDependantStatus(phone8Digit) {
+  if (!phone8Digit) return;
+
+  const docId = getDependantDocIdFromPhone(phone8Digit);
+
+  // Stop previous listener if any
+  if (unsubscribeDependant) unsubscribeDependant();
+
+  const docRef = db.collection("dependants").doc(docId);
+
+  unsubscribeDependant = docRef.onSnapshot(
+    (doc) => {
+      if (!doc.exists) {
+        console.log("Dependant doc not found:", docId);
+        return;
+      }
+      const data = doc.data();
+      console.log("Firestore update:", data);
+
+      if (!currentDependant) currentDependant = {};
+      currentDependant.status = data.status || "pending";
+
+      updateReminders();
+    },
+    (err) => {
+      console.error("Error listening for status:", err);
+    }
+  );
+}
+
+// --------------------
+// Modal open / close
+// --------------------
 
 // Show modal
-addBtn.addEventListener('click', ()=>{
-  if(dependantAdded&&!editing){ mainError.textContent="You can only add one dependant in the Basic plan."; setTimeout(()=>{mainError.textContent='';},5000); return; }
-  errorMsg.textContent=''; modalTitle.textContent=editing?"Edit Dependant":"Add Dependant"; modal.classList.add('active');
-  if(editing && currentDependant){
-    depName.value=currentDependant.name;
-    phoneInput.value=currentDependant.phone;
-    depMedicine.value=currentDependant.medicine;
-    dosageNumberInput.value=currentDependant.dosageNumber;
-    depDosageUnit.value=currentDependant.dosageUnit;
-    depNotes.value=currentDependant.notes;
-    numTimesInput.value=currentDependant.times.length;
+addBtn.addEventListener('click', () => {
+  if (dependantAdded && !editing) {
+    mainError.textContent = "You can only add one dependant in the Basic plan.";
+    setTimeout(() => { mainError.textContent = ''; }, 5000);
+    return;
+  }
+
+  errorMsg.textContent = '';
+  modalTitle.textContent = editing ? "Edit Dependant" : "Add Dependant";
+  modal.classList.add('active');
+
+  if (editing && currentDependant) {
+    depName.value         = currentDependant.name;
+    phoneInput.value      = currentDependant.phone;
+    depMedicine.value     = currentDependant.medicine;
+    dosageNumberInput.value = currentDependant.dosageNumber;
+    depDosageUnit.value   = currentDependant.dosageUnit;
+    depNotes.value        = currentDependant.notes;
+    numTimesInput.value   = currentDependant.times.length;
     renderTimeInputs(currentDependant.times);
   }
 });
 
 // Close modal
-closeModalBtn.addEventListener('click', ()=>{
-  modal.classList.remove('active'); form.reset(); resetDosageNote(); resetPhoneNote();
-  timesContainer.innerHTML=''; timesSection.style.display='none'; duplicateNote.style.display='none'; errorMsg.textContent='';
+closeModalBtn.addEventListener('click', () => {
+  modal.classList.remove('active');
+  form.reset();
+  resetDosageNote();
+  resetPhoneNote();
+  timesContainer.innerHTML = '';
+  timesSection.style.display = 'none';
+  duplicateNote.style.display = 'none';
+  errorMsg.textContent = '';
 });
+
+// --------------------
+// Validation
+// --------------------
 
 // Dosage validation
-dosageNumberInput.addEventListener('input', ()=>{
-  if(parseInt(dosageNumberInput.value)<1){ dosageNumberInput.style.border='2px solid red'; dosageNote.style.display='block'; }
-  else resetDosageNote();
+dosageNumberInput.addEventListener('input', () => {
+  if (parseInt(dosageNumberInput.value) < 1) {
+    dosageNumberInput.style.border = '2px solid red';
+    dosageNote.style.display = 'block';
+  } else {
+    resetDosageNote();
+  }
 });
 
-// Phone validation
-phoneInput.addEventListener('input', ()=>{
-  let val=phoneInput.value.replace(/\D/g,''); if(val.length>8) val=val.slice(0,8); phoneInput.value=val;
-  if(val.length!==8||!/^[689]/.test(val)){ phoneInput.style.border='2px solid red'; phoneNote.style.display='block'; }
-  else resetPhoneNote();
+// Phone validation (8-digit SG starting with 6/8/9)
+phoneInput.addEventListener('input', () => {
+  let val = phoneInput.value.replace(/\D/g, '');
+  if (val.length > 8) val = val.slice(0, 8);
+  phoneInput.value = val;
+
+  if (val.length !== 8 || !/^[689]/.test(val)) {
+    phoneInput.style.border = '2px solid red';
+    phoneNote.style.display = 'block';
+  } else {
+    resetPhoneNote();
+  }
 });
 
+// --------------------
 // Time inputs
-numTimesInput.addEventListener('input', ()=>{ renderTimeInputs(Array(parseInt(numTimesInput.value)||0).fill('')); });
+// --------------------
+numTimesInput.addEventListener('input', () => {
+  const count = parseInt(numTimesInput.value) || 0;
+  renderTimeInputs(Array(count).fill(''));
+});
 
-function renderTimeInputs(existingTimes){
-  timesContainer.innerHTML=''; if(existingTimes.length===0){timesSection.style.display='none'; return;}
-  timesSection.style.display='block';
-  existingTimes.forEach(time=>{
-    const input=document.createElement('input'); input.type='time'; input.classList.add('timeInput'); input.value=time||'';
-    input.addEventListener('input', checkDuplicates); timesContainer.appendChild(input);
+function renderTimeInputs(existingTimes) {
+  timesContainer.innerHTML = '';
+  if (existingTimes.length === 0) {
+    timesSection.style.display = 'none';
+    return;
+  }
+  timesSection.style.display = 'block';
+
+  existingTimes.forEach(time => {
+    const input = document.createElement('input');
+    input.type = 'time';
+    input.classList.add('timeInput');
+    input.value = time || '';
+    input.addEventListener('input', checkDuplicates);
+    timesContainer.appendChild(input);
   });
 }
 
-function checkDuplicates(){
-  const inputs=Array.from(timesContainer.querySelectorAll('.timeInput'));
-  const values=inputs.map(i=>i.value).filter(v=>v!==''); let hasDuplicate=false; inputs.forEach(i=>i.style.border='1px solid #ccc');
-  values.forEach(val=>{
-    const firstIndex=inputs.findIndex(i=>i.value===val);
-    inputs.forEach((input,j)=>{ if(input.value===val && j!==firstIndex){ input.style.border='2px solid red'; hasDuplicate=true; } });
+function checkDuplicates() {
+  const inputs = Array.from(timesContainer.querySelectorAll('.timeInput'));
+  const values = inputs.map(i => i.value).filter(v => v !== '');
+  let hasDuplicate = false;
+
+  inputs.forEach(i => i.style.border = '1px solid #ccc');
+
+  values.forEach(val => {
+    const firstIndex = inputs.findIndex(i => i.value === val);
+    inputs.forEach((input, j) => {
+      if (input.value === val && j !== firstIndex) {
+        input.style.border = '2px solid red';
+        hasDuplicate = true;
+      }
+    });
   });
-  if(hasDuplicate){ duplicateNote.style.display='block'; clearTimeout(duplicateTimeout); duplicateTimeout=setTimeout(()=>{duplicateNote.style.display='none';},3000);}
-  else duplicateNote.style.display='none';
+
+  if (hasDuplicate) {
+    duplicateNote.style.display = 'block';
+    clearTimeout(duplicateTimeout);
+    duplicateTimeout = setTimeout(() => {
+      duplicateNote.style.display = 'none';
+    }, 3000);
+  } else {
+    duplicateNote.style.display = 'none';
+  }
+
   return hasDuplicate;
 }
 
+// --------------------
 // Form submit
-form.addEventListener('submit', function(e){
+// --------------------
+form.addEventListener('submit', function(e) {
   e.preventDefault();
-  if(checkDuplicates()){ errorMsg.textContent="Duplicate times found. Fix them before saving."; return; }
-  const name=depName.value.trim(), phone=phoneInput.value.trim(), medicine=depMedicine.value.trim(),
-        dosageNumber=parseInt(dosageNumberInput.value), dosageUnit=depDosageUnit.value,
-        notes=depNotes.value.trim(),
-        times=Array.from(timesContainer.querySelectorAll('.timeInput')).map(i=>i.value).filter(v=>v!=='');
-  if(!name||!medicine||!dosageUnit||!notes||dosageNumber<1||!/^\d{8}$/.test(phone)||!/^[689]/.test(phone)||times.length!==parseInt(numTimesInput.value)){
-    errorMsg.textContent="Please fill all fields correctly including times."; return;
+
+  if (checkDuplicates()) {
+    errorMsg.textContent = "Duplicate times found. Fix them before saving.";
+    return;
   }
-  dispName.textContent=name; dispPhone.textContent=phone; dispMedicine.textContent=medicine;
-  dispDosage.textContent=`${dosageNumber} ${dosageUnit}`; dispTimes.textContent=times.join(', '); dispNotes.textContent=notes;
-  infoBox.style.display='block'; dependantAdded=true; editing=false; currentDependant={name,phone,medicine,dosageNumber,dosageUnit,notes,times};
-  updateReminders(); modal.classList.remove('active'); form.reset(); resetDosageNote(); resetPhoneNote(); timesContainer.innerHTML=''; timesSection.style.display='none'; duplicateNote.style.display='none'; errorMsg.textContent='';
+
+  const name         = depName.value.trim(),
+        phone        = phoneInput.value.trim(),
+        medicine     = depMedicine.value.trim(),
+        dosageNumber = parseInt(dosageNumberInput.value),
+        dosageUnit   = depDosageUnit.value,
+        notes        = depNotes.value.trim(),
+        times        = Array.from(timesContainer.querySelectorAll('.timeInput'))
+                           .map(i => i.value)
+                           .filter(v => v !== '');
+
+  if (!name || !medicine || !dosageUnit || !notes ||
+      dosageNumber < 1 ||
+      !/^\d{8}$/.test(phone) || !/^[689]/.test(phone) ||
+      times.length !== parseInt(numTimesInput.value)) {
+
+    errorMsg.textContent = "Please fill all fields correctly including times.";
+    return;
+  }
+
+  dispName.textContent     = name;
+  dispPhone.textContent    = phone;
+  dispMedicine.textContent = medicine;
+  dispDosage.textContent   = `${dosageNumber} ${dosageUnit}`;
+  dispTimes.textContent    = times.join(', ');
+  dispNotes.textContent    = notes;
+
+  infoBox.style.display = 'block';
+  dependantAdded = true;
+  editing = false;
+
+  currentDependant = {
+    name,
+    phone,
+    medicine,
+    dosageNumber,
+    dosageUnit,
+    notes,
+    times,
+    status: "pending"   // default until WhatsApp reply
+  };
+
+  updateReminders();
+  saveDependantToFirestore(currentDependant);
+  listenToDependantStatus(phone);
+
+  modal.classList.remove('active');
+  form.reset();
+  resetDosageNote();
+  resetPhoneNote();
+  timesContainer.innerHTML = '';
+  timesSection.style.display = 'none';
+  duplicateNote.style.display = 'none';
+  errorMsg.textContent = '';
 });
 
+// --------------------
 // Edit & Delete
-editBtn.addEventListener('click', ()=>{ if(!dependantAdded)return; editing=true; addBtn.click(); });
-removeBtn.addEventListener('click', ()=>{ if(!dependantAdded)return; deletePopup.style.display='block'; });
-confirmDeleteBtn.addEventListener('click', ()=>{
-  infoBox.style.display='none'; dependantAdded=false; dispName.textContent=''; dispPhone.textContent=''; dispMedicine.textContent='';
-  dispDosage.textContent=''; dispTimes.textContent=''; dispNotes.textContent=''; deletePopup.style.display='none'; remindersList.innerHTML='';
+// --------------------
+editBtn.addEventListener('click', () => {
+  if (!dependantAdded) return;
+  editing = true;
+  addBtn.click();
 });
-cancelDeleteBtn.addEventListener('click', ()=>{deletePopup.style.display='none';});
 
-// Reminders
-function updateReminders(){
-  remindersList.innerHTML=''; if(!currentDependant)return;
-  const header=document.createElement('div'); header.className='reminders-header';
-  header.innerHTML='<span>Name</span><span>Time</span><span>Status</span>'; remindersList.appendChild(header);
-  currentDependant.times.forEach(time=>{
-    const div=document.createElement('div'); div.className='reminder-item';
-    const nameSpan=document.createElement('span'); nameSpan.className='reminder-name'; nameSpan.textContent=currentDependant.name;
-    const timeSpan=document.createElement('span'); timeSpan.className='reminder-time'; timeSpan.textContent=time;
-    const statusSpan=document.createElement('span'); statusSpan.className='reminder-status'; statusSpan.textContent='Pending';
-    div.appendChild(nameSpan); div.appendChild(timeSpan); div.appendChild(statusSpan); remindersList.appendChild(div);
+removeBtn.addEventListener('click', () => {
+  if (!dependantAdded) return;
+  deletePopup.style.display = 'block';
+});
+
+confirmDeleteBtn.addEventListener('click', () => {
+  // Delete from Firestore as well
+  if (currentDependant && currentDependant.phone) {
+    const docId = getDependantDocIdFromPhone(currentDependant.phone);
+    db.collection("dependants").doc(docId)
+      .delete()
+      .then(() => console.log("Dependant deleted from Firestore:", docId))
+      .catch(err => console.error("Error deleting dependant:", err));
+  }
+
+  if (unsubscribeDependant) unsubscribeDependant();
+
+  infoBox.style.display = 'none';
+  dependantAdded = false;
+  dispName.textContent = '';
+  dispPhone.textContent = '';
+  dispMedicine.textContent = '';
+  dispDosage.textContent = '';
+  dispTimes.textContent = '';
+  dispNotes.textContent = '';
+  deletePopup.style.display = 'none';
+  remindersList.innerHTML = '';
+  currentDependant = null;
+});
+
+cancelDeleteBtn.addEventListener('click', () => {
+  deletePopup.style.display = 'none';
+});
+
+// --------------------
+// Reminders rendering
+// --------------------
+function updateReminders() {
+  remindersList.innerHTML = '';
+  if (!currentDependant) return;
+
+  const header = document.createElement('div');
+  header.className = 'reminders-header';
+  header.innerHTML = '<span>Name</span><span>Time</span><span>Status</span>';
+  remindersList.appendChild(header);
+
+  const statusIsTaken = currentDependant.status === 'taken';
+  const statusText    = statusIsTaken ? 'Taken' : 'Pending';
+
+  currentDependant.times.forEach(time => {
+    const div = document.createElement('div');
+    div.className = 'reminder-item';
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'reminder-name';
+    nameSpan.textContent = currentDependant.name;
+
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'reminder-time';
+    timeSpan.textContent = time;
+
+    const statusSpan = document.createElement('span');
+    statusSpan.className = 'reminder-status';
+    statusSpan.textContent = statusText;
+    if (statusIsTaken) statusSpan.classList.add('taken');
+
+    div.appendChild(nameSpan);
+    div.appendChild(timeSpan);
+    div.appendChild(statusSpan);
+    remindersList.appendChild(div);
   });
 }
 
+// --------------------
 // Sidebar nav
-document.querySelectorAll('.nav-item').forEach(item=>{
-  item.addEventListener('click', ()=>{
-    document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active')); item.classList.add('active');
-    const target=item.getAttribute('data-nav'); document.querySelectorAll('.dashboard-section').forEach(sec=>sec.style.display=(sec.id===target?'block':'none'));
+// --------------------
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+    const target = item.getAttribute('data-nav');
+    document.querySelectorAll('.dashboard-section').forEach(sec => {
+      sec.style.display = (sec.id === target ? 'block' : 'none');
+    });
   });
 });
 </script>
+
 </body>
 </html>
