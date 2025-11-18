@@ -39,14 +39,6 @@ button:hover{background:#45a049;}
 .btn-confirm{background:#f87171;color:white;}
 .btn-cancel{background:#9ca3af;color:white;}
 input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance:auto;margin:0; }
-
-
-
-
-
-
-
-
 /* Reminders 3-column static Pending */
 .reminders-header { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; font-weight:600; padding:6px; background:#f3f4f6; border-radius:6px; margin-bottom:4px; text-align:left; }
 .reminder-item { padding:6px; margin:2px 0; background:#fff; border-radius:6px; box-shadow:0 1px 2px rgba(0,0,0,.06); pointer-events:none; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; align-items:center; }
@@ -132,14 +124,13 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
         <div id="duplicateNote" class="duplicate-note">Duplicate times are not allowed!</div>
       </div>
 
-
-
-
-
-
-
       <label>Additional Notes:</label>
       <input type="text" id="depNotes" placeholder="Enter 'NA' if none" required />
+      <label>
+  <input type="checkbox" name="accept_terms" value="yes">
+  Add Dependants
+</label>
+
       <button type="submit">Save Users</button>
       <button type="button" id="closeModalBtn" style="background:#9ca3af;margin-top:4px;">Cancel</button>
 
