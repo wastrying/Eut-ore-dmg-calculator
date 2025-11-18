@@ -52,16 +52,16 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 <div id="main-dashboard">
   <aside class="sidebar">
     <div class="sidebar-title">Dashboard</div>
-    <div class="nav-item active" data-nav="dependants"><span class="icon-dot"></span>Dependants</div>
+    <div class="nav-item active" data-nav="dependants"><span class="icon-dot"></span>Users</div>
     <div class="nav-item" data-nav="reminders"><span class="icon-dot"></span>Upcoming Reminders</div>
   </aside>
 
   <div class="main-area">
     <div id="dependants" class="dashboard-section">
-      <div class="section-title">Your Dependants</div>
+      <div class="section-title">Your Users</div>
       <div class="board-wrapper">
         <div id="mainError" class="error"></div>
-        <button id="addDependantBtn">Add Dependant</button>
+        <button id="addDependantBtn">Add Users</button>
         <div id="dependantInfo" class="dependant-info">
           <h3>Dependant Profile</h3>
           <p><strong>Name:</strong> <span id="dispName"></span></p>
@@ -88,7 +88,7 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 <!-- Dependant Modal -->
 <div id="dependantModal" class="modal">
   <div class="modal-content">
-    <h2 id="modalTitle">Add Dependant</h2>
+    <h2 id="modalTitle">Add Users</h2>
     <p class="error" id="modalError"></p>
     <form id="dependantForm">
       <label>Name:</label>
@@ -117,7 +117,7 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
       </div>
       <label>Additional Notes:</label>
       <input type="text" id="depNotes" placeholder="Enter 'NA' if none" required />
-      <button type="submit">Save Dependant</button>
+      <button type="submit">Save Users</button>
       <button type="button" id="closeModalBtn" style="background:#9ca3af;margin-top:4px;">Cancel</button>
     </form>
   </div>
@@ -132,6 +132,7 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 <!-- Firebase SDKs (put these before your main script) -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
 // --------------------
@@ -148,7 +149,8 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const db   = firebase.firestore();
+const auth = firebase.auth();   // 👈 needed for users/{uid}
 
 // --------------------
 // Dashboard logic
@@ -190,9 +192,9 @@ const addBtn           = document.getElementById('addDependantBtn'),
       mainError        = document.getElementById('mainError'),
       remindersList    = document.getElementById('remindersList');
 
-dosageNote.style.display   = 'none';
-phoneNote.style.display    = 'none';
-duplicateNote.style.display= 'none';
+dosageNote.style.display    = 'none';
+phoneNote.style.display     = 'none';
+duplicateNote.style.display = 'none';
 
 function resetDosageNote(){
   dosageNote.style.display = 'none';
@@ -207,66 +209,92 @@ function resetPhoneNote(){
 // Firestore helpers
 // --------------------
 
-// Build Firestore doc ID that matches WhatsApp sender ID.
-// For Singapore, WhatsApp sends something like "6591234567" (65 + 8-digit number).
-function getDependantDocIdFromPhone(phone8Digit) {
-  // Adjust this if your country code / format is different.
+// Build full WhatsApp number (E.164-like) from 8-digit SG number.
+// WhatsApp will send something like "6591234567"
+function buildWhatsappNumber(phone8Digit) {
   return '65' + phone8Digit; // e.g. "91234567" -> "6591234567"
 }
 
-function saveDependantToFirestore(dep) {
+function saveDependantToUser(dep) {
   if (!dep || !dep.phone) return;
 
-  const docId = getDependantDocIdFromPhone(dep.phone);
+  const user = auth.currentUser;
+  if (!user) {
+    console.error("Not signed in – cannot save dependant to user doc.");
+    return;
+  }
 
-  db.collection("dependants").doc(docId)
+  const uid          = user.uid;
+  const fullWaNumber = buildWhatsappNumber(dep.phone);
+
+  db.collection("users").doc(uid)
     .set({
-      name: dep.name,
-      phone: dep.phone,
-      medicine: dep.medicine,
-      dosageNumber: dep.dosageNumber,
-      dosageUnit: dep.dosageUnit,
-      notes: dep.notes,
-      times: dep.times,
-      status: dep.status || "pending"
+      whatsappNumber: fullWaNumber,       // 👈 used by Apps Script to match senderWaId
+      medName: dep.name,
+      medPhone: dep.phone,                // 8-digit SG phone (for UI)
+      medMedicine: dep.medicine,
+      medDosageNumber: dep.dosageNumber,
+      medDosageUnit: dep.dosageUnit,
+      medNotes: dep.notes,
+      medTimes: dep.times,
+      medStatus: dep.status || "pending"
     }, { merge: true })
     .then(() => {
-      console.log("Dependant saved to Firestore with id:", docId);
+      console.log("Dependant saved on user doc:", uid);
     })
     .catch(err => {
-      console.error("Error saving dependant:", err);
+      console.error("Error saving dependant to user:", err);
     });
 }
 
-function listenToDependantStatus(phone8Digit) {
-  if (!phone8Digit) return;
+function listenToUserMedStatus() {
+  const user = auth.currentUser;
+  if (!user) {
+    console.error("Not signed in – cannot listen to user doc.");
+    return;
+  }
 
-  const docId = getDependantDocIdFromPhone(phone8Digit);
+  const uid = user.uid;
 
-  // Stop previous listener if any
   if (unsubscribeDependant) unsubscribeDependant();
 
-  const docRef = db.collection("dependants").doc(docId);
+  const docRef = db.collection("users").doc(uid);
 
   unsubscribeDependant = docRef.onSnapshot(
     (doc) => {
       if (!doc.exists) {
-        console.log("Dependant doc not found:", docId);
+        console.log("User doc not found:", uid);
         return;
       }
       const data = doc.data();
-      console.log("Firestore update:", data);
+      console.log("User doc update:", data);
 
       if (!currentDependant) currentDependant = {};
-      currentDependant.status = data.status || "pending";
+
+      currentDependant.status        = data.medStatus       || "pending";
+      currentDependant.name          = data.medName         || currentDependant.name;
+      currentDependant.phone         = data.medPhone        || currentDependant.phone;
+      currentDependant.medicine      = data.medMedicine     || currentDependant.medicine;
+      currentDependant.dosageNumber  = data.medDosageNumber || currentDependant.dosageNumber;
+      currentDependant.dosageUnit    = data.medDosageUnit   || currentDependant.dosageUnit;
+      currentDependant.notes         = data.medNotes        || currentDependant.notes;
+      currentDependant.times         = data.medTimes        || currentDependant.times;
 
       updateReminders();
     },
     (err) => {
-      console.error("Error listening for status:", err);
+      console.error("Error listening to user medStatus:", err);
     }
   );
 }
+
+// Optionally start listening as soon as user is signed in
+auth.onAuthStateChanged(user => {
+  if (user) {
+    console.log("Auth state changed, user:", user.uid);
+    listenToUserMedStatus();
+  }
+});
 
 // --------------------
 // Modal open / close
@@ -285,13 +313,13 @@ addBtn.addEventListener('click', () => {
   modal.classList.add('active');
 
   if (editing && currentDependant) {
-    depName.value         = currentDependant.name;
-    phoneInput.value      = currentDependant.phone;
-    depMedicine.value     = currentDependant.medicine;
+    depName.value           = currentDependant.name;
+    phoneInput.value        = currentDependant.phone;
+    depMedicine.value       = currentDependant.medicine;
     dosageNumberInput.value = currentDependant.dosageNumber;
-    depDosageUnit.value   = currentDependant.dosageUnit;
-    depNotes.value        = currentDependant.notes;
-    numTimesInput.value   = currentDependant.times.length;
+    depDosageUnit.value     = currentDependant.dosageUnit;
+    depNotes.value          = currentDependant.notes;
+    numTimesInput.value     = currentDependant.times.length;
     renderTimeInputs(currentDependant.times);
   }
 });
@@ -445,8 +473,8 @@ form.addEventListener('submit', function(e) {
   };
 
   updateReminders();
-  saveDependantToFirestore(currentDependant);
-  listenToDependantStatus(phone);
+  saveDependantToUser(currentDependant);
+  listenToUserMedStatus();
 
   modal.classList.remove('active');
   form.reset();
@@ -473,13 +501,24 @@ removeBtn.addEventListener('click', () => {
 });
 
 confirmDeleteBtn.addEventListener('click', () => {
-  // Delete from Firestore as well
-  if (currentDependant && currentDependant.phone) {
-    const docId = getDependantDocIdFromPhone(currentDependant.phone);
-    db.collection("dependants").doc(docId)
-      .delete()
-      .then(() => console.log("Dependant deleted from Firestore:", docId))
-      .catch(err => console.error("Error deleting dependant:", err));
+  // Delete dependant fields from the current user doc (not from /dependants)
+  const user = auth.currentUser;
+  if (user) {
+    db.collection("users").doc(user.uid)
+      .update({
+        whatsappNumber: firebase.firestore.FieldValue.delete(),
+        medName:        firebase.firestore.FieldValue.delete(),
+        medPhone:       firebase.firestore.FieldValue.delete(),
+        medMedicine:    firebase.firestore.FieldValue.delete(),
+        medDosageNumber:firebase.firestore.FieldValue.delete(),
+        medDosageUnit:  firebase.firestore.FieldValue.delete(),
+        medNotes:       firebase.firestore.FieldValue.delete(),
+        medTimes:       firebase.firestore.FieldValue.delete(),
+        medStatus:      firebase.firestore.FieldValue.delete(),
+        medLastTakenAt: firebase.firestore.FieldValue.delete()
+      })
+      .then(() => console.log("Dependant fields removed from user doc"))
+      .catch(err => console.error("Error removing dependant fields:", err));
   }
 
   if (unsubscribeDependant) unsubscribeDependant();
@@ -554,6 +593,5 @@ document.querySelectorAll('.nav-item').forEach(item => {
   });
 });
 </script>
-
 </body>
 </html>
