@@ -118,9 +118,9 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 <body>
 <div id="main-dashboard">
   <aside class="sidebar">
-    <div class="sidebar-title">Dashboard</div>
-    <div class="nav-item active" data-nav="dependants"><span class="icon-dot"></span>Users</div>
-    <div class="nav-item" data-nav="reminders"><span class="icon-dot"></span>Upcoming Reminders</div>
+  <div class="sidebar-title">Dashboard</div>
+  <div class="nav-item active" data-nav="dependants"><span class="icon-dot"></span>Users</div>
+  <div class="nav-item" data-nav="reminders"><span class="icon-dot"></span>Upcoming Reminders</div>
 
     <!-- NEW: bottom plan + logout + delete -->
     <div class="sidebar-spacer"></div>
@@ -129,8 +129,8 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
       <strong id="plan-name">-</strong>
     </div>
     <div id="logout" class="logout-link">Log out</div>
-    <div id="delete-account" class="logout-link delete-link">Delete account &amp; data</div>
-  </aside>
+  <div id="delete-account" class="logout-link" style="color:#f87171;">Delete account &amp; data</div>
+</aside>
 
   <div class="main-area">
     <div id="dependants" class="dashboard-section">
@@ -330,10 +330,101 @@ function resetExtraDepNote(){
   extraDepNote.style.display = 'none';
   extraDepInput.style.border = '1px solid #ccc';
 }
+// ========= Logout =========
+if (logoutBtn) {
+  logoutBtn.addEventListener('click', () => {
+    auth.signOut()
+      .then(() => {
+        // redirect wherever you want after logout
+        window.location.href = 'login.html'; 
+      })
+      .catch(err => {
+        console.error('Logout error:', err);
+        alert('Could not log out. Check the console for details.');
+      });
+  });
+}
+
+// ========= Delete account & data =========
+async function performDeleteAccount() {
+  const u = auth.currentUser;
+  if (!u) return;
+
+  try {
+    // 1) Clear Firestore user doc (+ try deleting doc)
+    await cleanupUserOwnedData();
+
+    // 2) Delete the Auth account
+    await u.delete();
+
+    alert('Your account and stored data have been deleted.');
+    window.location.href = 'login.html'; // or your landing page
+  } catch (err) {
+    console.error('Delete account failed:', err);
+    if (err && err.code === 'auth/requires-recent-login') {
+      alert('Please log in again and then delete your account – Firebase needs a recent login.');
+    } else {
+      alert('We could not delete your account. Check the console for details.');
+    }
+  }
+}
+
+if (deleteAccountBtn) {
+  deleteAccountBtn.addEventListener('click', () => {
+    if (!confirm('Delete your account and all stored medication data? This cannot be undone.')) return;
+    performDeleteAccount();
+  });
+}
 
 // --------------------
 // Plan + account helpers (ported from Enterprise page, compat style)
 // --------------------
+// ========= Account + data delete helpers =========
+
+// Wipe all medication + plan fields from users/{uid}, then try to delete the doc.
+function cleanupUserOwnedData() {
+  const u = auth.currentUser;
+  if (!u) return Promise.resolve();
+
+  const uid     = u.uid;
+  const userRef = db.collection("users").doc(uid);
+
+  // 1) Clear all fields we ever write on this doc
+  const clearFields = userRef.set({
+    // Medication / dependant fields
+    whatsappNumber:           firebase.firestore.FieldValue.delete(),
+    medName:                  firebase.firestore.FieldValue.delete(),
+    medPhone:                 firebase.firestore.FieldValue.delete(),
+    medMedicine:              firebase.firestore.FieldValue.delete(),
+    medDosageNumber:          firebase.firestore.FieldValue.delete(),
+    medDosageUnit:            firebase.firestore.FieldValue.delete(),
+    medNotes:                 firebase.firestore.FieldValue.delete(),
+    medTimes:                 firebase.firestore.FieldValue.delete(),
+    medExtraDetails:          firebase.firestore.FieldValue.delete(),
+    dependantPhone:           firebase.firestore.FieldValue.delete(),
+    dependantWhatsappNumber:  firebase.firestore.FieldValue.delete(),
+    medStatus:                firebase.firestore.FieldValue.delete(),
+    medLastTakenAt:           firebase.firestore.FieldValue.delete(),
+
+    // (Optional) also clear plan + workspace info if you store it here
+    plan:                     firebase.firestore.FieldValue.delete(),
+    basePlan:                 firebase.firestore.FieldValue.delete(),
+    workspaceOwnerUid:        firebase.firestore.FieldValue.delete(),
+    email:                    firebase.firestore.FieldValue.delete()
+  }, { merge: true }).catch(err => {
+    console.warn("Couldn't clear user fields; continuing anyway:", err);
+  });
+
+  // 2) Then try to delete the whole doc.
+  const deleteDoc = userRef.delete().catch(err => {
+    console.warn(
+      "Couldn't delete users doc (likely Firestore rules). " +
+      "Doc may remain but fields are cleared. Error:", err
+    );
+  });
+
+  return Promise.all([clearFields, deleteDoc]);
+}
 
 // Load or create the user's plan, update "Current Plan" pill
 function loadUserPlan(user){
