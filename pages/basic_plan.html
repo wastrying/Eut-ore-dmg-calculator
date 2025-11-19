@@ -294,26 +294,40 @@ function saveDependantToUser(dep) {
     return;
   }
 
-  const uid          = user.uid;
-  const fullWaNumber = buildWhatsappNumber(dep.phone);
+  const uid            = user.uid;
 
+  // Main user WhatsApp (65 + user's 8-digit phone)
+  const fullWaNumber   = buildWhatsappNumber(dep.phone);
 
+  // Dependant’s 8-digit phone (from the extra field)
+  const dependantPhone = (dep.extraDetails || '').trim();
+
+  // Dependant’s WhatsApp (if provided)
+  const dependantWa    = dependantPhone ? buildWhatsappNumber(dependantPhone) : '';
 
   db.collection("users").doc(uid)
     .set({
-      whatsappNumber: fullWaNumber,       // used by Apps Script to match senderWaId
-      medName: dep.name,
-      medPhone: dep.phone,                // 8-digit SG phone (for UI)
-      medMedicine: dep.medicine,
+      // 🧍 Main user
+      whatsappNumber: fullWaNumber,   // e.g. "6591234567"
+      medPhone:       dep.phone,      // e.g. "91234567"
+
+      // 👥 Dependant — saved in the same style
+      dependantPhone:          dependantPhone,  // "81234567"
+      dependantWhatsappNumber: dependantWa,     // "6581234567"
+
+      // Keep existing field for compatibility with Apps Script logic
+      medExtraDetails: dependantPhone,
+
+      medName:         dep.name,
+      medMedicine:     dep.medicine,
       medDosageNumber: dep.dosageNumber,
-      medDosageUnit: dep.dosageUnit,
-      medNotes: dep.notes,
-      medTimes: dep.times,
-      medExtraDetails: dep.extraDetails || '',
-      medStatus: dep.status || "pending"
+      medDosageUnit:   dep.dosageUnit,
+      medNotes:        dep.notes,
+      medTimes:        dep.times,
+      medStatus:       dep.status || "pending"
     }, { merge: true })
     .then(() => {
-      console.log("Dependant saved on user doc:", uid);
+      console.log("Dependant + user phones saved on user doc:", uid);
     })
     .catch(err => {
       console.error("Error saving dependant to user:", err);
@@ -668,6 +682,8 @@ confirmDeleteBtn.addEventListener('click', () => {
         medNotes:       firebase.firestore.FieldValue.delete(),
         medTimes:       firebase.firestore.FieldValue.delete(),
         medExtraDetails:firebase.firestore.FieldValue.delete(),
+        dependantPhone:          firebase.firestore.FieldValue.delete(),
+        dependantWhatsappNumber: firebase.firestore.FieldValue.delete(),
         medStatus:      firebase.firestore.FieldValue.delete(),
         medLastTakenAt: firebase.firestore.FieldValue.delete()
       })
