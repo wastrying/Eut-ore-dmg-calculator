@@ -203,6 +203,124 @@
       pointer-events:none;
       padding-left:2px;
     }
+    /* === Mobile layout tweaks === */
+@media (max-width: 768px) {
+
+  /* Give the page a bit more breathing room on phones */
+  body{
+    padding:8px;
+  }
+
+  /* Make the logo smaller on mobile so it doesn't dominate */
+  .logo{
+    height:96px;
+  }
+
+  /* Wrapper: push the card a bit lower so it clears the logo */
+  .wrapper{
+    margin-top:110px;
+  }
+
+  /* Dashboard: stack sidebar on top of content, allow scrolling */
+  #main-dashboard{
+    grid-template-columns:1fr;   /* single column (sidebar above main) */
+    height:auto;                 /* let content decide height */
+    max-height:none;
+    min-height:60vh;
+    border-radius:14px;
+  }
+
+  /* Sidebar becomes a horizontal scrollable nav bar */
+  .sidebar{
+    flex-direction:row;
+    align-items:center;
+    gap:6px;
+    padding:8px 10px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    white-space:nowrap;
+  }
+
+  /* Hide "Dashboard" label to save vertical space */
+  .sidebar-title{
+    display:none;
+  }
+
+  /* Nav items are compact pills */
+  .nav-item{
+    font-size:13px;
+    padding:6px 10px;
+    white-space:nowrap;
+  }
+
+  /* Spacer is not needed when sidebar is horizontal */
+  .sidebar-spacer{
+    flex:0;
+  }
+
+  /* Plan pill + logout move to the right end of the row */
+  .sidebar-plan-label{
+    margin-left:auto;
+    font-size:11px;
+    padding:6px 8px;
+  }
+
+  .logout-link{
+    margin-top:0;
+    margin-left:8px;
+    font-size:11px;
+  }
+
+  /* Content padding a bit tighter */
+  .main-area{
+    padding:12px;
+  }
+
+  .board-wrapper{
+    padding:12px;
+  }
+
+  .section-title{
+    font-size:15px;
+  }
+
+  /* Buttons for edit/remove stack nicely on narrow screens */
+  .dependant-actions{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .dependant-actions button{
+    width:100%;
+  }
+
+  /* Modal: more "bottom sheet" style on mobile */
+  .modal{
+    align-items:flex-end;
+  }
+
+  .modal-content{
+    width:100%;
+    max-width:none;
+    max-height:90vh;
+    border-radius:12px 12px 0 0;
+  }
+}
+
+/* Extra small phones */
+@media (max-width: 480px) {
+  .logo{
+    height:80px;
+  }
+  .section-title{
+    font-size:14px;
+  }
+  button{
+    padding:8px 10px;
+    font-size:13px;
+  }
+}
+
   </style>
 </head>
 <body>
