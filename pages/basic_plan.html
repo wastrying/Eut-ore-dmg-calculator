@@ -351,32 +351,32 @@ function cleanupUserOwnedData(){
   const uid     = u.uid;
   const userRef = db.collection("users").doc(uid);
 
-  // 1) Clear all fields we ever write on this doc
-  const clearFields = userRef.set({
-    // Medication / dependant fields
-    whatsappNumber:           firebase.firestore.FieldValue.delete(),
-    medName:                  firebase.firestore.FieldValue.delete(),
-    medPhone:                 firebase.firestore.FieldValue.delete(),
-    medMedicine:              firebase.firestore.FieldValue.delete(),
-    medDosageNumber:          firebase.firestore.FieldValue.delete(),
-    medDosageUnit:            firebase.firestore.FieldValue.delete(),
-    medNotes:                 firebase.firestore.FieldValue.delete(),
-    medTimes:                 firebase.firestore.FieldValue.delete(),
-    medExtraDetails:          firebase.firestore.FieldValue.delete(),
-    dependantPhone:           firebase.firestore.FieldValue.delete(),
-    dependantWhatsappNumber:  firebase.firestore.FieldValue.delete(),
-    medStatus:                firebase.firestore.FieldValue.delete(),
-    medLastTakenAt:           firebase.firestore.FieldValue.delete(),
-
-    // Also clear plan + workspace info
-    plan:                     firebase.firestore.FieldValue.delete(),
-    basePlan:                 firebase.firestore.FieldValue.delete(),
-    workspaceOwnerUid:        firebase.firestore.FieldValue.delete(),
-    email:                    firebase.firestore.FieldValue.delete()
-  }, { merge:true }).catch(e => {
-    console.warn("Couldn't clear user fields; continuing:", e);
-  });
-
+  // Try deleting doc first
+  return userRef.delete()
+    .catch(err => {
+      console.warn("Couldn't delete doc, clearing fields instead:", err);
+      // Fallback: clear all fields so data is gone even if doc stays
+      return userRef.set({
+        whatsappNumber:           firebase.firestore.FieldValue.delete(),
+        medName:                  firebase.firestore.FieldValue.delete(),
+        medPhone:                 firebase.firestore.FieldValue.delete(),
+        medMedicine:              firebase.firestore.FieldValue.delete(),
+        medDosageNumber:          firebase.firestore.FieldValue.delete(),
+        medDosageUnit:            firebase.firestore.FieldValue.delete(),
+        medNotes:                 firebase.firestore.FieldValue.delete(),
+        medTimes:                 firebase.firestore.FieldValue.delete(),
+        medExtraDetails:          firebase.firestore.FieldValue.delete(),
+        dependantPhone:           firebase.firestore.FieldValue.delete(),
+        dependantWhatsappNumber:  firebase.firestore.FieldValue.delete(),
+        medStatus:                firebase.firestore.FieldValue.delete(),
+        medLastTakenAt:           firebase.firestore.FieldValue.delete(),
+        plan:                     firebase.firestore.FieldValue.delete(),
+        basePlan:                 firebase.firestore.FieldValue.delete(),
+        workspaceOwnerUid:        firebase.firestore.FieldValue.delete(),
+        email:                    firebase.firestore.FieldValue.delete()
+      }, { merge:true });
+    });
+}
   // 2) Try to delete the whole user doc
   const deleteUserDoc = userRef.delete().catch(e => {
     console.warn("Couldn't delete user doc; continuing:", e);
