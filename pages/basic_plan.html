@@ -244,12 +244,11 @@ firebase.initializeApp(firebaseConfig);
 const db   = firebase.firestore();
 const auth = firebase.auth();   // used to get users/{uid}
 
-// Reuse same routes as your other pages
 const LOGIN_URL     = "./login.html";
 const SELECTION_URL = "./selection.html";
 
 // --------------------
-// Dashboard logic
+// Dashboard state
 // --------------------
 let dependantAdded = false,
     editing = false,
@@ -259,6 +258,9 @@ let dependantAdded = false,
     currentUser = null,
     currentPlan = null;
 
+// --------------------
+// DOM refs
+// --------------------
 const addBtn           = document.getElementById('addDependantBtn'),
       editBtn          = document.getElementById('editDependantBtn'),
       removeBtn        = document.getElementById('removeDependantBtn'),
@@ -298,17 +300,20 @@ const addBtn           = document.getElementById('addDependantBtn'),
       extraDepInput    = document.getElementById('extraDependantName'),
       extraDepNote     = document.getElementById('extraDepNote'),
 
-      // NEW: plan + logout + delete handles
-      sidebarPlanEl    = document.getElementById('sidebar-plan'),
-      planNameEl       = document.getElementById('plan-name'),
-      logoutLink       = document.getElementById('logout'),
-      deleteAccountLink= document.getElementById('delete-account');
+      // Plan + logout + delete handles
+      sidebarPlanEl     = document.getElementById('sidebar-plan'),
+      planNameEl        = document.getElementById('plan-name'),
+      logoutLink        = document.getElementById('logout'),
+      deleteAccountLink = document.getElementById('delete-account');
 
 dosageNote.style.display    = 'none';
 phoneNote.style.display     = 'none';
 duplicateNote.style.display = 'none';
 extraDepNote.style.display  = 'none';
 
+// --------------------
+// Small helpers
+// --------------------
 function resetDosageNote(){
   dosageNote.style.display = 'none';
   dosageNumberInput.style.border = '1px solid #ccc';
@@ -317,6 +322,11 @@ function resetPhoneNote(){
   phoneNote.style.display = 'none';
   phoneInput.style.border = '1px solid #ccc';
 }
+function resetExtraDepNote(){
+  extraDepNote.style.display = 'none';
+  extraDepInput.style.border = '1px solid #ccc';
+}
+
 // Show/hide extra dependant field based on checkbox
 addDepCheckbox.addEventListener('change', () => {
   if (addDepCheckbox.checked) {
@@ -324,65 +334,17 @@ addDepCheckbox.addEventListener('change', () => {
   } else {
     extraDepField.style.display = 'none';
     extraDepInput.value = '';
+    resetExtraDepNote();
   }
 });
-function resetExtraDepNote(){
-  extraDepNote.style.display = 'none';
-  extraDepInput.style.border = '1px solid #ccc';
-}
-// ========= Logout =========
-if (logoutBtn) {
-  logoutBtn.addEventListener('click', () => {
-    auth.signOut()
-      .then(() => {
-        // redirect wherever you want after logout
-        window.location.href = 'login.html'; 
-      })
-      .catch(err => {
-        console.error('Logout error:', err);
-        alert('Could not log out. Check the console for details.');
-      });
-  });
-}
-
-// ========= Delete account & data =========
-async function performDeleteAccount() {
-  const u = auth.currentUser;
-  if (!u) return;
-
-  try {
-    // 1) Clear Firestore user doc (+ try deleting doc)
-    await cleanupUserOwnedData();
-
-    // 2) Delete the Auth account
-    await u.delete();
-
-    alert('Your account and stored data have been deleted.');
-    window.location.href = 'login.html'; // or your landing page
-  } catch (err) {
-    console.error('Delete account failed:', err);
-    if (err && err.code === 'auth/requires-recent-login') {
-      alert('Please log in again and then delete your account – Firebase needs a recent login.');
-    } else {
-      alert('We could not delete your account. Check the console for details.');
-    }
-  }
-}
-
-if (deleteAccountBtn) {
-  deleteAccountBtn.addEventListener('click', () => {
-    if (!confirm('Delete your account and all stored medication data? This cannot be undone.')) return;
-    performDeleteAccount();
-  });
-}
 
 // --------------------
-// Plan + account helpers (ported from Enterprise page, compat style)
+// ACCOUNT / PLAN HELPERS
 // --------------------
-// ========= Account + data delete helpers =========
 
-// Wipe all medication + plan fields from users/{uid}, then try to delete the doc.
-function cleanupUserOwnedData() {
+// Wipe all medication + plan fields from users/{uid},
+// try to delete the doc, and soft-disable any plan_links they own.
+function cleanupUserOwnedData(){
   const u = auth.currentUser;
   if (!u) return Promise.resolve();
 
@@ -406,24 +368,68 @@ function cleanupUserOwnedData() {
     medStatus:                firebase.firestore.FieldValue.delete(),
     medLastTakenAt:           firebase.firestore.FieldValue.delete(),
 
-    // (Optional) also clear plan + workspace info if you store it here
+    // Also clear plan + workspace info
     plan:                     firebase.firestore.FieldValue.delete(),
     basePlan:                 firebase.firestore.FieldValue.delete(),
     workspaceOwnerUid:        firebase.firestore.FieldValue.delete(),
     email:                    firebase.firestore.FieldValue.delete()
-  }, { merge: true }).catch(err => {
-    console.warn("Couldn't clear user fields; continuing anyway:", err);
+  }, { merge:true }).catch(e => {
+    console.warn("Couldn't clear user fields; continuing:", e);
   });
 
-  // 2) Then try to delete the whole doc.
-  const deleteDoc = userRef.delete().catch(err => {
-    console.warn(
-      "Couldn't delete users doc (likely Firestore rules). " +
-      "Doc may remain but fields are cleared. Error:", err
-    );
+  // 2) Try to delete the whole user doc
+  const deleteUserDoc = userRef.delete().catch(e => {
+    console.warn("Couldn't delete user doc; continuing:", e);
   });
 
-  return Promise.all([clearFields, deleteDoc]);
+  // 3) Soft-disable any plan_links they own (if you use that collection)
+  const softDeleteLinks = db.collection("plan_links").where("ownerUid","==", uid).get()
+    .then(snap => {
+      if (snap.empty) return;
+      const batch = db.batch();
+      snap.forEach(docSnap => {
+        batch.set(docSnap.ref, { isActive:false }, { merge:true });
+      });
+      return batch.commit();
+    })
+    .catch(e => {
+      console.warn("Couldn't soft-delete plan_links; continuing:", e);
+    });
+
+  return Promise.all([clearFields, deleteUserDoc, softDeleteLinks]);
+}
+
+// Re-authenticate (password users only; Google users get a hint)
+function reauthenticateCurrentUser(){
+  return new Promise((resolve, reject) => {
+    const u = auth.currentUser;
+    if (!u) return reject(new Error("No authenticated user."));
+
+    const providerData = u.providerData && u.providerData[0];
+    const providerId   = providerData ? providerData.providerId : "password";
+
+    if (providerId !== "password") {
+      alert("Please sign out and sign back in, then try deleting your account again.");
+      return reject(Object.assign(new Error("Manual reauth required"), { code:"manual-reauth-required" }));
+    }
+
+    const email = u.email || "";
+    const pw = window.prompt(`For security, please confirm the password for ${email} to delete your account:`);
+    if (!pw) return reject(new Error("Password confirmation was cancelled."));
+
+    const cred = firebase.auth.EmailAuthProvider.credential(email, pw);
+    u.reauthenticateWithCredential(cred)
+      .then(() => resolve())
+      .catch(reject);
+  });
+}
+
+// Delete account + data (wraps cleanup + auth delete)
+async function performDeleteAccount(){
+  const u = auth.currentUser;
+  if (!u) throw new Error("No authenticated user");
+  await cleanupUserOwnedData();
+  await u.delete();
 }
 
 // Load or create the user's plan, update "Current Plan" pill
@@ -464,180 +470,101 @@ function loadUserPlan(user){
   });
 }
 
-// Re-authenticate before destructive operations
-function reauthenticateCurrentUser(){
-  return new Promise((resolve, reject) => {
-    const u = auth.currentUser;
-    if (!u) return reject(new Error("No authenticated user."));
+// --------------------
+// Logout + Delete button wiring
+// --------------------
+if (logoutLink){
+  logoutLink.addEventListener("click", () => {
+    auth.signOut()
+      .then(() => {
+        window.location.href = LOGIN_URL;
+      })
+      .catch(err => {
+        console.error("Error during logout:", err);
+        alert("Could not log out. Please try again.");
+      });
+  });
+}
 
-    const providerData = u.providerData && u.providerData[0];
-    const providerId   = providerData ? providerData.providerId : "password";
-
-    if (providerId === "google.com"){
-      const provider = new firebase.auth.GoogleAuthProvider();
-      u.reauthenticateWithPopup(provider)
-        .then(() => resolve())
-        .catch(reject);
+if (deleteAccountLink){
+  deleteAccountLink.addEventListener("click", () => {
+    if (!auth.currentUser){
+      alert("You must be logged in to delete your account.");
+      return;
+    }
+    if (!window.confirm("Are you sure you want to delete your account and data? This action cannot be undone.")){
       return;
     }
 
-    const email = u.email || "";
-    const pw = window.prompt(`For security, please confirm the password for ${email} to delete your account:`);
-    if (!pw) return reject(new Error("Password confirmation was cancelled."));
+    const originalText = deleteAccountLink.textContent;
+    deleteAccountLink.style.pointerEvents = "none";
+    deleteAccountLink.textContent = "Deleting…";
 
-    const cred = firebase.auth.EmailAuthProvider.credential(email, pw);
-    u.reauthenticateWithCredential(cred)
-      .then(() => resolve())
-      .catch(reject);
-  });
-}
-
-// Delete user doc + deactivate any plan_links they own
-function cleanupUserOwnedData(){
-  const u = auth.currentUser;
-  if (!u) return Promise.resolve();
-  const uid = u.uid;
-  const userRef = db.collection("users").doc(uid);
-
-  // 1) Always try to wipe all medication-related fields FIRST
-  const clearMedFields = userRef.set({
-    whatsappNumber:           firebase.firestore.FieldValue.delete(),
-    medName:                  firebase.firestore.FieldValue.delete(),
-    medPhone:                 firebase.firestore.FieldValue.delete(),
-    medMedicine:              firebase.firestore.FieldValue.delete(),
-    medDosageNumber:          firebase.firestore.FieldValue.delete(),
-    medDosageUnit:            firebase.firestore.FieldValue.delete(),
-    medNotes:                 firebase.firestore.FieldValue.delete(),
-    medTimes:                 firebase.firestore.FieldValue.delete(),
-    medExtraDetails:          firebase.firestore.FieldValue.delete(),
-    dependantPhone:           firebase.firestore.FieldValue.delete(),
-    dependantWhatsappNumber:  firebase.firestore.FieldValue.delete(),
-    medStatus:                firebase.firestore.FieldValue.delete(),
-    medLastTakenAt:           firebase.firestore.FieldValue.delete()
-  }, { merge:true }).catch(e => {
-    console.warn("Couldn't clear medication fields; continuing:", e);
-  });
-
-  // 2) Then try to delete the whole user doc
-  const deleteUserDoc = userRef.delete().catch(e => {
-    console.warn("Couldn't delete user doc; continuing:", e);
-  });
-
-  // 3) Soft-disable any plan_links they own
-  const softDeleteLinks = db.collection("plan_links").where("ownerUid","==", uid).get()
-    .then(snap => {
-      if (snap.empty) return;
-      const batch = db.batch();
-      snap.forEach(docSnap => {
-        batch.set(docSnap.ref, { isActive:false }, { merge:true });
-      });
-      return batch.commit();
-    })
-    .catch(e => {
-      console.warn("Couldn't soft-delete plan_links; continuing:", e);
-    });
-
-  return Promise.all([clearMedFields, deleteUserDoc, softDeleteLinks]);
-}
-
-
-function performDeleteAccount(){
-  const u = auth.currentUser;
-  if (!u) return Promise.reject(new Error("No authenticated user"));
-  return cleanupUserOwnedData().then(() => u.delete());
-}
-
-// Logout
-logoutLink && logoutLink.addEventListener("click", () => {
-  auth.signOut()
-    .then(() => {
-      window.location.href = LOGIN_URL;
-    })
-    .catch(err => {
-      console.error("Error during logout:", err);
-      alert("Could not log out. Please try again.");
-    });
-});
-
-// Delete account & data
-deleteAccountLink && deleteAccountLink.addEventListener("click", () => {
-  if (!auth.currentUser){
-    alert("You must be logged in to delete your account.");
-    return;
-  }
-  if (!window.confirm("Are you sure you want to delete your account and data? This action cannot be undone.")){
-    return;
-  }
-
-  const originalText = deleteAccountLink.textContent;
-  deleteAccountLink.style.pointerEvents = "none";
-  deleteAccountLink.textContent = "Deleting…";
-
-  performDeleteAccount()
-    .then(() => {
-      alert("Your account and data have been deleted.");
-      window.location.href = LOGIN_URL;
-    })
-    .catch(err => {
-      if (err && err.code === "auth/requires-recent-login"){
-        // Need reauth
-        reauthenticateCurrentUser()
-          .then(() => performDeleteAccount())
-          .then(() => {
+    (async () => {
+      try {
+        await performDeleteAccount();
+        alert("Your account and data have been deleted.");
+        window.location.href = LOGIN_URL;
+      } catch (err) {
+        if (err && err.code === "auth/requires-recent-login"){
+          try {
+            await reauthenticateCurrentUser();
+            await performDeleteAccount();
             alert("Your account and data have been deleted.");
             window.location.href = LOGIN_URL;
-          })
-          .catch(inner => {
+          } catch (inner) {
             console.error("Delete after reauth failed:", inner);
             alert("We couldn't delete your account even after re-authenticating. Please try again.");
-          })
-          .finally(() => {
-            deleteAccountLink.style.pointerEvents = "";
-            deleteAccountLink.textContent = originalText;
-          });
-      } else {
-        console.error("Delete account failed:", err);
-        alert("We couldn't delete your account. Please try again.");
+          }
+        } else if (err && err.code === "manual-reauth-required") {
+          // Already showed alert inside reauthenticateCurrentUser
+        } else {
+          console.error("Delete account failed:", err);
+          alert("We couldn't delete your account. Please try again.");
+        }
+      } finally {
         deleteAccountLink.style.pointerEvents = "";
         deleteAccountLink.textContent = originalText;
       }
-    });
-});
+    })();
+  });
+}
 
-// Plan selection / change
-sidebarPlanEl && sidebarPlanEl.addEventListener("click", () => {
-  if (!currentUser){
-    window.location.href = LOGIN_URL;
-    return;
-  }
+// --------------------
+// Plan pill behaviour
+// --------------------
+if (sidebarPlanEl){
+  sidebarPlanEl.addEventListener("click", () => {
+    if (!currentUser){
+      window.location.href = LOGIN_URL;
+      return;
+    }
 
-  if (currentPlan === "Developers"){
-    // Same behaviour as your Dev dashboard: allow direct override
-    const newPlan = window.prompt("Enter new plan (e.g., Basic, Premium, Enterprise):", currentPlan);
-    if (!newPlan) return;
-    db.collection("users").doc(currentUser.uid)
-      .set({ plan:newPlan }, { merge:true })
-      .then(() => {
-        alert("Your plan has been updated to " + newPlan);
-        currentPlan = newPlan;
-        if (planNameEl) planNameEl.textContent = newPlan;
-      })
-      .catch(err => {
-        console.error("Error updating plan:", err);
-        alert("Could not update plan. Please try again.");
-      });
-  } else {
-    // Normal users go to selection flow
-    try { sessionStorage.setItem("rbx_last_nav","from_dashboard"); } catch(e){}
-    window.location.href = SELECTION_URL;
-  }
-});
+    if (currentPlan === "Developers"){
+      const newPlan = window.prompt("Enter new plan (e.g., Basic, Premium, Enterprise):", currentPlan);
+      if (!newPlan) return;
+
+      db.collection("users").doc(currentUser.uid)
+        .set({ plan:newPlan }, { merge:true })
+        .then(() => {
+          alert("Your plan has been updated to " + newPlan);
+          currentPlan = newPlan;
+          if (planNameEl) planNameEl.textContent = newPlan;
+        })
+        .catch(err => {
+          console.error("Error updating plan:", err);
+          alert("Could not update plan. Please try again.");
+        });
+    } else {
+      try { sessionStorage.setItem("rbx_last_nav","from_dashboard"); } catch(e){}
+      window.location.href = SELECTION_URL;
+    }
+  });
+}
 
 // --------------------
 // Firestore helpers (med data)
 // --------------------
-
-// Build full WhatsApp number (E.164-like) from 8-digit SG number.
 function buildWhatsappNumber(phone8Digit) {
   return '65' + phone8Digit; // e.g. "91234567" -> "6591234567"
 }
@@ -653,9 +580,9 @@ function saveDependantToUser(dep) {
 
   const uid = user.uid;
 
-  const fullWaNumber = buildWhatsappNumber(dep.phone);
+  const fullWaNumber   = buildWhatsappNumber(dep.phone);
   const dependantPhone = (dep.extraDetails || '').trim();
-  const dependantWa = dependantPhone ? buildWhatsappNumber(dependantPhone) : '';
+  const dependantWa    = dependantPhone ? buildWhatsappNumber(dependantPhone) : '';
 
   db.collection("users").doc(uid)
     .set({
@@ -770,7 +697,9 @@ function listenToUserMedStatus() {
   );
 }
 
-// Start listening + load plan when signed in
+// --------------------
+// Auth state: start listeners + load plan
+// --------------------
 auth.onAuthStateChanged(user => {
   if (user) {
     currentUser = user;
@@ -778,8 +707,8 @@ auth.onAuthStateChanged(user => {
     listenToUserMedStatus();
     loadUserPlan(user);
   } else {
-    currentUser = null;
-    currentPlan = null;
+    currentUser      = null;
+    currentPlan      = null;
     currentDependant = null;
     applyCurrentDependantToUI();
     if (planNameEl) planNameEl.textContent = "-";
@@ -998,7 +927,7 @@ form.addEventListener('submit', function(e) {
 });
 
 // --------------------
-// Edit & Delete dependant data (not account)
+// Edit & Delete dependant data (NOT account)
 // --------------------
 editBtn.addEventListener('click', () => {
   if (!dependantAdded) return;
@@ -1041,6 +970,7 @@ confirmDeleteBtn.addEventListener('click', () => {
 
   deletePopup.style.display = 'none';
 });
+
 cancelDeleteBtn.addEventListener('click', () => {
   deletePopup.style.display = 'none';
 });
@@ -1098,5 +1028,6 @@ document.querySelectorAll('.nav-item').forEach(item => {
   });
 });
 </script>
+
 </body>
 </html>
