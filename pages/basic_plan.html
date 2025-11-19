@@ -281,6 +281,7 @@ function resetExtraDepNote(){
 // --------------------
 
 // Build full WhatsApp number (E.164-like) from 8-digit SG number.
+// Build full WhatsApp number (E.164-like) from 8-digit SG number.
 function buildWhatsappNumber(phone8Digit) {
   return '65' + phone8Digit; // e.g. "91234567" -> "6591234567"
 }
@@ -294,37 +295,36 @@ function saveDependantToUser(dep) {
     return;
   }
 
-  const uid            = user.uid;
+  const uid = user.uid;
 
   // Main user WhatsApp (65 + user's 8-digit phone)
-  const fullWaNumber   = buildWhatsappNumber(dep.phone);
+  const fullWaNumber = buildWhatsappNumber(dep.phone);
 
   // Dependant’s 8-digit phone (from the extra field)
   const dependantPhone = (dep.extraDetails || '').trim();
 
   // Dependant’s WhatsApp (if provided)
-  const dependantWa    = dependantPhone ? buildWhatsappNumber(dependantPhone) : '';
+  const dependantWa = dependantPhone ? buildWhatsappNumber(dependantPhone) : '';
 
   db.collection("users").doc(uid)
     .set({
-      // 🧍 Main user
-      whatsappNumber: fullWaNumber,   // e.g. "6591234567"
-      medPhone:       dep.phone,      // e.g. "91234567"
-
-      // 👥 Dependant — saved in the same style
-      dependantPhone:          dependantPhone,  // "81234567"
-      dependantWhatsappNumber: dependantWa,     // "6581234567"
-
-      // Keep existing field for compatibility with Apps Script logic
-      medExtraDetails: dependantPhone,
-
-      medName:         dep.name,
-      medMedicine:     dep.medicine,
+      // main user
+      whatsappNumber: fullWaNumber,
+      medPhone:       dep.phone,        // 8-digit
+      medName:        dep.name,         // ✅ needed for UI & Apps Script
+      medMedicine:    dep.medicine,
       medDosageNumber: dep.dosageNumber,
       medDosageUnit:   dep.dosageUnit,
       medNotes:        dep.notes,
       medTimes:        dep.times,
-      medStatus:       dep.status || "pending"
+
+      // dependant (both raw 8-digit + full WA)
+      medExtraDetails:         dep.extraDetails || '', // 8-digit, legacy field
+      dependantPhone:          dependantPhone || '',   // 8-digit, explicit
+      dependantWhatsappNumber: dependantWa   || '',    // "65" + 8-digit
+
+      // status
+      medStatus: dep.status || "pending"
     }, { merge: true })
     .then(() => {
       console.log("Dependant + user phones saved on user doc:", uid);
@@ -333,6 +333,7 @@ function saveDependantToUser(dep) {
       console.error("Error saving dependant to user:", err);
     });
 }
+
 
 // --------------------
 // UI helper – apply currentDependant to screen
