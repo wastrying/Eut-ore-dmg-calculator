@@ -406,12 +406,33 @@ function cleanupUserOwnedData(){
   const u = auth.currentUser;
   if (!u) return Promise.resolve();
   const uid = u.uid;
+  const userRef = db.collection("users").doc(uid);
 
-  const deleteUserDoc = db.collection("users").doc(uid).delete()
-    .catch(e => {
-      console.warn("Couldn't delete user doc; continuing:", e);
-    });
+  // 1) Always try to wipe all medication-related fields FIRST
+  const clearMedFields = userRef.set({
+    whatsappNumber:           firebase.firestore.FieldValue.delete(),
+    medName:                  firebase.firestore.FieldValue.delete(),
+    medPhone:                 firebase.firestore.FieldValue.delete(),
+    medMedicine:              firebase.firestore.FieldValue.delete(),
+    medDosageNumber:          firebase.firestore.FieldValue.delete(),
+    medDosageUnit:            firebase.firestore.FieldValue.delete(),
+    medNotes:                 firebase.firestore.FieldValue.delete(),
+    medTimes:                 firebase.firestore.FieldValue.delete(),
+    medExtraDetails:          firebase.firestore.FieldValue.delete(),
+    dependantPhone:           firebase.firestore.FieldValue.delete(),
+    dependantWhatsappNumber:  firebase.firestore.FieldValue.delete(),
+    medStatus:                firebase.firestore.FieldValue.delete(),
+    medLastTakenAt:           firebase.firestore.FieldValue.delete()
+  }, { merge:true }).catch(e => {
+    console.warn("Couldn't clear medication fields; continuing:", e);
+  });
 
+  // 2) Then try to delete the whole user doc
+  const deleteUserDoc = userRef.delete().catch(e => {
+    console.warn("Couldn't delete user doc; continuing:", e);
+  });
+
+  // 3) Soft-disable any plan_links they own
   const softDeleteLinks = db.collection("plan_links").where("ownerUid","==", uid).get()
     .then(snap => {
       if (snap.empty) return;
@@ -425,8 +446,9 @@ function cleanupUserOwnedData(){
       console.warn("Couldn't soft-delete plan_links; continuing:", e);
     });
 
-  return Promise.all([deleteUserDoc, softDeleteLinks]);
+  return Promise.all([clearMedFields, deleteUserDoc, softDeleteLinks]);
 }
+
 
 function performDeleteAccount(){
   const u = auth.currentUser;
@@ -901,24 +923,24 @@ removeBtn.addEventListener('click', () => {
 confirmDeleteBtn.addEventListener('click', () => {
   const user = auth.currentUser;
   if (user) {
-    db.collection("users").doc(user.uid)
-      .update({
-        whatsappNumber: firebase.firestore.FieldValue.delete(),
-        medName:        firebase.firestore.FieldValue.delete(),
-        medPhone:       firebase.firestore.FieldValue.delete(),
-        medMedicine:    firebase.firestore.FieldValue.delete(),
-        medDosageNumber:firebase.firestore.FieldValue.delete(),
-        medDosageUnit:  firebase.firestore.FieldValue.delete(),
-        medNotes:       firebase.firestore.FieldValue.delete(),
-        medTimes:       firebase.firestore.FieldValue.delete(),
-        medExtraDetails:firebase.firestore.FieldValue.delete(),
-        dependantPhone:          firebase.firestore.FieldValue.delete(),
-        dependantWhatsappNumber: firebase.firestore.FieldValue.delete(),
-        medStatus:      firebase.firestore.FieldValue.delete(),
-        medLastTakenAt: firebase.firestore.FieldValue.delete()
-      })
-      .then(() => console.log("Dependant fields removed from user doc"))
-      .catch(err => console.error("Error removing dependant fields:", err));
+    const ref = db.collection("users").doc(user.uid);
+    ref.set({
+      whatsappNumber:           firebase.firestore.FieldValue.delete(),
+      medName:                  firebase.firestore.FieldValue.delete(),
+      medPhone:                 firebase.firestore.FieldValue.delete(),
+      medMedicine:              firebase.firestore.FieldValue.delete(),
+      medDosageNumber:          firebase.firestore.FieldValue.delete(),
+      medDosageUnit:            firebase.firestore.FieldValue.delete(),
+      medNotes:                 firebase.firestore.FieldValue.delete(),
+      medTimes:                 firebase.firestore.FieldValue.delete(),
+      medExtraDetails:          firebase.firestore.FieldValue.delete(),
+      dependantPhone:           firebase.firestore.FieldValue.delete(),
+      dependantWhatsappNumber:  firebase.firestore.FieldValue.delete(),
+      medStatus:                firebase.firestore.FieldValue.delete(),
+      medLastTakenAt:           firebase.firestore.FieldValue.delete()
+    }, { merge:true })
+    .then(() => console.log("Dependant fields removed from user doc"))
+    .catch(err => console.error("Error removing dependant fields:", err));
   }
 
   if (unsubscribeDependant) unsubscribeDependant();
@@ -928,7 +950,6 @@ confirmDeleteBtn.addEventListener('click', () => {
 
   deletePopup.style.display = 'none';
 });
-
 cancelDeleteBtn.addEventListener('click', () => {
   deletePopup.style.display = 'none';
 });
