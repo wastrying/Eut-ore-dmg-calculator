@@ -344,16 +344,40 @@
   }
 
   async function writePlanAndGo(uid, plan){
-    try{
-      setStatus("Saving your selection…");
-      await setDoc(doc(db, "users", uid), { plan }, { merge: true });
-      try{ sessionStorage.setItem("rbx_last_nav", "from_selection"); }catch{}
-      redirectToDashboard(plan);
-    }catch(e){
-      console.error(e);
-      setStatus("Something went wrong while saving. Please try again.");
-    }
+  try {
+    setStatus("Saving your selection…");
+    console.log("[selection] Saving plan", { uid, plan });
+
+    const user = auth.currentUser;
+    const emailLower = (user?.email || "").toLowerCase();
+
+    const ref  = doc(db, "users", uid);
+    const snap = await getDoc(ref);
+    const data = snap.exists() ? (snap.data() || {}) : {};
+
+    // Keep / derive a basePlan so membership logic can restore it later
+    const basePlan =
+      data.basePlan ||
+      data.plan     ||
+      plan;
+
+    await setDoc(ref, {
+      email:             emailLower,
+      plan:              plan,        // what you just chose
+      basePlan:          basePlan,    // original / fallback plan
+      workspaceOwnerUid: data.workspaceOwnerUid || uid
+    }, { merge: true });
+
+    console.log("[selection] Plan saved successfully, redirecting…");
+    try { sessionStorage.setItem("rbx_last_nav", "from_selection"); } catch {}
+
+    redirectToDashboard(plan);
+  } catch (e) {
+    console.error("[selection] Error saving plan:", e);
+    setStatus("Something went wrong while saving: " + (e?.message || e));
   }
+}
+
 
   onAuthStateChanged(auth, async (user)=>{
     if(!user){
