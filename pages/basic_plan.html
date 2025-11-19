@@ -1,362 +1,1037 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Remblyx Advanced Dashboard</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
-body{background:#f5f5f5;min-height:100vh;color:#222;display:flex;}
-#main-dashboard{display:grid;grid-template-columns:220px 1fr;gap:0;height:100vh;width:100vw;overflow:hidden;background:#fff;}
-.sidebar{background:#111827;color:#e5e7eb;padding:16px;display:flex;flex-direction:column;gap:12px;}
-.sidebar-title{font-size:14px;font-weight:600;color:#9ca3af;text-transform:uppercase;}
-.nav-item{display:flex;align-items:center;gap:8px;padding:10px;border-radius:8px;cursor:pointer;color:#d1d5db;transition:.2s;}
-.nav-item:hover{background:rgba(249,250,251,.06);}
-.nav-item.active{background:#1f2937;color:#fff;border-left:3px solid #667eea;padding-left:7px;}
-.icon-dot{width:7px;height:7px;border-radius:999px;background:#4ade80;}
+  <meta charset="UTF-8">
+  <title>Remblyx Advanced Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-/* NEW: spacer + plan pill + logout/delete */
-.sidebar-spacer{flex:1;}
-.sidebar-plan-label{
-  font-size:12px;
-  color:#9ca3af;
-  padding:8px;
-  border-radius:8px;
-  border:1px solid rgba(156,163,175,.4);
-  background:#111827;
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-  cursor:pointer;
-  transition:.2s;
-}
-.sidebar-plan-label strong{
-  color:#60a5fa;
-  font-weight:600;
-}
-.sidebar-plan-label:hover{
-  background:#1f2937;
-  border-color:#60a5fa;
-}
-.logout-link{
-  font-size:12px;
-  color:#9ca3af;
-  margin-top:6px;
-  cursor:pointer;
-  text-decoration:underline;
-}
-.logout-link:hover{color:#fff;}
-.logout-link.delete-link{color:#f87171;}
-.logout-link.delete-link:hover{color:#fecaca;}
+  <!-- App icon / favicon (from Enterprise page) -->
+  <link rel="icon" type="image/png" sizes="32x32" href="../images/medisignal.png" />
+  <link rel="apple-touch-icon" href="../images/medisignal.png" />
 
-.main-area{padding:16px;display:flex;flex-direction:column;gap:16px;overflow:auto;}
-.section-title{font-weight:600;font-size:16px;color:#111827;margin-bottom:8px;}
-.board-wrapper{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:16px;max-width:100%;overflow:auto;}
-button{padding:8px 12px;border:none;border-radius:6px;background:#4CAF50;color:white;cursor:pointer;}
-button:hover{background:#45a049;}
-.dependant-info{margin-top:12px;padding:12px;background:#fff;border-left:4px solid #4CAF50;border-radius:6px; display:none;}
-.dependant-actions{display:flex;gap:8px;margin-top:10px;}
-.error{color:red;font-weight:bold;margin-bottom:8px;}
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;z-index:1000;}
-.modal.active{display:flex;}
-.modal-content{background:#fff;padding:20px;border-radius:12px;width:90%;max-width:400px;box-shadow:0 8px 24px rgba(0,0,0,0.3);max-height:90vh;overflow-y:auto;}
-.modal-content h2{margin-top:0;}
-.modal-content label{display:block;margin:8px 0 4px;font-weight:600;}
-/* Before: .modal-content input,.modal-content select */
-.modal-content input:not([type="checkbox"]), 
-.modal-content select {
-  width:100%;
-  padding:4px 8px;
-  margin-bottom:10px;
-  border:1px solid #ccc;
-  border-radius:6px;
-  box-sizing:border-box;
-}
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;}
 
-.modal-content .dosage-row{display:flex;gap:6px;}
-.modal-content .dosage-row input{flex:1;}
-.modal-content .dosage-row select{flex:1;}
-.time-picker-container{margin-top:10px;}
-.dosage-note,.phone-note,.duplicate-note{font-size:12px;color:red;margin-top:2px;display:none;}
-.delete-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;padding:24px;box-shadow:0 8px 24px rgba(0,0,0,0.3);display:none;z-index:2000;max-width:400px;text-align:center;}
-.delete-popup p{margin-bottom:20px;font-weight:600;}
-.delete-popup button{margin:0 8px;padding:8px 14px;border:none;border-radius:6px;cursor:pointer;}
-.btn-confirm{background:#f87171;color:white;}
-.btn-cancel{background:#9ca3af;color:white;}
-input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance:auto;margin:0; }
-/* Checkbox row */
-.modal-content label.checkbox-label {
-  display:flex;
-  align-items:center;
-  justify-content:flex-start;
-  gap:3px;
-  margin-top:8px;
-  margin-bottom:12px;
-  font-weight:normal;
-}
-.modal-content .checkbox-label input[type="checkbox"] {
-  margin:0;
-}
+    /* === New layout (background + centered card) === */
+    body{
+      background:#f5f5f5;
+      min-height:100vh;
+      color:#222;
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+      position:relative;
+      overflow:hidden;
+      padding:16px;
+    }
 
-/* Reminders 3-column static Pending */
-.reminders-header { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; font-weight:600; padding:6px; background:#f3f4f6; border-radius:6px; margin-bottom:4px; text-align:left; }
-.reminder-item { padding:6px; margin:2px 0; background:#fff; border-radius:6px; box-shadow:0 1px 2px rgba(0,0,0,.06); pointer-events:none; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; align-items:center; }
-.reminder-name{font-weight:600; display:flex; align-items:center;}
-.reminder-time{font-size:14px;color:#555; display:flex; align-items:center;}
-.reminder-status{
-  font-size:12px;
-  color:#10b981;
-  text-align:left;
-  display:flex;
-  justify-content:flex-start;
-  align-items:center;
-  pointer-events:none;
-  padding-left:2px;
-}
-</style>
+    /* Blurred background image */
+    .overlay{
+      position:fixed;
+      inset:0;
+      z-index:-1;
+    }
+    .bg-image{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      filter:blur(4px);
+      opacity:.8;
+    }
+
+    /* Logo/header like Enterprise page */
+    .header-row{
+      position:fixed;
+      top:8px;
+      left:8px;
+      z-index:40;
+    }
+    .logo{
+      height:160px;
+      cursor:pointer;
+      transition:.3s ease;
+    }
+    .logo:hover{
+      filter:brightness(1.1);
+      transform:scale(1.03);
+    }
+
+    /* Wrapper that holds the main dashboard card */
+    .wrapper{
+      width:100%;
+      max-width:1200px;
+      margin-top:58px;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      z-index:10;
+    }
+
+    /* Card-style main dashboard (same feel as Enterprise) */
+    #main-dashboard{
+      display:grid;
+      grid-template-columns:220px 1fr;
+      gap:0;
+      height:calc(100dvh - 110px);
+      max-height:calc(100dvh - 110px);
+      width:100%;
+      overflow:hidden;
+      background:rgba(255,255,255,.96);
+      border-radius:18px;
+      box-shadow:0 10px 26px rgba(0,0,0,.2);
+    }
+
+    /* Small responsive tweak */
+    @media (max-width:900px){
+      #main-dashboard{grid-template-columns:1fr;}
+    }
+
+    /* Safe-area for notched devices */
+    @supports(padding:max(0px)){
+      body{
+        padding-left:max(16px, env(safe-area-inset-left));
+        padding-right:max(16px, env(safe-area-inset-right));
+        padding-top:max(16px, env(safe-area-inset-top));
+        padding-bottom:max(16px, env(safe-area-inset-bottom));
+      }
+    }
+
+    /* === Existing styles from your original Users dashboard === */
+
+    .sidebar{background:#111827;color:#e5e7eb;padding:16px;display:flex;flex-direction:column;gap:12px;}
+    .sidebar-title{font-size:14px;font-weight:600;color:#9ca3af;text-transform:uppercase;}
+    .nav-item{display:flex;align-items:center;gap:8px;padding:10px;border-radius:8px;cursor:pointer;color:#d1d5db;transition:.2s;}
+    .nav-item:hover{background:rgba(249,250,251,.06);}
+    .nav-item.active{background:#1f2937;color:#fff;border-left:3px solid #667eea;padding-left:7px;}
+    .icon-dot{width:7px;height:7px;border-radius:999px;background:#4ade80;}
+
+    /* NEW: spacer + plan pill + logout/delete */
+    .sidebar-spacer{flex:1;}
+    .sidebar-plan-label{
+      font-size:12px;
+      color:#9ca3af;
+      padding:8px;
+      border-radius:8px;
+      border:1px solid rgba(156,163,175,.4);
+      background:#111827;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      cursor:pointer;
+      transition:.2s;
+    }
+    .sidebar-plan-label strong{
+      color:#60a5fa;
+      font-weight:600;
+    }
+    .sidebar-plan-label:hover{
+      background:#1f2937;
+      border-color:#60a5fa;
+    }
+    .logout-link{
+      font-size:12px;
+      color:#9ca3af;
+      margin-top:6px;
+      cursor:pointer;
+      text-decoration:underline;
+    }
+    .logout-link:hover{color:#fff;}
+    .logout-link.delete-link{color:#f87171;}
+    .logout-link.delete-link:hover{color:#fecaca;}
+
+    .main-area{padding:16px;display:flex;flex-direction:column;gap:16px;overflow:auto;}
+    .section-title{font-weight:600;font-size:16px;color:#111827;margin-bottom:8px;}
+    .board-wrapper{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:16px;max-width:100%;overflow:auto;}
+    button{padding:8px 12px;border:none;border-radius:6px;background:#4CAF50;color:white;cursor:pointer;}
+    button:hover{background:#45a049;}
+    .dependant-info{margin-top:12px;padding:12px;background:#fff;border-left:4px solid #4CAF50;border-radius:6px; display:none;}
+    .dependant-actions{display:flex;gap:8px;margin-top:10px;}
+    .error{color:red;font-weight:bold;margin-bottom:8px;}
+    .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;z-index:1000;}
+    .modal.active{display:flex;}
+    .modal-content{background:#fff;padding:20px;border-radius:12px;width:90%;max-width:400px;box-shadow:0 8px 24px rgba(0,0,0,0.3);max-height:90vh;overflow-y:auto;}
+    .modal-content h2{margin-top:0;}
+    .modal-content label{display:block;margin:8px 0 4px;font-weight:600;}
+    /* Before: .modal-content input,.modal-content select */
+    .modal-content input:not([type="checkbox"]), 
+    .modal-content select {
+      width:100%;
+      padding:4px 8px;
+      margin-bottom:10px;
+      border:1px solid #ccc;
+      border-radius:6px;
+      box-sizing:border-box;
+    }
+
+    .modal-content .dosage-row{display:flex;gap:6px;}
+    .modal-content .dosage-row input{flex:1;}
+    .modal-content .dosage-row select{flex:1;}
+    .time-picker-container{margin-top:10px;}
+    .dosage-note,.phone-note,.duplicate-note{font-size:12px;color:red;margin-top:2px;display:none;}
+    .delete-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;padding:24px;box-shadow:0 8px 24px rgba(0,0,0,0.3);display:none;z-index:2000;max-width:400px;text-align:center;}
+    .delete-popup p{margin-bottom:20px;font-weight:600;}
+    .delete-popup button{margin:0 8px;padding:8px 14px;border:none;border-radius:6px;cursor:pointer;}
+    .btn-confirm{background:#f87171;color:white;}
+    .btn-cancel{background:#9ca3af;color:white;}
+    input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance:auto;margin:0; }
+    /* Checkbox row */
+    .modal-content label.checkbox-label {
+      display:flex;
+      align-items:center;
+      justify-content:flex-start;
+      gap:3px;
+      margin-top:8px;
+      margin-bottom:12px;
+      font-weight:normal;
+    }
+    .modal-content .checkbox-label input[type="checkbox"] {
+      margin:0;
+    }
+
+    /* Reminders 3-column static Pending */
+    .reminders-header { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; font-weight:600; padding:6px; background:#f3f4f6; border-radius:6px; margin-bottom:4px; text-align:left; }
+    .reminder-item { padding:6px; margin:2px 0; background:#fff; border-radius:6px; box-shadow:0 1px 2px rgba(0,0,0,.06); pointer-events:none; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; align-items:center; }
+    .reminder-name{font-weight:600; display:flex; align-items:center;}
+    .reminder-time{font-size:14px;color:#555; display:flex; align-items:center;}
+    .reminder-status{
+      font-size:12px;
+      color:#10b981;
+      text-align:left;
+      display:flex;
+      justify-content:flex-start;
+      align-items:center;
+      pointer-events:none;
+      padding-left:2px;
+    }
+  </style>
 </head>
 <body>
-<div id="main-dashboard">
-  <aside class="sidebar">
-  <div class="sidebar-title">Dashboard</div>
-  <div class="nav-item active" data-nav="dependants"><span class="icon-dot"></span>Users</div>
-  <div class="nav-item" data-nav="reminders"><span class="icon-dot"></span>Upcoming Reminders</div>
 
-    <!-- NEW: bottom plan + logout + delete -->
-    <div class="sidebar-spacer"></div>
-    <div id="sidebar-plan" class="sidebar-plan-label" title="Click to change plan">
-      <span class="label-text">Current Plan</span>
-      <strong id="plan-name">-</strong>
-    </div>
-    <div id="logout" class="logout-link">Log out</div>
-  <div id="delete-account" class="logout-link" style="color:#f87171;">Delete account &amp; data</div>
-</aside>
+  <!-- Blurred background image (same as Enterprise layout) -->
+  <div class="overlay">
+    <img src="../images/background.png" class="bg-image" alt="">
+  </div>
 
-  <div class="main-area">
-    <div id="dependants" class="dashboard-section">
-      <div class="section-title">Your Users</div>
-      <div class="board-wrapper">
-        <div id="mainError" class="error"></div>
-        <button id="addDependantBtn">Add Users</button>
-        <div id="dependantInfo" class="dependant-info">
-          <h3>Users Profile</h3>
-          <p><strong>Name:</strong> <span id="dispName"></span></p>
-          <p><strong>Phone Number:</strong> <span id="dispPhone"></span></p>
-          <p id="extraDependantRow" style="display:none;"> <strong>Dependant Phone Number:</strong> <span id="dispExtraPhone"></span></p>
-          <p><strong>Medicine Type:</strong> <span id="dispMedicine"></span></p>
-          <p><strong>Dosage:</strong> <span id="dispDosage"></span></p>
-          <p><strong>Times to Take Medicine:</strong> <span id="dispTimes"></span></p>
-          <p><strong>Additional Notes:</strong> <span id="dispNotes"></span></p>
-          <div class="dependant-actions">
-            <button id="editDependantBtn" style="background:#3b82f6;">Edit</button>
-            <button id="removeDependantBtn" style="background:#f87171;">Remove</button>
+  <!-- Remblyx logo header (same as Enterprise layout) -->
+  <div class="header-row" id="header-row">
+    <img src="../images/remblyxlogo.png"
+         alt="Remblyx"
+         class="logo"
+         id="logo"
+         onclick="window.location.href='../index.html'">
+  </div>
+
+  <!-- Centered card wrapper -->
+  <div class="wrapper">
+    <div id="main-dashboard">
+      <aside class="sidebar">
+        <div class="sidebar-title">Dashboard</div>
+        <div class="nav-item active" data-nav="dependants"><span class="icon-dot"></span>Users</div>
+        <div class="nav-item" data-nav="reminders"><span class="icon-dot"></span>Upcoming Reminders</div>
+
+        <!-- NEW: bottom plan + logout + delete -->
+        <div class="sidebar-spacer"></div>
+        <div id="sidebar-plan" class="sidebar-plan-label" title="Click to change plan">
+          <span class="label-text">Current Plan</span>
+          <strong id="plan-name">-</strong>
+        </div>
+        <div id="logout" class="logout-link">Log out</div>
+        <div id="delete-account" class="logout-link" style="color:#f87171;">Delete account &amp; data</div>
+      </aside>
+
+      <div class="main-area">
+        <div id="dependants" class="dashboard-section">
+          <div class="section-title">Your Users</div>
+          <div class="board-wrapper">
+            <div id="mainError" class="error"></div>
+            <button id="addDependantBtn">Add Users</button>
+            <div id="dependantInfo" class="dependant-info">
+              <h3>Users Profile</h3>
+              <p><strong>Name:</strong> <span id="dispName"></span></p>
+              <p><strong>Phone Number:</strong> <span id="dispPhone"></span></p>
+              <p id="extraDependantRow" style="display:none;"> <strong>Dependant Phone Number:</strong> <span id="dispExtraPhone"></span></p>
+              <p><strong>Medicine Type:</strong> <span id="dispMedicine"></span></p>
+              <p><strong>Dosage:</strong> <span id="dispDosage"></span></p>
+              <p><strong>Times to Take Medicine:</strong> <span id="dispTimes"></span></p>
+              <p><strong>Additional Notes:</strong> <span id="dispNotes"></span></p>
+              <div class="dependant-actions">
+                <button id="editDependantBtn" style="background:#3b82f6;">Edit</button>
+                <button id="removeDependantBtn" style="background:#f87171;">Remove</button>
+              </div>
+            </div>
           </div>
+        </div>
+
+        <div id="reminders" class="dashboard-section" style="display:none;">
+          <div class="section-title">Upcoming Reminders</div>
+          <div class="board-wrapper" id="remindersList"></div>
         </div>
       </div>
     </div>
+  </div>
 
-    <div id="reminders" class="dashboard-section" style="display:none;">
-      <div class="section-title">Upcoming Reminders</div>
-      <div class="board-wrapper" id="remindersList"></div>
+  <!-- Dependant Modal -->
+  <div id="dependantModal" class="modal">
+    <div class="modal-content">
+      <h2 id="modalTitle">Add Users</h2>
+      <p class="error" id="modalError"></p>
+      <form id="dependantForm">
+        <label>Name:</label>
+        <input type="text" id="depName" required />
+        <label>Phone Number:</label>
+        <input type="text" id="depPhone" placeholder="Enter 8-digit phone number" required />
+        <div id="phoneNote" class="phone-note">Phone must be 8 digits starting with 6, 8, or 9.</div>
+        <label>Type of Medicine:</label>
+        <input type="text" id="depMedicine" required />
+        <label>Dosage:</label>
+        <div class="dosage-row">
+          <input type="number" id="depDosageNumber" min="0" value="0" required />
+          <select id="depDosageUnit" required>
+            <option value="">Unit</option>
+            <option value="mg">mg</option>
+            <option value="g">g</option>
+          </select>
+        </div>
+        <div id="dosageNote" class="dosage-note">Dosage must be at least 1.</div>
+        <label>Number of Times to Take Medicine:</label>
+        <input type="number" id="numTimesInput" min="0" value="0" />
+        <div id="timesSection" style="display:none; margin-top:8px;">
+          <label>Times to Take Medicine:</label>
+          <div id="timesContainer" style="display:flex; flex-direction:column; gap:1px;"></div>
+          <div id="duplicateNote" class="duplicate-note">Duplicate times are not allowed!</div>
+        </div>
+
+        <label>Additional Notes:</label>
+        <input type="text" id="depNotes" placeholder="Enter 'NA' if none" required />
+
+        <label class="checkbox-label">
+          <input type="checkbox" name="accept_terms" id="addDependantCheckbox">
+          <span>Add Dependant</span>
+        </label>
+
+        <!-- This box will appear only when checkbox is ticked -->
+        <div id="extraDependantField" style="display:none; margin-top:4px;">
+          <label for="extraDependantName">Dependant Phone Number:</label>
+          <input type="text" id="extraDependantName" placeholder="Enter 8-digit phone number">
+          <div id="extraDepNote" class="phone-note">Phone must be 8 digits starting with 6, 8, or 9.</div>
+        </div>
+        <button type="submit">Save Users</button>
+        <button type="button" id="closeModalBtn" style="background:#9ca3af;margin-top:16px;">Cancel</button>
+
+      </form>
     </div>
   </div>
-</div>
 
-<!-- Dependant Modal -->
-<div id="dependantModal" class="modal">
-  <div class="modal-content">
-    <h2 id="modalTitle">Add Users</h2>
-    <p class="error" id="modalError"></p>
-    <form id="dependantForm">
-      <label>Name:</label>
-      <input type="text" id="depName" required />
-      <label>Phone Number:</label>
-      <input type="text" id="depPhone" placeholder="Enter 8-digit phone number" required />
-      <div id="phoneNote" class="phone-note">Phone must be 8 digits starting with 6, 8, or 9.</div>
-      <label>Type of Medicine:</label>
-      <input type="text" id="depMedicine" required />
-      <label>Dosage:</label>
-      <div class="dosage-row">
-        <input type="number" id="depDosageNumber" min="0" value="0" required />
-        <select id="depDosageUnit" required>
-          <option value="">Unit</option>
-          <option value="mg">mg</option>
-          <option value="g">g</option>
-        </select>
-      </div>
-      <div id="dosageNote" class="dosage-note">Dosage must be at least 1.</div>
-      <label>Number of Times to Take Medicine:</label>
-      <input type="number" id="numTimesInput" min="0" value="0" />
-      <div id="timesSection" style="display:none; margin-top:8px;">
-        <label>Times to Take Medicine:</label>
-        <div id="timesContainer" style="display:flex; flex-direction:column; gap:1px;"></div>
-        <div id="duplicateNote" class="duplicate-note">Duplicate times are not allowed!</div>
-      </div>
-
-      <label>Additional Notes:</label>
-      <input type="text" id="depNotes" placeholder="Enter 'NA' if none" required />
-
-      <label class="checkbox-label">
-        <input type="checkbox" name="accept_terms" id="addDependantCheckbox">
-        <span>Add Dependant</span>
-      </label>
-
-      <!-- This box will appear only when checkbox is ticked -->
-      <div id="extraDependantField" style="display:none; margin-top:4px;">
-        <label for="extraDependantName">Dependant Phone Number:</label>
-        <input type="text" id="extraDependantName" placeholder="Enter 8-digit phone number">
-        <div id="extraDepNote" class="phone-note">Phone must be 8 digits starting with 6, 8, or 9.</div>
-      </div>
-      <button type="submit">Save Users</button>
-      <button type="button" id="closeModalBtn" style="background:#9ca3af;margin-top:16px;">Cancel</button>
-
-    </form>
+  <!-- Delete Popup -->
+  <div id="deletePopup" class="delete-popup">
+    <p>Are you sure you want to delete this User?<br>Once deleted, it cannot be recovered.</p>
+    <button class="btn-confirm" id="confirmDeleteBtn">Yes, Delete</button>
+    <button class="btn-cancel" id="cancelDeleteBtn">Cancel</button>
   </div>
-</div>
 
-<!-- Delete Popup -->
-<div id="deletePopup" class="delete-popup">
-  <p>Are you sure you want to delete this User?<br>Once deleted, it cannot be recovered.</p>
-  <button class="btn-confirm" id="confirmDeleteBtn">Yes, Delete</button>
-  <button class="btn-cancel" id="cancelDeleteBtn">Cancel</button>
-</div>
+  <!-- Firebase SDKs (put these before your main script) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
-<!-- Firebase SDKs (put these before your main script) -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script>
+  // --------------------
+  // Firebase init
+  // --------------------
+  const firebaseConfig = {
+    apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
+    authDomain: "remblyx-medisignal.firebaseapp.com",
+    projectId: "remblyx-medisignal",
+    storageBucket: "remblyx-medisignal.appspot.com",
+    messagingSenderId: "50711670199",
+    appId: "1:50711670199:web:0c9c2ff72cd77234ce0c32",
+    measurementId: "G-JQ3843RM4V"
+  };
 
-<script>
-// --------------------
-// Firebase init
-// --------------------
-const firebaseConfig = {
-  apiKey: "AIzaSyAEosHpiAT72yIIvaT1a8-lAXwsw-mR3i8",
-  authDomain: "remblyx-medisignal.firebaseapp.com",
-  projectId: "remblyx-medisignal",
-  storageBucket: "remblyx-medisignal.appspot.com",
-  messagingSenderId: "50711670199",
-  appId: "1:50711670199:web:0c9c2ff72cd77234ce0c32",
-  measurementId: "G-JQ3843RM4V"
-};
+  firebase.initializeApp(firebaseConfig);
+  const db   = firebase.firestore();
+  const auth = firebase.auth();   // used to get users/{uid}
 
-firebase.initializeApp(firebaseConfig);
-const db   = firebase.firestore();
-const auth = firebase.auth();   // used to get users/{uid}
+  const LOGIN_URL     = "./login.html";
+  const SELECTION_URL = "./selection.html";
 
-const LOGIN_URL     = "./login.html";
-const SELECTION_URL = "./selection.html";
+  // --------------------
+  // Dashboard state
+  // --------------------
+  let dependantAdded = false,
+      editing = false,
+      currentDependant = null,
+      duplicateTimeout,
+      unsubscribeDependant = null,
+      currentUser = null,
+      currentPlan = null;
 
-// --------------------
-// Dashboard state
-// --------------------
-let dependantAdded = false,
-    editing = false,
-    currentDependant = null,
-    duplicateTimeout,
-    unsubscribeDependant = null,
-    currentUser = null,
-    currentPlan = null;
+  // --------------------
+  // DOM refs
+  // --------------------
+  const addBtn           = document.getElementById('addDependantBtn'),
+        editBtn          = document.getElementById('editDependantBtn'),
+        removeBtn        = document.getElementById('removeDependantBtn'),
+        modal            = document.getElementById('dependantModal'),
+        closeModalBtn    = document.getElementById('closeModalBtn'),
+        form             = document.getElementById('dependantForm'),
+        errorMsg         = document.getElementById('modalError'),
+        modalTitle       = document.getElementById('modalTitle'),
+        infoBox          = document.getElementById('dependantInfo'),
+        dispName         = document.getElementById('dispName'),
+        dispPhone        = document.getElementById('dispPhone'),
+        dispMedicine     = document.getElementById('dispMedicine'),
+        dispTimes        = document.getElementById('dispTimes'),
+        dispDosage       = document.getElementById('dispDosage'),
+        dispNotes        = document.getElementById('dispNotes'),
+        extraDepRow      = document.getElementById('extraDependantRow'),
+        dispExtraPhone   = document.getElementById('dispExtraPhone'),
+        depName          = document.getElementById('depName'),
+        depMedicine      = document.getElementById('depMedicine'),
+        depNotes         = document.getElementById('depNotes'),
+        dosageNumberInput= document.getElementById('depDosageNumber'),
+        depDosageUnit    = document.getElementById('depDosageUnit'),
+        phoneInput       = document.getElementById('depPhone'),
+        phoneNote        = document.getElementById('phoneNote'),
+        dosageNote       = document.getElementById('dosageNote'),
+        numTimesInput    = document.getElementById('numTimesInput'),
+        timesSection     = document.getElementById('timesSection'),
+        timesContainer   = document.getElementById('timesContainer'),
+        duplicateNote    = document.getElementById('duplicateNote'),
+        deletePopup      = document.getElementById('deletePopup'),
+        confirmDeleteBtn = document.getElementById('confirmDeleteBtn'),
+        cancelDeleteBtn  = document.getElementById('cancelDeleteBtn'),
+        mainError        = document.getElementById('mainError'),
+        remindersList    = document.getElementById('remindersList'),
+        addDepCheckbox   = document.getElementById('addDependantCheckbox'),
+        extraDepField    = document.getElementById('extraDependantField'),
+        extraDepInput    = document.getElementById('extraDependantName'),
+        extraDepNote     = document.getElementById('extraDepNote'),
 
-// --------------------
-// DOM refs
-// --------------------
-const addBtn           = document.getElementById('addDependantBtn'),
-      editBtn          = document.getElementById('editDependantBtn'),
-      removeBtn        = document.getElementById('removeDependantBtn'),
-      modal            = document.getElementById('dependantModal'),
-      closeModalBtn    = document.getElementById('closeModalBtn'),
-      form             = document.getElementById('dependantForm'),
-      errorMsg         = document.getElementById('modalError'),
-      modalTitle       = document.getElementById('modalTitle'),
-      infoBox          = document.getElementById('dependantInfo'),
-      dispName         = document.getElementById('dispName'),
-      dispPhone        = document.getElementById('dispPhone'),
-      dispMedicine     = document.getElementById('dispMedicine'),
-      dispTimes        = document.getElementById('dispTimes'),
-      dispDosage       = document.getElementById('dispDosage'),
-      dispNotes        = document.getElementById('dispNotes'),
-      extraDepRow      = document.getElementById('extraDependantRow'),
-      dispExtraPhone   = document.getElementById('dispExtraPhone'),
-      depName          = document.getElementById('depName'),
-      depMedicine      = document.getElementById('depMedicine'),
-      depNotes         = document.getElementById('depNotes'),
-      dosageNumberInput= document.getElementById('depDosageNumber'),
-      depDosageUnit    = document.getElementById('depDosageUnit'),
-      phoneInput       = document.getElementById('depPhone'),
-      phoneNote        = document.getElementById('phoneNote'),
-      dosageNote       = document.getElementById('dosageNote'),
-      numTimesInput    = document.getElementById('numTimesInput'),
-      timesSection     = document.getElementById('timesSection'),
-      timesContainer   = document.getElementById('timesContainer'),
-      duplicateNote    = document.getElementById('duplicateNote'),
-      deletePopup      = document.getElementById('deletePopup'),
-      confirmDeleteBtn = document.getElementById('confirmDeleteBtn'),
-      cancelDeleteBtn  = document.getElementById('cancelDeleteBtn'),
-      mainError        = document.getElementById('mainError'),
-      remindersList    = document.getElementById('remindersList'),
-      addDepCheckbox   = document.getElementById('addDependantCheckbox'),
-      extraDepField    = document.getElementById('extraDependantField'),
-      extraDepInput    = document.getElementById('extraDependantName'),
-      extraDepNote     = document.getElementById('extraDepNote'),
+        // Plan + logout + delete handles
+        sidebarPlanEl     = document.getElementById('sidebar-plan'),
+        planNameEl        = document.getElementById('plan-name'),
+        logoutLink        = document.getElementById('logout'),
+        deleteAccountLink = document.getElementById('delete-account');
 
-      // Plan + logout + delete handles
-      sidebarPlanEl     = document.getElementById('sidebar-plan'),
-      planNameEl        = document.getElementById('plan-name'),
-      logoutLink        = document.getElementById('logout'),
-      deleteAccountLink = document.getElementById('delete-account');
+  dosageNote.style.display    = 'none';
+  phoneNote.style.display     = 'none';
+  duplicateNote.style.display = 'none';
+  extraDepNote.style.display  = 'none';
 
-dosageNote.style.display    = 'none';
-phoneNote.style.display     = 'none';
-duplicateNote.style.display = 'none';
-extraDepNote.style.display  = 'none';
+  // --------------------
+  // Small helpers
+  // --------------------
+  function resetDosageNote(){
+    dosageNote.style.display = 'none';
+    dosageNumberInput.style.border = '1px solid #ccc';
+  }
+  function resetPhoneNote(){
+    phoneNote.style.display = 'none';
+    phoneInput.style.border = '1px solid #ccc';
+  }
+  function resetExtraDepNote(){
+    extraDepNote.style.display = 'none';
+    extraDepInput.style.border = '1px solid #ccc';
+  }
 
-// --------------------
-// Small helpers
-// --------------------
-function resetDosageNote(){
-  dosageNote.style.display = 'none';
-  dosageNumberInput.style.border = '1px solid #ccc';
-}
-function resetPhoneNote(){
-  phoneNote.style.display = 'none';
-  phoneInput.style.border = '1px solid #ccc';
-}
-function resetExtraDepNote(){
-  extraDepNote.style.display = 'none';
-  extraDepInput.style.border = '1px solid #ccc';
-}
+  // Show/hide extra dependant field based on checkbox
+  addDepCheckbox.addEventListener('change', () => {
+    if (addDepCheckbox.checked) {
+      extraDepField.style.display = 'block';
+    } else {
+      extraDepField.style.display = 'none';
+      extraDepInput.value = '';
+      resetExtraDepNote();
+    }
+  });
 
-// Show/hide extra dependant field based on checkbox
-addDepCheckbox.addEventListener('change', () => {
-  if (addDepCheckbox.checked) {
-    extraDepField.style.display = 'block';
-  } else {
+  // --------------------
+  // ACCOUNT / PLAN HELPERS
+  // --------------------
+
+  // Wipe all medication + plan fields from users/{uid},
+  // try to delete the doc, and soft-disable any plan_links they own.
+  function cleanupUserOwnedData(){
+    const u = auth.currentUser;
+    if (!u) return Promise.resolve();
+
+    const uid     = u.uid;
+    const userRef = db.collection("users").doc(uid);
+
+    // Try deleting doc first
+    return userRef.delete()
+      .catch(err => {
+        console.warn("Couldn't delete doc, clearing fields instead:", err);
+        // Fallback: clear all fields so data is gone even if doc stays
+        return userRef.set({
+          whatsappNumber:           firebase.firestore.FieldValue.delete(),
+          medName:                  firebase.firestore.FieldValue.delete(),
+          medPhone:                 firebase.firestore.FieldValue.delete(),
+          medMedicine:              firebase.firestore.FieldValue.delete(),
+          medDosageNumber:          firebase.firestore.FieldValue.delete(),
+          medDosageUnit:            firebase.firestore.FieldValue.delete(),
+          medNotes:                 firebase.firestore.FieldValue.delete(),
+          medTimes:                 firebase.firestore.FieldValue.delete(),
+          medExtraDetails:          firebase.firestore.FieldValue.delete(),
+          dependantPhone:           firebase.firestore.FieldValue.delete(),
+          dependantWhatsappNumber:  firebase.firestore.FieldValue.delete(),
+          medStatus:                firebase.firestore.FieldValue.delete(),
+          medLastTakenAt:           firebase.firestore.FieldValue.delete(),
+          plan:                     firebase.firestore.FieldValue.delete(),
+          basePlan:                 firebase.firestore.FieldValue.delete(),
+          workspaceOwnerUid:        firebase.firestore.FieldValue.delete(),
+          email:                    firebase.firestore.FieldValue.delete()
+        }, { merge:true });
+      });
+  }
+
+  // Re-authenticate (password users only; Google users get a hint)
+  function reauthenticateCurrentUser(){
+    return new Promise((resolve, reject) => {
+      const u = auth.currentUser;
+      if (!u) return reject(new Error("No authenticated user."));
+
+      const providerData = u.providerData && u.providerData[0];
+      const providerId   = providerData ? providerData.providerId : "password";
+
+      if (providerId !== "password") {
+        alert("Please sign out and sign back in, then try deleting your account again.");
+        return reject(Object.assign(new Error("Manual reauth required"), { code:"manual-reauth-required" }));
+      }
+
+      const email = u.email || "";
+      const pw = window.prompt(`For security, please confirm the password for ${email} to delete your account:`);
+      if (!pw) return reject(new Error("Password confirmation was cancelled."));
+
+      const cred = firebase.auth.EmailAuthProvider.credential(email, pw);
+      u.reauthenticateWithCredential(cred)
+        .then(() => resolve())
+        .catch(reject);
+    });
+  }
+
+  // Delete account + data (wraps cleanup + auth delete)
+  async function performDeleteAccount(){
+    const u = auth.currentUser;
+    if (!u) throw new Error("No authenticated user");
+    await cleanupUserOwnedData();
+    await u.delete();
+  }
+
+  // Load or create the user's plan, update "Current Plan" pill
+  function loadUserPlan(user){
+    const uid = user.uid;
+    const ref = db.collection("users").doc(uid);
+    return ref.get().then(docSnap => {
+      let plan = "Basic";
+      const emailLower = (user.email || "").toLowerCase();
+
+      if (docSnap.exists){
+        const data = docSnap.data() || {};
+        plan = data.plan || data.basePlan || "Basic";
+
+        const updates = {};
+        if (!data.plan)      updates.plan = plan;
+        if (!data.basePlan)  updates.basePlan = plan;
+        if (data.email !== emailLower) updates.email = emailLower;
+        if (Object.keys(updates).length){
+          ref.set(updates, { merge:true });
+        }
+      } else {
+        ref.set({
+          email: emailLower,
+          plan: "Basic",
+          basePlan: "Basic"
+        }, { merge:true });
+        plan = "Basic";
+      }
+
+      currentPlan = plan;
+      if (planNameEl) planNameEl.textContent = plan;
+      return plan;
+    }).catch(err => {
+      console.error("loadUserPlan error:", err);
+      currentPlan = null;
+      if (planNameEl) planNameEl.textContent = "-";
+    });
+  }
+
+  // --------------------
+  // Logout + Delete button wiring
+  // --------------------
+  if (logoutLink){
+    logoutLink.addEventListener("click", () => {
+      auth.signOut()
+        .then(() => {
+          window.location.href = LOGIN_URL;
+        })
+        .catch(err => {
+          console.error("Error during logout:", err);
+          alert("Could not log out. Please try again.");
+        });
+    });
+  }
+
+  if (deleteAccountLink){
+    deleteAccountLink.addEventListener("click", () => {
+      if (!auth.currentUser){
+        alert("You must be logged in to delete your account.");
+        return;
+      }
+      if (!window.confirm("Are you sure you want to delete your account and data? This action cannot be undone.")){
+        return;
+      }
+
+      const originalText = deleteAccountLink.textContent;
+      deleteAccountLink.style.pointerEvents = "none";
+      deleteAccountLink.textContent = "Deleting…";
+
+      (async () => {
+        try {
+          await performDeleteAccount();
+          alert("Your account and data have been deleted.");
+          window.location.href = LOGIN_URL;
+        } catch (err) {
+          if (err && err.code === "auth/requires-recent-login"){
+            try {
+              await reauthenticateCurrentUser();
+              await performDeleteAccount();
+              alert("Your account and data have been deleted.");
+              window.location.href = LOGIN_URL;
+            } catch (inner) {
+              console.error("Delete after reauth failed:", inner);
+              alert("We couldn't delete your account even after re-authenticating. Please try again.");
+            }
+          } else if (err && err.code === "manual-reauth-required") {
+            // Already showed alert inside reauthenticateCurrentUser
+          } else {
+            console.error("Delete account failed:", err);
+            alert("We couldn't delete your account. Please try again.");
+          }
+        } finally {
+          deleteAccountLink.style.pointerEvents = "";
+          deleteAccountLink.textContent = originalText;
+        }
+      })();
+    });
+  }
+
+  // --------------------
+  // Plan pill behaviour
+  // --------------------
+  if (sidebarPlanEl){
+    sidebarPlanEl.addEventListener("click", () => {
+      if (!currentUser){
+        window.location.href = LOGIN_URL;
+        return;
+      }
+
+      if (currentPlan === "Developers"){
+        const newPlan = window.prompt("Enter new plan (e.g., Basic, Premium, Enterprise):", currentPlan);
+        if (!newPlan) return;
+
+        db.collection("users").doc(currentUser.uid)
+          .set({ plan:newPlan }, { merge:true })
+          .then(() => {
+            alert("Your plan has been updated to " + newPlan);
+            currentPlan = newPlan;
+            if (planNameEl) planNameEl.textContent = newPlan;
+          })
+          .catch(err => {
+            console.error("Error updating plan:", err);
+            alert("Could not update plan. Please try again.");
+          });
+      } else {
+        try { sessionStorage.setItem("rbx_last_nav","from_dashboard"); } catch(e){}
+        window.location.href = SELECTION_URL;
+      }
+    });
+  }
+
+  // --------------------
+  // Firestore helpers (med data)
+  // --------------------
+  function buildWhatsappNumber(phone8Digit) {
+    return '65' + phone8Digit; // e.g. "91234567" -> "6591234567"
+  }
+
+  function saveDependantToUser(dep) {
+    if (!dep || !dep.phone) return;
+
+    const user = auth.currentUser;
+    if (!user) {
+      console.error("Not signed in – cannot save dependant to user doc.");
+      return;
+    }
+
+    const uid = user.uid;
+
+    const fullWaNumber   = buildWhatsappNumber(dep.phone);
+    const dependantPhone = (dep.extraDetails || '').trim();
+    const dependantWa    = dependantPhone ? buildWhatsappNumber(dependantPhone) : '';
+
+    db.collection("users").doc(uid)
+      .set({
+        whatsappNumber: fullWaNumber,
+        medPhone:       dep.phone,
+        medName:        dep.name,
+        medMedicine:    dep.medicine,
+        medDosageNumber: dep.dosageNumber,
+        medDosageUnit:   dep.dosageUnit,
+        medNotes:        dep.notes,
+        medTimes:        dep.times,
+
+        medExtraDetails:         dep.extraDetails || '',
+        dependantPhone:          dependantPhone || '',
+        dependantWhatsappNumber: dependantWa   || '',
+
+        medStatus: dep.status || "pending"
+      }, { merge: true })
+      .then(() => {
+        console.log("Dependant + user phones saved on user doc:", uid);
+      })
+      .catch(err => {
+        console.error("Error saving dependant to user:", err);
+      });
+  }
+
+  // --------------------
+  // UI helper – apply currentDependant to screen
+  // --------------------
+  function applyCurrentDependantToUI() {
+    if (!currentDependant || !currentDependant.name) {
+      infoBox.style.display = 'none';
+      dependantAdded = false;
+      remindersList.innerHTML = '';
+      return;
+    }
+
+    dispName.textContent     = currentDependant.name || '';
+    dispPhone.textContent    = currentDependant.phone || '';
+    if (currentDependant.extraDetails) {
+      dispExtraPhone.textContent = currentDependant.extraDetails;
+      extraDepRow.style.display  = 'block';
+    } else {
+      dispExtraPhone.textContent = '';
+      extraDepRow.style.display  = 'none';
+    }
+    dispMedicine.textContent = currentDependant.medicine || '';
+    if (currentDependant.dosageNumber && currentDependant.dosageUnit) {
+      dispDosage.textContent = `${currentDependant.dosageNumber} ${currentDependant.dosageUnit}`;
+    } else {
+      dispDosage.textContent = '';
+    }
+    dispTimes.textContent    = (currentDependant.times || []).join(', ');
+    dispNotes.textContent    = currentDependant.notes || '';
+
+    infoBox.style.display = 'block';
+    dependantAdded = true;
+
+    updateReminders();
+  }
+
+  // --------------------
+  // Listen to user doc for med fields
+  // --------------------
+  function listenToUserMedStatus() {
+    const user = auth.currentUser;
+    if (!user) {
+      console.error("Not signed in – cannot listen to user doc.");
+      return;
+    }
+
+    const uid = user.uid;
+
+    if (unsubscribeDependant) unsubscribeDependant();
+
+    const docRef = db.collection("users").doc(uid);
+
+    unsubscribeDependant = docRef.onSnapshot(
+      (doc) => {
+        if (!doc.exists) {
+          console.log("User doc not found:", uid);
+          currentDependant = null;
+          applyCurrentDependantToUI();
+          return;
+        }
+        const data = doc.data();
+        console.log("User doc update:", data);
+
+        if (!data.medName) {
+          currentDependant = null;
+          applyCurrentDependantToUI();
+          return;
+        }
+
+        currentDependant = {
+          name:         data.medName         || '',
+          phone:        data.medPhone        || '',
+          medicine:     data.medMedicine     || '',
+          dosageNumber: data.medDosageNumber || 0,
+          dosageUnit:   data.medDosageUnit   || '',
+          notes:        data.medNotes        || '',
+          times:        data.medTimes        || [],
+          extraDetails: data.medExtraDetails || '',
+          status:       data.medStatus       || 'pending'
+        };
+
+        applyCurrentDependantToUI();
+      },
+      (err) => {
+        console.error("Error listening to user medStatus:", err);
+      }
+    );
+  }
+
+  // --------------------
+  // Auth state: start listeners + load plan
+  // --------------------
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      currentUser = user;
+      console.log("Auth state changed, user:", user.uid);
+      listenToUserMedStatus();
+      loadUserPlan(user);
+    } else {
+      currentUser      = null;
+      currentPlan      = null;
+      currentDependant = null;
+      applyCurrentDependantToUI();
+      if (planNameEl) planNameEl.textContent = "-";
+    }
+  });
+
+  // --------------------
+  // Modal open / close
+  // --------------------
+  addBtn.addEventListener('click', () => {
+    if (dependantAdded && !editing) {
+      mainError.textContent = "You can only add one dependant in the Basic plan.";
+      setTimeout(() => { mainError.textContent = ''; }, 5000);
+      return;
+    }
+
+    errorMsg.textContent = '';
+    modalTitle.textContent = editing ? "Edit Users" : "Add Users";
+    modal.classList.add('active');
+
+    addDepCheckbox.checked = false;
     extraDepField.style.display = 'none';
     extraDepInput.value = '';
     resetExtraDepNote();
+
+    if (editing && currentDependant) {
+      if (currentDependant.extraDetails) {
+        addDepCheckbox.checked = true;
+        extraDepField.style.display = 'block';
+        extraDepInput.value = currentDependant.extraDetails;
+      }
+      depName.value           = currentDependant.name || '';
+      phoneInput.value        = currentDependant.phone || '';
+      depMedicine.value       = currentDependant.medicine || '';
+      dosageNumberInput.value = currentDependant.dosageNumber || 0;
+      depDosageUnit.value     = currentDependant.dosageUnit || '';
+      depNotes.value          = currentDependant.notes || '';
+      const times = currentDependant.times || [];
+      numTimesInput.value     = times.length;
+      renderTimeInputs(times);
+    }
+  });
+
+  closeModalBtn.addEventListener('click', () => {
+    modal.classList.remove('active');
+    form.reset();
+    addDepCheckbox.checked = false;
+    extraDepField.style.display = 'none';
+    extraDepInput.value = '';
+    resetDosageNote();
+    resetPhoneNote();
+    resetExtraDepNote();
+    timesContainer.innerHTML = '';
+    timesSection.style.display = 'none';
+    duplicateNote.style.display = 'none';
+    errorMsg.textContent = '';
+  });
+
+  // --------------------
+  // Validation
+  // --------------------
+  dosageNumberInput.addEventListener('input', () => {
+    if (parseInt(dosageNumberInput.value) < 1) {
+      dosageNumberInput.style.border = '2px solid red';
+      dosageNote.style.display = 'block';
+    } else {
+      resetDosageNote();
+    }
+  });
+
+  phoneInput.addEventListener('input', () => {
+    let val = phoneInput.value.replace(/\D/g, '');
+    if (val.length > 8) val = val.slice(0, 8);
+    phoneInput.value = val;
+
+    if (val.length !== 8 || !/^[689]/.test(val)) {
+      phoneInput.style.border = '2px solid red';
+      phoneNote.style.display = 'block';
+    } else {
+      resetPhoneNote();
+    }
+  });
+
+  extraDepInput.addEventListener('input', () => {
+    let val = extraDepInput.value.replace(/\D/g, '');
+    if (val.length > 8) val = val.slice(0, 8);
+    extraDepInput.value = val;
+
+    if (addDepCheckbox.checked &&
+        (val.length !== 8 || !/^[689]/.test(val))) {
+      extraDepInput.style.border = '2px solid red';
+      extraDepNote.style.display = 'block';
+    } else {
+      resetExtraDepNote();
+    }
+  });
+
+  // --------------------
+  // Time inputs
+  // --------------------
+  numTimesInput.addEventListener('input', () => {
+    const count = parseInt(numTimesInput.value) || 0;
+    renderTimeInputs(Array(count).fill(''));
+  });
+
+  function renderTimeInputs(existingTimes) {
+    timesContainer.innerHTML = '';
+    if (!existingTimes || existingTimes.length === 0) {
+      timesSection.style.display = 'none';
+      return;
+    }
+    timesSection.style.display = 'block';
+
+    existingTimes.forEach(time => {
+      const input = document.createElement('input');
+      input.type = 'time';
+      input.classList.add('timeInput');
+      input.value = time || '';
+      input.addEventListener('input', checkDuplicates);
+      timesContainer.appendChild(input);
+    });
   }
-});
 
-// --------------------
-// ACCOUNT / PLAN HELPERS
-// --------------------
+  function checkDuplicates() {
+    const inputs = Array.from(timesContainer.querySelectorAll('.timeInput'));
+    const values = inputs.map(i => i.value).filter(v => v !== '');
+    let hasDuplicate = false;
 
-// Wipe all medication + plan fields from users/{uid},
-// try to delete the doc, and soft-disable any plan_links they own.
-function cleanupUserOwnedData(){
-  const u = auth.currentUser;
-  if (!u) return Promise.resolve();
+    inputs.forEach(i => i.style.border = '1px solid #ccc');
 
-  const uid     = u.uid;
-  const userRef = db.collection("users").doc(uid);
+    values.forEach(val => {
+      const firstIndex = inputs.findIndex(i => i.value === val);
+      inputs.forEach((input, j) => {
+        if (input.value === val && j !== firstIndex) {
+          input.style.border = '2px solid red';
+          hasDuplicate = true;
+        }
+      });
+    });
 
-  // Try deleting doc first
-  return userRef.delete()
-    .catch(err => {
-      console.warn("Couldn't delete doc, clearing fields instead:", err);
-      // Fallback: clear all fields so data is gone even if doc stays
-      return userRef.set({
+    if (hasDuplicate) {
+      duplicateNote.style.display = 'block';
+      clearTimeout(duplicateTimeout);
+      duplicateTimeout = setTimeout(() => {
+        duplicateNote.style.display = 'none';
+      }, 3000);
+    } else {
+      duplicateNote.style.display = 'none';
+    }
+
+    return hasDuplicate;
+  }
+
+  // --------------------
+  // Form submit
+  // --------------------
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    if (checkDuplicates()) {
+      errorMsg.textContent = "Duplicate times found. Fix them before saving.";
+      return;
+    }
+
+    const name         = depName.value.trim(),
+          phone        = phoneInput.value.trim(),
+          medicine     = depMedicine.value.trim(),
+          dosageNumber = parseInt(dosageNumberInput.value),
+          dosageUnit   = depDosageUnit.value,
+          notes        = depNotes.value.trim(),
+          times        = Array.from(timesContainer.querySelectorAll('.timeInput'))
+                             .map(i => i.value)
+                             .filter(v => v !== ''),
+          extraDetails = extraDepInput.value.trim();
+
+    const numTimes = parseInt(numTimesInput.value) || 0;
+
+    if (!name || !medicine || !dosageUnit || !notes ||
+        dosageNumber < 1 ||
+        !/^\d{8}$/.test(phone) || !/^[689]/.test(phone) ||
+        times.length !== numTimes ||
+        (addDepCheckbox.checked &&
+         (!/^\d{8}$/.test(extraDetails) || !/^[689]/.test(extraDetails)))) {
+      errorMsg.textContent = "Please fill all fields correctly including times.";
+      return;
+    }
+
+    currentDependant = {
+      name,
+      phone,
+      medicine,
+      dosageNumber,
+      dosageUnit,
+      notes,
+      times,
+      extraDetails: addDepCheckbox.checked ? extraDetails : '',
+      status: "pending"
+    };
+
+    applyCurrentDependantToUI();
+    saveDependantToUser(currentDependant);
+
+    modal.classList.remove('active');
+    form.reset();
+    addDepCheckbox.checked = false;
+    extraDepField.style.display = 'none';
+    extraDepInput.value = '';
+    resetDosageNote();
+    resetPhoneNote();
+    resetExtraDepNote();
+    timesContainer.innerHTML = '';
+    timesSection.style.display = 'none';
+    duplicateNote.style.display = 'none';
+    errorMsg.textContent = '';
+    editing = false;
+  });
+
+  // --------------------
+  // Edit & Delete dependant data (NOT account)
+  // --------------------
+  editBtn.addEventListener('click', () => {
+    if (!dependantAdded) return;
+    editing = true;
+    addBtn.click();
+  });
+
+  removeBtn.addEventListener('click', () => {
+    if (!dependantAdded) return;
+    deletePopup.style.display = 'block';
+  });
+
+  confirmDeleteBtn.addEventListener('click', () => {
+    const user = auth.currentUser;
+    if (user) {
+      const ref = db.collection("users").doc(user.uid);
+      ref.set({
         whatsappNumber:           firebase.firestore.FieldValue.delete(),
         medName:                  firebase.firestore.FieldValue.delete(),
         medPhone:                 firebase.firestore.FieldValue.delete(),
@@ -369,665 +1044,77 @@ function cleanupUserOwnedData(){
         dependantPhone:           firebase.firestore.FieldValue.delete(),
         dependantWhatsappNumber:  firebase.firestore.FieldValue.delete(),
         medStatus:                firebase.firestore.FieldValue.delete(),
-        medLastTakenAt:           firebase.firestore.FieldValue.delete(),
-        plan:                     firebase.firestore.FieldValue.delete(),
-        basePlan:                 firebase.firestore.FieldValue.delete(),
-        workspaceOwnerUid:        firebase.firestore.FieldValue.delete(),
-        email:                    firebase.firestore.FieldValue.delete()
-      }, { merge:true });
-    });
-}
-  // 2) Try to delete the whole user doc
-  const deleteUserDoc = userRef.delete().catch(e => {
-    console.warn("Couldn't delete user doc; continuing:", e);
-  });
-
-  // 3) Soft-disable any plan_links they own (if you use that collection)
-  const softDeleteLinks = db.collection("plan_links").where("ownerUid","==", uid).get()
-    .then(snap => {
-      if (snap.empty) return;
-      const batch = db.batch();
-      snap.forEach(docSnap => {
-        batch.set(docSnap.ref, { isActive:false }, { merge:true });
-      });
-      return batch.commit();
-    })
-    .catch(e => {
-      console.warn("Couldn't soft-delete plan_links; continuing:", e);
-    });
-
-  return Promise.all([clearFields, deleteUserDoc, softDeleteLinks]);
-}
-
-// Re-authenticate (password users only; Google users get a hint)
-function reauthenticateCurrentUser(){
-  return new Promise((resolve, reject) => {
-    const u = auth.currentUser;
-    if (!u) return reject(new Error("No authenticated user."));
-
-    const providerData = u.providerData && u.providerData[0];
-    const providerId   = providerData ? providerData.providerId : "password";
-
-    if (providerId !== "password") {
-      alert("Please sign out and sign back in, then try deleting your account again.");
-      return reject(Object.assign(new Error("Manual reauth required"), { code:"manual-reauth-required" }));
+        medLastTakenAt:           firebase.firestore.FieldValue.delete()
+      }, { merge:true })
+      .then(() => console.log("Dependant fields removed from user doc"))
+      .catch(err => console.error("Error removing dependant fields:", err));
     }
 
-    const email = u.email || "";
-    const pw = window.prompt(`For security, please confirm the password for ${email} to delete your account:`);
-    if (!pw) return reject(new Error("Password confirmation was cancelled."));
+    if (unsubscribeDependant) unsubscribeDependant();
 
-    const cred = firebase.auth.EmailAuthProvider.credential(email, pw);
-    u.reauthenticateWithCredential(cred)
-      .then(() => resolve())
-      .catch(reject);
-  });
-}
-
-// Delete account + data (wraps cleanup + auth delete)
-async function performDeleteAccount(){
-  const u = auth.currentUser;
-  if (!u) throw new Error("No authenticated user");
-  await cleanupUserOwnedData();
-  await u.delete();
-}
-
-// Load or create the user's plan, update "Current Plan" pill
-function loadUserPlan(user){
-  const uid = user.uid;
-  const ref = db.collection("users").doc(uid);
-  return ref.get().then(docSnap => {
-    let plan = "Basic";
-    const emailLower = (user.email || "").toLowerCase();
-
-    if (docSnap.exists){
-      const data = docSnap.data() || {};
-      plan = data.plan || data.basePlan || "Basic";
-
-      const updates = {};
-      if (!data.plan)      updates.plan = plan;
-      if (!data.basePlan)  updates.basePlan = plan;
-      if (data.email !== emailLower) updates.email = emailLower;
-      if (Object.keys(updates).length){
-        ref.set(updates, { merge:true });
-      }
-    } else {
-      ref.set({
-        email: emailLower,
-        plan: "Basic",
-        basePlan: "Basic"
-      }, { merge:true });
-      plan = "Basic";
-    }
-
-    currentPlan = plan;
-    if (planNameEl) planNameEl.textContent = plan;
-    return plan;
-  }).catch(err => {
-    console.error("loadUserPlan error:", err);
-    currentPlan = null;
-    if (planNameEl) planNameEl.textContent = "-";
-  });
-}
-
-// --------------------
-// Logout + Delete button wiring
-// --------------------
-if (logoutLink){
-  logoutLink.addEventListener("click", () => {
-    auth.signOut()
-      .then(() => {
-        window.location.href = LOGIN_URL;
-      })
-      .catch(err => {
-        console.error("Error during logout:", err);
-        alert("Could not log out. Please try again.");
-      });
-  });
-}
-
-if (deleteAccountLink){
-  deleteAccountLink.addEventListener("click", () => {
-    if (!auth.currentUser){
-      alert("You must be logged in to delete your account.");
-      return;
-    }
-    if (!window.confirm("Are you sure you want to delete your account and data? This action cannot be undone.")){
-      return;
-    }
-
-    const originalText = deleteAccountLink.textContent;
-    deleteAccountLink.style.pointerEvents = "none";
-    deleteAccountLink.textContent = "Deleting…";
-
-    (async () => {
-      try {
-        await performDeleteAccount();
-        alert("Your account and data have been deleted.");
-        window.location.href = LOGIN_URL;
-      } catch (err) {
-        if (err && err.code === "auth/requires-recent-login"){
-          try {
-            await reauthenticateCurrentUser();
-            await performDeleteAccount();
-            alert("Your account and data have been deleted.");
-            window.location.href = LOGIN_URL;
-          } catch (inner) {
-            console.error("Delete after reauth failed:", inner);
-            alert("We couldn't delete your account even after re-authenticating. Please try again.");
-          }
-        } else if (err && err.code === "manual-reauth-required") {
-          // Already showed alert inside reauthenticateCurrentUser
-        } else {
-          console.error("Delete account failed:", err);
-          alert("We couldn't delete your account. Please try again.");
-        }
-      } finally {
-        deleteAccountLink.style.pointerEvents = "";
-        deleteAccountLink.textContent = originalText;
-      }
-    })();
-  });
-}
-
-// --------------------
-// Plan pill behaviour
-// --------------------
-if (sidebarPlanEl){
-  sidebarPlanEl.addEventListener("click", () => {
-    if (!currentUser){
-      window.location.href = LOGIN_URL;
-      return;
-    }
-
-    if (currentPlan === "Developers"){
-      const newPlan = window.prompt("Enter new plan (e.g., Basic, Premium, Enterprise):", currentPlan);
-      if (!newPlan) return;
-
-      db.collection("users").doc(currentUser.uid)
-        .set({ plan:newPlan }, { merge:true })
-        .then(() => {
-          alert("Your plan has been updated to " + newPlan);
-          currentPlan = newPlan;
-          if (planNameEl) planNameEl.textContent = newPlan;
-        })
-        .catch(err => {
-          console.error("Error updating plan:", err);
-          alert("Could not update plan. Please try again.");
-        });
-    } else {
-      try { sessionStorage.setItem("rbx_last_nav","from_dashboard"); } catch(e){}
-      window.location.href = SELECTION_URL;
-    }
-  });
-}
-
-// --------------------
-// Firestore helpers (med data)
-// --------------------
-function buildWhatsappNumber(phone8Digit) {
-  return '65' + phone8Digit; // e.g. "91234567" -> "6591234567"
-}
-
-function saveDependantToUser(dep) {
-  if (!dep || !dep.phone) return;
-
-  const user = auth.currentUser;
-  if (!user) {
-    console.error("Not signed in – cannot save dependant to user doc.");
-    return;
-  }
-
-  const uid = user.uid;
-
-  const fullWaNumber   = buildWhatsappNumber(dep.phone);
-  const dependantPhone = (dep.extraDetails || '').trim();
-  const dependantWa    = dependantPhone ? buildWhatsappNumber(dependantPhone) : '';
-
-  db.collection("users").doc(uid)
-    .set({
-      whatsappNumber: fullWaNumber,
-      medPhone:       dep.phone,
-      medName:        dep.name,
-      medMedicine:    dep.medicine,
-      medDosageNumber: dep.dosageNumber,
-      medDosageUnit:   dep.dosageUnit,
-      medNotes:        dep.notes,
-      medTimes:        dep.times,
-
-      medExtraDetails:         dep.extraDetails || '',
-      dependantPhone:          dependantPhone || '',
-      dependantWhatsappNumber: dependantWa   || '',
-
-      medStatus: dep.status || "pending"
-    }, { merge: true })
-    .then(() => {
-      console.log("Dependant + user phones saved on user doc:", uid);
-    })
-    .catch(err => {
-      console.error("Error saving dependant to user:", err);
-    });
-}
-
-// --------------------
-// UI helper – apply currentDependant to screen
-// --------------------
-function applyCurrentDependantToUI() {
-  if (!currentDependant || !currentDependant.name) {
-    infoBox.style.display = 'none';
-    dependantAdded = false;
-    remindersList.innerHTML = '';
-    return;
-  }
-
-  dispName.textContent     = currentDependant.name || '';
-  dispPhone.textContent    = currentDependant.phone || '';
-  if (currentDependant.extraDetails) {
-    dispExtraPhone.textContent = currentDependant.extraDetails;
-    extraDepRow.style.display  = 'block';
-  } else {
-    dispExtraPhone.textContent = '';
-    extraDepRow.style.display  = 'none';
-  }
-  dispMedicine.textContent = currentDependant.medicine || '';
-  if (currentDependant.dosageNumber && currentDependant.dosageUnit) {
-    dispDosage.textContent = `${currentDependant.dosageNumber} ${currentDependant.dosageUnit}`;
-  } else {
-    dispDosage.textContent = '';
-  }
-  dispTimes.textContent    = (currentDependant.times || []).join(', ');
-  dispNotes.textContent    = currentDependant.notes || '';
-
-  infoBox.style.display = 'block';
-  dependantAdded = true;
-
-  updateReminders();
-}
-
-// --------------------
-// Listen to user doc for med fields
-// --------------------
-function listenToUserMedStatus() {
-  const user = auth.currentUser;
-  if (!user) {
-    console.error("Not signed in – cannot listen to user doc.");
-    return;
-  }
-
-  const uid = user.uid;
-
-  if (unsubscribeDependant) unsubscribeDependant();
-
-  const docRef = db.collection("users").doc(uid);
-
-  unsubscribeDependant = docRef.onSnapshot(
-    (doc) => {
-      if (!doc.exists) {
-        console.log("User doc not found:", uid);
-        currentDependant = null;
-        applyCurrentDependantToUI();
-        return;
-      }
-      const data = doc.data();
-      console.log("User doc update:", data);
-
-      if (!data.medName) {
-        currentDependant = null;
-        applyCurrentDependantToUI();
-        return;
-      }
-
-      currentDependant = {
-        name:         data.medName         || '',
-        phone:        data.medPhone        || '',
-        medicine:     data.medMedicine     || '',
-        dosageNumber: data.medDosageNumber || 0,
-        dosageUnit:   data.medDosageUnit   || '',
-        notes:        data.medNotes        || '',
-        times:        data.medTimes        || [],
-        extraDetails: data.medExtraDetails || '',
-        status:       data.medStatus       || 'pending'
-      };
-
-      applyCurrentDependantToUI();
-    },
-    (err) => {
-      console.error("Error listening to user medStatus:", err);
-    }
-  );
-}
-
-// --------------------
-// Auth state: start listeners + load plan
-// --------------------
-auth.onAuthStateChanged(user => {
-  if (user) {
-    currentUser = user;
-    console.log("Auth state changed, user:", user.uid);
-    listenToUserMedStatus();
-    loadUserPlan(user);
-  } else {
-    currentUser      = null;
-    currentPlan      = null;
     currentDependant = null;
     applyCurrentDependantToUI();
-    if (planNameEl) planNameEl.textContent = "-";
-  }
-});
 
-// --------------------
-// Modal open / close
-// --------------------
-addBtn.addEventListener('click', () => {
-  if (dependantAdded && !editing) {
-    mainError.textContent = "You can only add one dependant in the Basic plan.";
-    setTimeout(() => { mainError.textContent = ''; }, 5000);
-    return;
-  }
-
-  errorMsg.textContent = '';
-  modalTitle.textContent = editing ? "Edit Users" : "Add Users";
-  modal.classList.add('active');
-
-  addDepCheckbox.checked = false;
-  extraDepField.style.display = 'none';
-  extraDepInput.value = '';
-  resetExtraDepNote();
-
-  if (editing && currentDependant) {
-    if (currentDependant.extraDetails) {
-      addDepCheckbox.checked = true;
-      extraDepField.style.display = 'block';
-      extraDepInput.value = currentDependant.extraDetails;
-    }
-    depName.value           = currentDependant.name || '';
-    phoneInput.value        = currentDependant.phone || '';
-    depMedicine.value       = currentDependant.medicine || '';
-    dosageNumberInput.value = currentDependant.dosageNumber || 0;
-    depDosageUnit.value     = currentDependant.dosageUnit || '';
-    depNotes.value          = currentDependant.notes || '';
-    const times = currentDependant.times || [];
-    numTimesInput.value     = times.length;
-    renderTimeInputs(times);
-  }
-});
-
-closeModalBtn.addEventListener('click', () => {
-  modal.classList.remove('active');
-  form.reset();
-  addDepCheckbox.checked = false;
-  extraDepField.style.display = 'none';
-  extraDepInput.value = '';
-  resetDosageNote();
-  resetPhoneNote();
-  resetExtraDepNote();
-  timesContainer.innerHTML = '';
-  timesSection.style.display = 'none';
-  duplicateNote.style.display = 'none';
-  errorMsg.textContent = '';
-});
-
-// --------------------
-// Validation
-// --------------------
-dosageNumberInput.addEventListener('input', () => {
-  if (parseInt(dosageNumberInput.value) < 1) {
-    dosageNumberInput.style.border = '2px solid red';
-    dosageNote.style.display = 'block';
-  } else {
-    resetDosageNote();
-  }
-});
-
-phoneInput.addEventListener('input', () => {
-  let val = phoneInput.value.replace(/\D/g, '');
-  if (val.length > 8) val = val.slice(0, 8);
-  phoneInput.value = val;
-
-  if (val.length !== 8 || !/^[689]/.test(val)) {
-    phoneInput.style.border = '2px solid red';
-    phoneNote.style.display = 'block';
-  } else {
-    resetPhoneNote();
-  }
-});
-
-extraDepInput.addEventListener('input', () => {
-  let val = extraDepInput.value.replace(/\D/g, '');
-  if (val.length > 8) val = val.slice(0, 8);
-  extraDepInput.value = val;
-
-  if (addDepCheckbox.checked &&
-      (val.length !== 8 || !/^[689]/.test(val))) {
-    extraDepInput.style.border = '2px solid red';
-    extraDepNote.style.display = 'block';
-  } else {
-    resetExtraDepNote();
-  }
-});
-
-// --------------------
-// Time inputs
-// --------------------
-numTimesInput.addEventListener('input', () => {
-  const count = parseInt(numTimesInput.value) || 0;
-  renderTimeInputs(Array(count).fill(''));
-});
-
-function renderTimeInputs(existingTimes) {
-  timesContainer.innerHTML = '';
-  if (!existingTimes || existingTimes.length === 0) {
-    timesSection.style.display = 'none';
-    return;
-  }
-  timesSection.style.display = 'block';
-
-  existingTimes.forEach(time => {
-    const input = document.createElement('input');
-    input.type = 'time';
-    input.classList.add('timeInput');
-    input.value = time || '';
-    input.addEventListener('input', checkDuplicates);
-    timesContainer.appendChild(input);
+    deletePopup.style.display = 'none';
   });
-}
 
-function checkDuplicates() {
-  const inputs = Array.from(timesContainer.querySelectorAll('.timeInput'));
-  const values = inputs.map(i => i.value).filter(v => v !== '');
-  let hasDuplicate = false;
+  cancelDeleteBtn.addEventListener('click', () => {
+    deletePopup.style.display = 'none';
+  });
 
-  inputs.forEach(i => i.style.border = '1px solid #ccc');
+  // --------------------
+  // Reminders rendering
+  // --------------------
+  function updateReminders() {
+    remindersList.innerHTML = '';
+    if (!currentDependant || !currentDependant.times) return;
 
-  values.forEach(val => {
-    const firstIndex = inputs.findIndex(i => i.value === val);
-    inputs.forEach((input, j) => {
-      if (input.value === val && j !== firstIndex) {
-        input.style.border = '2px solid red';
-        hasDuplicate = true;
-      }
+    const header = document.createElement('div');
+    header.className = 'reminders-header';
+    header.innerHTML = '<span>Name</span><span>Time</span><span>Status</span>';
+    remindersList.appendChild(header);
+
+    const statusIsTaken = currentDependant.status === 'taken';
+    const statusText    = statusIsTaken ? 'Taken' : 'Pending';
+
+    currentDependant.times.forEach(time => {
+      const div = document.createElement('div');
+      div.className = 'reminder-item';
+
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'reminder-name';
+      nameSpan.textContent = currentDependant.name;
+
+      const timeSpan = document.createElement('span');
+      timeSpan.className = 'reminder-time';
+      timeSpan.textContent = time;
+
+      const statusSpan = document.createElement('span');
+      statusSpan.className = 'reminder-status';
+      statusSpan.textContent = statusText;
+      if (statusIsTaken) statusSpan.classList.add('taken');
+
+      div.appendChild(nameSpan);
+      div.appendChild(timeSpan);
+      div.appendChild(statusSpan);
+      remindersList.appendChild(div);
+    });
+  }
+
+  // --------------------
+  // Sidebar nav
+  // --------------------
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+      const target = item.getAttribute('data-nav');
+      document.querySelectorAll('.dashboard-section').forEach(sec => {
+        sec.style.display = (sec.id === target ? 'block' : 'none');
+      });
     });
   });
-
-  if (hasDuplicate) {
-    duplicateNote.style.display = 'block';
-    clearTimeout(duplicateTimeout);
-    duplicateTimeout = setTimeout(() => {
-      duplicateNote.style.display = 'none';
-    }, 3000);
-  } else {
-    duplicateNote.style.display = 'none';
-  }
-
-  return hasDuplicate;
-}
-
-// --------------------
-// Form submit
-// --------------------
-form.addEventListener('submit', function(e) {
-  e.preventDefault();
-
-  if (checkDuplicates()) {
-    errorMsg.textContent = "Duplicate times found. Fix them before saving.";
-    return;
-  }
-
-  const name         = depName.value.trim(),
-        phone        = phoneInput.value.trim(),
-        medicine     = depMedicine.value.trim(),
-        dosageNumber = parseInt(dosageNumberInput.value),
-        dosageUnit   = depDosageUnit.value,
-        notes        = depNotes.value.trim(),
-        times        = Array.from(timesContainer.querySelectorAll('.timeInput'))
-                           .map(i => i.value)
-                           .filter(v => v !== ''),
-        extraDetails = extraDepInput.value.trim();
-
-  const numTimes = parseInt(numTimesInput.value) || 0;
-
-  if (!name || !medicine || !dosageUnit || !notes ||
-      dosageNumber < 1 ||
-      !/^\d{8}$/.test(phone) || !/^[689]/.test(phone) ||
-      times.length !== numTimes ||
-      (addDepCheckbox.checked &&
-       (!/^\d{8}$/.test(extraDetails) || !/^[689]/.test(extraDetails)))) {
-    errorMsg.textContent = "Please fill all fields correctly including times.";
-    return;
-  }
-
-  currentDependant = {
-    name,
-    phone,
-    medicine,
-    dosageNumber,
-    dosageUnit,
-    notes,
-    times,
-    extraDetails: addDepCheckbox.checked ? extraDetails : '',
-    status: "pending"
-  };
-
-  applyCurrentDependantToUI();
-  saveDependantToUser(currentDependant);
-
-  modal.classList.remove('active');
-  form.reset();
-  addDepCheckbox.checked = false;
-  extraDepField.style.display = 'none';
-  extraDepInput.value = '';
-  resetDosageNote();
-  resetPhoneNote();
-  resetExtraDepNote();
-  timesContainer.innerHTML = '';
-  timesSection.style.display = 'none';
-  duplicateNote.style.display = 'none';
-  errorMsg.textContent = '';
-  editing = false;
-});
-
-// --------------------
-// Edit & Delete dependant data (NOT account)
-// --------------------
-editBtn.addEventListener('click', () => {
-  if (!dependantAdded) return;
-  editing = true;
-  addBtn.click();
-});
-
-removeBtn.addEventListener('click', () => {
-  if (!dependantAdded) return;
-  deletePopup.style.display = 'block';
-});
-
-confirmDeleteBtn.addEventListener('click', () => {
-  const user = auth.currentUser;
-  if (user) {
-    const ref = db.collection("users").doc(user.uid);
-    ref.set({
-      whatsappNumber:           firebase.firestore.FieldValue.delete(),
-      medName:                  firebase.firestore.FieldValue.delete(),
-      medPhone:                 firebase.firestore.FieldValue.delete(),
-      medMedicine:              firebase.firestore.FieldValue.delete(),
-      medDosageNumber:          firebase.firestore.FieldValue.delete(),
-      medDosageUnit:            firebase.firestore.FieldValue.delete(),
-      medNotes:                 firebase.firestore.FieldValue.delete(),
-      medTimes:                 firebase.firestore.FieldValue.delete(),
-      medExtraDetails:          firebase.firestore.FieldValue.delete(),
-      dependantPhone:           firebase.firestore.FieldValue.delete(),
-      dependantWhatsappNumber:  firebase.firestore.FieldValue.delete(),
-      medStatus:                firebase.firestore.FieldValue.delete(),
-      medLastTakenAt:           firebase.firestore.FieldValue.delete()
-    }, { merge:true })
-    .then(() => console.log("Dependant fields removed from user doc"))
-    .catch(err => console.error("Error removing dependant fields:", err));
-  }
-
-  if (unsubscribeDependant) unsubscribeDependant();
-
-  currentDependant = null;
-  applyCurrentDependantToUI();
-
-  deletePopup.style.display = 'none';
-});
-
-cancelDeleteBtn.addEventListener('click', () => {
-  deletePopup.style.display = 'none';
-});
-
-// --------------------
-// Reminders rendering
-// --------------------
-function updateReminders() {
-  remindersList.innerHTML = '';
-  if (!currentDependant || !currentDependant.times) return;
-
-  const header = document.createElement('div');
-  header.className = 'reminders-header';
-  header.innerHTML = '<span>Name</span><span>Time</span><span>Status</span>';
-  remindersList.appendChild(header);
-
-  const statusIsTaken = currentDependant.status === 'taken';
-  const statusText    = statusIsTaken ? 'Taken' : 'Pending';
-
-  currentDependant.times.forEach(time => {
-    const div = document.createElement('div');
-    div.className = 'reminder-item';
-
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 'reminder-name';
-    nameSpan.textContent = currentDependant.name;
-
-    const timeSpan = document.createElement('span');
-    timeSpan.className = 'reminder-time';
-    timeSpan.textContent = time;
-
-    const statusSpan = document.createElement('span');
-    statusSpan.className = 'reminder-status';
-    statusSpan.textContent = statusText;
-    if (statusIsTaken) statusSpan.classList.add('taken');
-
-    div.appendChild(nameSpan);
-    div.appendChild(timeSpan);
-    div.appendChild(statusSpan);
-    remindersList.appendChild(div);
-  });
-}
-
-// --------------------
-// Sidebar nav
-// --------------------
-document.querySelectorAll('.nav-item').forEach(item => {
-  item.addEventListener('click', () => {
-    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-    item.classList.add('active');
-    const target = item.getAttribute('data-nav');
-    document.querySelectorAll('.dashboard-section').forEach(sec => {
-      sec.style.display = (sec.id === target ? 'block' : 'none');
-    });
-  });
-});
-</script>
+  </script>
 
 </body>
 </html>
