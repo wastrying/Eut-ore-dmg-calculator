@@ -81,7 +81,7 @@
       box-shadow:0 10px 26px rgba(0,0,0,.2);
     }
 
-    /* Small responsive tweak */
+    /* Small responsive tweak (base) */
     @media (max-width:900px){
       #main-dashboard{grid-template-columns:1fr;}
     }
@@ -203,124 +203,83 @@
       pointer-events:none;
       padding-left:2px;
     }
-    /* === Mobile layout tweaks === */
-@media (max-width: 768px) {
 
-  /* Give the page a bit more breathing room on phones */
-  body{
-    padding:8px;
-  }
+    /* ===== Top bar + mobile drawer (Developer-style mobile layout) ===== */
+    .top-bar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:8px;
+    }
+    .top-bar-title{
+      font-size:16px;
+      font-weight:600;
+      color:#111827;
+    }
+    .mobile-menu-btn{
+      display:none;
+      border:1px solid #e5e7eb;
+      background:#ffffff;
+      border-radius:8px;
+      padding:8px 10px;
+      font-size:16px;
+      line-height:1;
+      cursor:pointer;
+    }
+    .backdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.35);
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .2s ease;
+      z-index:1100;
+    }
+    .backdrop.show{
+      opacity:1;
+      pointer-events:auto;
+    }
 
-  /* Make the logo smaller on mobile so it doesn't dominate */
-  .logo{
-    height:96px;
-  }
+    @media (max-width:900px){
+      /* Let the card grow with content on phones */
+      #main-dashboard{
+        grid-template-columns:1fr;
+        height:auto;
+        max-height:none;
+        min-height:60vh;
+      }
 
-  /* Wrapper: push the card a bit lower so it clears the logo */
-  .wrapper{
-    margin-top:110px;
-  }
+      .mobile-menu-btn{
+        display:inline-block;
+      }
 
-  /* Dashboard: stack sidebar on top of content, allow scrolling */
-  #main-dashboard{
-    grid-template-columns:1fr;   /* single column (sidebar above main) */
-    height:auto;                 /* let content decide height */
-    max-height:none;
-    min-height:60vh;
-    border-radius:14px;
-  }
+      /* Sidebar turns into slide-in drawer */
+      .sidebar{
+        position:fixed;
+        top:0;
+        bottom:0;
+        left:-100%;
+        width:82vw;
+        max-width:320px;
+        box-shadow:8px 0 20px rgba(0,0,0,.25);
+        transition:left .25s ease;
+        z-index:1200;
+      }
+      .sidebar.open{
+        left:0;
+      }
 
-  /* Sidebar becomes a horizontal scrollable nav bar */
-  .sidebar{
-    flex-direction:row;
-    align-items:center;
-    gap:6px;
-    padding:8px 10px;
-    overflow-x:auto;
-    overflow-y:hidden;
-    white-space:nowrap;
-  }
+      html.drawer-open body{
+        overflow:hidden;
+      }
+    }
 
-  /* Hide "Dashboard" label to save vertical space */
-  .sidebar-title{
-    display:none;
-  }
-
-  /* Nav items are compact pills */
-  .nav-item{
-    font-size:13px;
-    padding:6px 10px;
-    white-space:nowrap;
-  }
-
-  /* Spacer is not needed when sidebar is horizontal */
-  .sidebar-spacer{
-    flex:0;
-  }
-
-  /* Plan pill + logout move to the right end of the row */
-  .sidebar-plan-label{
-    margin-left:auto;
-    font-size:11px;
-    padding:6px 8px;
-  }
-
-  .logout-link{
-    margin-top:0;
-    margin-left:8px;
-    font-size:11px;
-  }
-
-  /* Content padding a bit tighter */
-  .main-area{
-    padding:12px;
-  }
-
-  .board-wrapper{
-    padding:12px;
-  }
-
-  .section-title{
-    font-size:15px;
-  }
-
-  /* Buttons for edit/remove stack nicely on narrow screens */
-  .dependant-actions{
-    flex-direction:column;
-    align-items:stretch;
-  }
-
-  .dependant-actions button{
-    width:100%;
-  }
-
-  /* Modal: more "bottom sheet" style on mobile */
-  .modal{
-    align-items:flex-end;
-  }
-
-  .modal-content{
-    width:100%;
-    max-width:none;
-    max-height:90vh;
-    border-radius:12px 12px 0 0;
-  }
-}
-
-/* Extra small phones */
-@media (max-width: 480px) {
-  .logo{
-    height:80px;
-  }
-  .section-title{
-    font-size:14px;
-  }
-  button{
-    padding:8px 10px;
-    font-size:13px;
-  }
-}
-
+    @media (max-width:640px){
+      .top-bar-title{
+        font-size:14px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -357,7 +316,16 @@
         <div id="delete-account" class="logout-link" style="color:#f87171;">Delete account &amp; data</div>
       </aside>
 
+      <!-- Backdrop for mobile sidebar drawer -->
+      <div class="backdrop" id="backdrop"></div>
+
       <div class="main-area">
+        <!-- Top bar with hamburger (mobile) + title -->
+        <div class="top-bar">
+          <button id="open-sidebar" class="mobile-menu-btn" aria-label="Open menu">☰</button>
+          <div class="top-bar-title">Users Dashboard</div>
+        </div>
+
         <div id="dependants" class="dashboard-section">
           <div class="section-title">Your Users</div>
           <div class="board-wrapper">
@@ -532,10 +500,53 @@
         logoutLink        = document.getElementById('logout'),
         deleteAccountLink = document.getElementById('delete-account');
 
+  // Mobile sidebar drawer handles
+  const sidebarEl      = document.querySelector('.sidebar'),
+        openSidebarBtn = document.getElementById('open-sidebar'),
+        backdropEl     = document.getElementById('backdrop'),
+        root           = document.documentElement;
+
   dosageNote.style.display    = 'none';
   phoneNote.style.display     = 'none';
   duplicateNote.style.display = 'none';
   extraDepNote.style.display  = 'none';
+
+  // --------------------
+  // Mobile sidebar drawer (hamburger + backdrop)
+  // --------------------
+  function openDrawer(){
+    if (!sidebarEl || !backdropEl) return;
+    sidebarEl.classList.add('open');
+    backdropEl.classList.add('show');
+    root.classList.add('drawer-open');
+  }
+
+  function closeDrawer(){
+    if (!sidebarEl || !backdropEl) return;
+    sidebarEl.classList.remove('open');
+    backdropEl.classList.remove('show');
+    root.classList.remove('drawer-open');
+  }
+
+  if (openSidebarBtn){
+    openSidebarBtn.addEventListener('click', openDrawer);
+  }
+
+  if (backdropEl){
+    backdropEl.addEventListener('click', closeDrawer);
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeDrawer();
+  });
+
+  if (sidebarEl){
+    sidebarEl.addEventListener('click', (e) => {
+      if (e.target.closest('.nav-item')){
+        closeDrawer();
+      }
+    });
+  }
 
   // --------------------
   // Small helpers
