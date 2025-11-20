@@ -134,7 +134,6 @@
       .mobile-menu-btn{display:inline-block}
       .sidebar{ position:fixed;left:-100%;top:0;bottom:0;width:82vw;max-width:320px; transform:translateX(0);transition:left .25s ease;box-shadow:8px 0 20px rgba(0,0,0,.25); z-index:1200; }
       .sidebar.open{left:0}
-      .sidebar-title,.nav-item .label,.sidebar-plan-label .label-text{}
       .search-box{min-width:0;width:100%}
       .top-actions{flex:1;justify-content:flex-end}
       .top-left{flex:1}
@@ -153,30 +152,7 @@
 
     @media (max-width:640px){
       .header-row{ top:max(0px, env(safe-area-inset-top)); left:max(6px, env(safe-area-inset-left)); }
-      .sidebar{
-    background:#020617;      /* a bit darker, example */
-    color:#f9fafb;
-  }
-
-  .nav-item{
-    color:#e5e7eb;
-  }
-
-  .nav-item.active{
-    color:#ffffff;
-  }
-
-  .sidebar-plan-label{
-    color:#e5e7eb;
-  }
-
-  .sidebar-plan-label strong{
-    color:#38bdf8;           /* brighter cyan for the plan name */
-  }
-
-  .logout-link{
-    color:#cbd5f5;
-  }
+      
       .home-tap{ position:absolute; top:6px; left:6px; width:44px; height:44px; border-radius:10px; background:transparent; border:none; cursor:pointer; }
       .home-tap:focus-visible{ outline:2px solid #60a5fa; outline-offset:2px; }
       .logo{ height:72px; pointer-events:none }
