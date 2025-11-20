@@ -153,6 +153,30 @@
 
     @media (max-width:640px){
       .header-row{ top:max(0px, env(safe-area-inset-top)); left:max(6px, env(safe-area-inset-left)); }
+      .sidebar{
+    background:#020617;      /* a bit darker, example */
+    color:#f9fafb;
+  }
+
+  .nav-item{
+    color:#e5e7eb;
+  }
+
+  .nav-item.active{
+    color:#ffffff;
+  }
+
+  .sidebar-plan-label{
+    color:#e5e7eb;
+  }
+
+  .sidebar-plan-label strong{
+    color:#38bdf8;           /* brighter cyan for the plan name */
+  }
+
+  .logout-link{
+    color:#cbd5f5;
+  }
       .home-tap{ position:absolute; top:6px; left:6px; width:44px; height:44px; border-radius:10px; background:transparent; border:none; cursor:pointer; }
       .home-tap:focus-visible{ outline:2px solid #60a5fa; outline-offset:2px; }
       .logo{ height:72px; pointer-events:none }
