@@ -47,10 +47,11 @@
       z-index:40;
     }
     .logo{
-      height:160px;
-      cursor:pointer;
-      transition:.3s ease;
-    }
+  height:160px;
+  max-width:100%;
+  cursor:pointer;
+  transition:.3s ease;
+}
     .logo:hover{
       filter:brightness(1.1);
       transform:scale(1.03);
@@ -276,9 +277,11 @@
     }
 
     @media (max-width:640px){
+      .logo{height:80px;
       .top-bar-title{
         font-size:14px;
       }
+           }       
     }
   </style>
 </head>
