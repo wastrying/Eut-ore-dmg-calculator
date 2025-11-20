@@ -155,7 +155,7 @@
       
       .home-tap{ position:absolute; top:6px; left:6px; width:44px; height:44px; border-radius:10px; background:transparent; border:none; cursor:pointer; }
       .home-tap:focus-visible{ outline:2px solid #60a5fa; outline-offset:2px; }
-      .logo{ height:72px; pointer-events:none }
+      .logo{ height:72px; pointer-events:auto }
       .wrapper{ margin-top:86px }
       .board-title{font-size:clamp(14px,4vw,18px)}
       .board-subtitle{display:none}
@@ -199,7 +199,6 @@
   <div class="overlay"><img src="../images/background.png" class="bg-image" alt=""></div>
 
   <div class="header-row" id="header-row">
-    <button id="home-tap" class="home-tap" aria-label="Go to home" title="Home"></button>
     <img src="../images/remblyxlogo.png" alt="Remblyx" class="logo" id="logo" onclick="window.location.href='../index.html'">
   </div>
 
@@ -252,10 +251,6 @@
           <div class="dev-grid-header"><div>Email</div><div>Plan</div></div>
           <div id="dev-users"></div>
         </div>
-
-
-
-
         <!-- Standard board -->
         <div id="standard-board" class="board-wrapper">
           <div class="board-header-row">
