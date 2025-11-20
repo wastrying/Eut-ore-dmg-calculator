@@ -1275,6 +1275,13 @@
       });
     });
   });
+    function redirectByPlan(plan){
+  if (plan === "Basic")       window.location.href = "./basic_plan.html";
+  else if (plan === "Premium")    window.location.href = "./premium_plan.html";
+  else if (plan === "Enterprise") window.location.href = "./enterprise_plan.html";
+  else if (plan === "Developers") window.location.href = "./developer_plan.html";
+  else window.location.href = "./basic_plan.html"; // fallback
+}
   </script>
 
 </body>
