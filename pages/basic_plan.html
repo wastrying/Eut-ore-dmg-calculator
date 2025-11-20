@@ -302,6 +302,15 @@
     transition:opacity .15s ease;
   }
     }
+    /* Hide header + clickable logo whenever the drawer is open */
+.drawer-open .header-row,
+.drawer-open .logo {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .15s ease;
+}
+
   </style>
 </head>
 <body>
