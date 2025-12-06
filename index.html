@@ -1,262 +1,2832 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MediSignal Telehealth</title>
-<link rel="icon" type="image/png" sizes="32x32" href="images/medisignal.png">
-<link rel="icon" type="image/png" sizes="192x192" href="images/medisignal.png">
-<link rel="apple-touch-icon" href="images/medisignal.png">
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
-  html, body {
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-  position: fixed;      /* prevents iOS rubber-band scrolling */
-  inset: 0;             /* keeps it pinned */
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upgrades Hub</title>
+  <style>
+    /* =========================
+   ELVL resource colors
+   ========================= */
+:root{
+  --c-xp: #7de05e;
+  --c-axp: #d48aff;
+  --c-peso: #d4d4d4;
+  --c-px: #d48aff;       /* ₱X */
+  --c-lambda: #008eed;   /* λ */
+  --c-bit: #ef4444;    /* Ƀ */
+  --c-rupee: #fceb7e;      /* ₹ */
+  --c-sun: #ffe335;      /* ☉ */
+  --c-tau: #03e6ff;      /* τ */
+  --c-L: #62fcdb;        /* Λ */
+  --c-gamma: #a414f7;    /* γ */
+  --c-psi: #2dfab6;      /* ψ */
+  --res-outline: rgba(0,0,0,0.22);
+  --res-stroke-w: 0.6px;
 }
-  body { display: flex; justify-content: center; align-items: center; overflow-x: hidden; }
 
-  .overlay {
-  position: relative;
-  width: 100%;
-  height: 100dvh; /* dynamic viewport fixes iOS URL bar issue */
-  max-height: 100dvh;
-  overflow: hidden;
+html[data-theme="dark"]{
+  --c-xp: #7de05e;
+  --c-axp: #d48aff;
+  --c-peso: #d4d4d4;
+  --c-px: #d48aff;       /* ₱X */
+  --c-lambda: #008eed;   /* λ */
+  --c-bit: #ef4444;    /* Ƀ */
+  --c-rupee: #fceb7e;      /* ₹ */
+  --c-sun: #ffe335;      /* ☉ */
+  --c-tau: #03e6ff;      /* τ */
+  --c-L: #62fcdb;        /* Λ */
+  --c-gamma: #a414f7;    /* γ */
+  --c-psi: #2dfab6; 
+  --res-outline: rgba(0,0,0,0.22);
 }
 
+.res{
+  font-weight: 900;
+  -webkit-text-stroke: var(--res-stroke-w) var(--res-outline);
 
-  /* Background */
-  .bg-image {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    object-fit: cover;
-    z-index: -3;
-  }
+  /* fallback outline using multi-direction shadow */
+  text-shadow:
+    -0.6px  0      0 var(--res-outline),
+     0.6px  0      0 var(--res-outline),
+     0     -0.6px  0 var(--res-outline),
+     0      0.6px  0 var(--res-outline);
+}
 
-  /* Header row (logo + login) */
-  .header-row {
-    position: absolute;
-    top: 30px;
-    left: 0;
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 50px;
-    z-index: 2;
-  }
+.res-xp{ color: var(--c-xp); }
+.res-axp{ color: var(--c-axp); }
+.res-peso{ color: var(--c-peso); }
+.res-px{ color: var(--c-px); }
+.res-lambda{ color: var(--c-lambda); }
+.res-rupee{ color: var(--c-rupee); }
+.res-bit{ color: var(--c-bit); }
+.res-sun{ color: var(--c-sun); }
+.res-tau{ color: var(--c-tau); }
+.res-L{ color: var(--c-L); }
+.res-gamma{ color: var(--c-gamma); }
+.res-psi{ color: var(--c-psi); }
 
-  .logo {
-    width: 250px;
-    height: auto;
-  }
+/* =========================
+   Ore Mastery Gallery
+   ========================= */
+.ore-gallery{
+  --ore-cols: 6; /* ✅ JS will read this */
+  display: grid;
+  grid-template-columns: repeat(var(--ore-cols), minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
 
-  .login-btn { 
-    background-color: rgba(255,255,255,0.8); 
-    font-size: 1.2rem; 
-    padding: 1rem 2rem; 
-    color: black; 
-    border: none; 
-    border-radius: 28px; 
-    font-weight: bold; 
-    cursor: pointer; 
-    box-shadow: 0 4px 12px rgba(0,0,0,0.12); 
-    transition: transform 0.12s ease, background-color 0.12s ease; 
-  }
+/* Responsive fallbacks (also update --ore-cols) */
+@media (max-width: 1200px){
+  .ore-gallery{ --ore-cols: 4; }
+}
+@media (max-width: 900px){
+  .ore-gallery{ --ore-cols: 3; }
+}
+@media (max-width: 600px){
+  .ore-gallery{ --ore-cols: 2; }
+}
+@media (max-width: 380px){
+  .ore-gallery{ --ore-cols: 1; }
+}
 
-  .login-btn:hover { 
-    transform: translateY(-2px);
-    background-color: #e2e4e7;
-  }
+.ore-card{
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(180deg, rgba(47,143,107,0.06), transparent 45%),
+    var(--panel);
+  padding: 10px;
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+.ore-open-btn{
+  margin-top: 8px;
+  width: 100%;
+  border: 1px solid rgba(47,143,107,0.22);
+  background: linear-gradient(180deg, var(--mint-200), var(--mint-100));
+  color: var(--accent-dark);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform .08s, box-shadow .15s, filter .15s;
+}
+.ore-open-btn:hover{ box-shadow: var(--shadow-sm); filter: saturate(1.05); }
+.ore-open-btn:active{ transform: translateY(1px); }
+/* =========================
+   Ore Drawer: Level + Milestones UI
+   ========================= */
+.ore-level-box{
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background:
+    linear-gradient(180deg, rgba(47,143,107,0.06), transparent 45%),
+    var(--panel);
+  display: grid;
+  gap: 8px;
+}
 
-  /* Item image */
-  .item-image {
-    position: absolute;
-    top: 250px;
-    left: 70%;
-    transform: translateX(-50%);
-    width: 500px;
-    max-width: 50%;
-    z-index: 1;
-  }
+.ore-level-label{
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
 
-  /* Text container */
-  .text-container {
-    position: absolute;
-    top: 350px;
-    left: 30%;
-    transform: translateX(-50%);
-    max-width: 60%;
-    text-align: center;
-    line-height: 1;
-    z-index: 2;
-  }
+.ore-level-input{
+  width: 100%;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 650;
+  outline: none;
+  background: var(--panel);
+  color: var(--text);
+}
+html[data-theme="dark"] .ore-level-input{
+  border-color: rgba(255,255,255,0.12);
+}
 
-  .future-font {
-    font-family: Arial, sans-serif;
-    font-size: clamp(40px, 4vw, 60px);
-    display: block;
-    font-weight: normal;
-    color: black;
-  }
+.ore-level-input:focus{
+  border-color: rgba(47,143,107,0.5);
+  box-shadow: 0 0 0 4px rgba(47,143,107,0.12);
+}
 
-  .telehealth-font {
-    font-family: 'TT Norms', sans-serif;
-    font-size: clamp(60px, 5vw, 100px);
-    display: block;
-    font-weight: bold;
-    color: black;
-    margin-top: 0.2rem;
-  }
+.ore-milestones{
+  border: 1px dashed var(--border-soft);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: grid;
+  gap: 8px;
+}
 
-  /* Buttons */
-  .button-absolute-container {
-    position: absolute;
-    top: 575px;
-    left: 30%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 1.5rem;
-    z-index: 2;
-  }
+.ore-ms-row{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+.ore-ms-row:last-child{ border-bottom: none; }
 
-  .signup-btn, .info-btn {
-    font-size: 1.2rem;
-    padding: 1rem 3rem;
-    border-radius: 30px;
-    font-weight: bold;
-    cursor: pointer;
-    border: none;
-    color: black;
-    transition: transform 0.12s ease, background-color 0.12s ease;
-  }
+.ore-ms-left{
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
 
-  .signup-btn {
-    background-color: rgba(255,255,255,1);
-    box-shadow: 0 6px 18px rgba(0,123,255,0.18);
-  }
+.ore-ms-lv{
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0.9;
+}
 
-  .signup-btn:hover {
-    transform: translateY(-2px);
-    background-color: #e2e4e7;
-  }
+.ore-ms-label{
+  font-size: 12px;
+  font-weight: 700;
+}
 
-  .info-btn {
-    background-color: rgba(255,255,255,0.5);
-    border: 2px solid rgba(255,255,255,0.5);
-  }
+.ore-ms-status{
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border-soft);
+  color: var(--muted);
+  background: rgba(0,0,0,0.03);
+}
+html[data-theme="dark"] .ore-ms-status{
+  background: rgba(255,255,255,0.05);
+}
 
-  .info-btn:hover {
-    transform: translateY(-2px);
-    background-color: #e2e4e7;
-  }
+.ore-ms-status.unlocked{
+  color: var(--accent-dark);
+  border-color: rgba(47,143,107,0.3);
+  background: linear-gradient(180deg, var(--mint-200), var(--mint-100));
+}
 
-  /* Responsive adjustments */
-  @media (max-width: 1200px) {
-    .logo { width: 200px;
-      top: 20px;
+/* =========================
+   Ore Sliding Drawer
+   ========================= */
+.ore-drawer-backdrop{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.25);
+  backdrop-filter: blur(2px);
+  z-index: 50;
+}
+html[data-theme="dark"] .ore-drawer-backdrop{
+  background: rgba(0,0,0,0.45);
+}
+
+.ore-drawer{
+  position: fixed;
+  top: 0;
+  height: 100vh;
+  width: min(360px, 92vw);
+  background: var(--panel);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-md);
+  z-index: 51;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 14px 18px;
+  transition: transform .22s ease, opacity .22s ease;
+  opacity: 1;
+}
+
+/* Start off-screen based on side */
+.ore-drawer.from-right{
+  right: 0;
+  transform: translateX(100%);
+  border-left-width: 1px;
+  border-right-width: 0;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+}
+.ore-drawer.from-left{
+  left: 0;
+  transform: translateX(-100%);
+  border-right-width: 1px;
+  border-left-width: 0;
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+}
+
+/* Open state */
+.ore-drawer.open.from-right{ transform: translateX(0); }
+.ore-drawer.open.from-left{ transform: translateX(0); }
+
+.ore-drawer-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--border-soft);
+}
+
+.ore-drawer-title{
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-dark);
+}
+
+.ore-drawer-close{
+  border: 1px solid var(--border-soft);
+  background: var(--panel);
+  color: var(--muted);
+  border-radius: 10px;
+  padding: 6px 8px;
+  cursor: pointer;
+  font-weight: 800;
+}
+.ore-drawer-close:hover{
+  box-shadow: var(--shadow-sm);
+}
+
+.ore-drawer-body{
+  padding-top: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.ore-drawer-img{
+  width: 100%;
+  max-height: 180px;
+  object-fit: contain;
+  border-radius: 12px;
+  border: 1px dashed var(--border-soft);
+  background: rgba(0,0,0,0.02);
+}
+html[data-theme="dark"] .ore-drawer-img{
+  background: rgba(255,255,255,0.03);
+}
+
+.ore-drawer-text{
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+  font-weight: 600;
+}
+
+.hidden{ display: none !important; }
+
+.ore-img{
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  border-radius: 10px;
+  border: 1px dashed var(--border-soft);
+  background: rgba(0,0,0,0.02);
+}
+
+html[data-theme="dark"] .ore-img{
+  background: rgba(255,255,255,0.03);
+}
+/* ✅ Ore click info box */
+.ore-info{
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(180deg, rgba(47,143,107,0.06), transparent 45%),
+    var(--panel);
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--muted);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 10px;
+}
+
+.ore-name{
+  margin-top: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+/* ✅ Selected ore highlight */
+.ore-card.selected{
+  border-color: rgba(47,143,107,0.5);
+  box-shadow:
+    0 0 0 1px rgba(47,143,107,0.12),
+    var(--shadow-sm);
+  background:
+    linear-gradient(180deg, var(--mint-200), transparent 45%),
+    var(--panel);
+}
+.ore-ms-value{
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--accent-dark);
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(47,143,107,0.22);
+  background: linear-gradient(180deg, var(--mint-200), var(--mint-100));
+  white-space: nowrap;
+}
+.ore-level-chip{
+  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-dark);
+  border: 1px solid rgba(47,143,107,0.22);
+  background: linear-gradient(180deg, var(--mint-200), var(--mint-100));
+}
+
+    :root{
+      --bg: #f6f8f7;
+      --panel: #ffffff;
+      --mint-100: #e9f6f0;
+      --mint-200: #d8f0e6;
+      --mint-300: #bfe6d7;
+      --accent: #2f8f6b;
+      --accent-dark:#236b50;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --radius-lg: 14px;
+      --radius-md: 10px;
+      --shadow-sm: 0 2px 10px rgba(0,0,0,0.06);
+      --shadow-md: 0 10px 30px rgba(0,0,0,0.08);
+      --sidebar-w: 220px;
+      --border-soft: rgba(0,0,0,0.06);
+      --row-hover: #f4fbf7;
+      --row-odd: #fcfdfc;
+      --thead-bg: #fbfffd;
     }
-    .login-btn { font-size: 1rem; padding: 0.8rem 1.8rem;top: 10px; }
-    .item-image { width: 400px; top: 100px; }
-    .text-container { top: 360px; }
-    .button-absolute-container { top: 500px; }
-  }
 
-  @media (max-width: 900px) {
-  .header-row {
-    position: relative;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    margin-top: -35px;
-  }
+    html[data-theme="dark"]{
+      --bg: #0f1413;
+      --panel: #121a18;
+      --mint-100: #0f2420;
+      --mint-200: #123029;
+      --mint-300: #154037;
+      --accent: #4bd6a2;
+      --accent-dark: #c9ffea;
+      --text: #e6f0ee;
+      --muted: #9aa7a3;
+      --shadow-sm: 0 2px 10px rgba(0,0,0,0.35);
+      --shadow-md: 0 10px 30px rgba(0,0,0,0.45);
+      --border-soft: rgba(255,255,255,0.06);
+      --row-hover: #14261f;
+      --row-odd: #101a17;
+      --thead-bg: #0f1f1a;
+    }
 
-  .login-btn {
-    margin-top: -35px;
-  }
+    *{box-sizing:border-box;}
 
-  .item-image {
-    position: relative;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 70%;
-    max-width: 400px;
-    margin: 20px auto;
-  }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 80% -10%, var(--mint-100), transparent 60%),
+        radial-gradient(900px 500px at -10% 30%, var(--mint-200), transparent 55%),
+        var(--bg);
+      min-height:100vh;
+    }
 
-  .text-container {
-    position: relative;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
-    margin-top: 20px;
-    max-width: 90%;
-  }
+    .route{
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
 
-  /* Center button container perfectly */
-  .button-absolute-container {
-    position: relative;
-    top: 0;
-    left: 50%;
-    display: flex;
-    flex-direction: column;
-    align-items: center; /* ✅ centers the buttons */
-    justify-content: center;
-    width: 100%;
-    gap: 1rem;
-    margin: 20px auto 0 auto;
-  }
+    .frame{
+      display:grid;
+      grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+      min-height: 100vh;
+    }
 
-  .signup-btn, .info-btn {
-    width: 80%;
-    max-width: 300px; /* ✅ consistent width */
-    font-size: 1rem;
-    padding: 0.8rem 0;
-    text-align: center; 
+    .sidebar{
+      background: var(--panel);
+      border-right: 1px solid var(--border-soft);
+      box-shadow: 6px 0 24px rgba(0,0,0,0.05);
+      padding: 14px 10px 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+    }
+
+    .sidebar-title{
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      padding: 10px 12px 6px;
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .nav{
+      display:flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 6px;
+    }
+
+    .nav-divider{
+      height: 1px;
+      background: var(--border-soft);
+      margin: 8px 8px 6px;
+    }
+
+    .nav-btn{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 10px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 650;
+      color: var(--muted);
+      transition: background .15s, color .15s, box-shadow .15s, transform .08s;
+      user-select:none;
+    }
+    .nav-btn:hover{
+      background: rgba(47,143,107,0.08);
+      color: var(--text);
+    }
+    .nav-btn:active{ transform: translateY(1px); }
+
+    .nav-stack{
+      display:flex;
+      flex-direction: column;
+      gap: 2px;
+      line-height: 1.1;
+    }
+    .nav-sub{
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      opacity: 0.9;
+      white-space: nowrap;
+    }
+
+    .nav-mini{
+      font-size: 10px;
+      color: rgba(0,0,0,0.35);
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.04);
+      white-space: nowrap;
+    }
+    html[data-theme="dark"] .nav-mini{
+      color: rgba(255,255,255,0.65);
+      background: rgba(255,255,255,0.06);
+    }
+
+    #r-upgrades:checked ~ .frame .sidebar label[for="r-upgrades"],
+    #r-ore:checked ~ .frame .sidebar label[for="r-ore"],
+    #r-pickaxe:checked ~ .frame .sidebar label[for="r-pickaxe"],
+    #r-elvl:checked ~ .frame .sidebar label[for="r-elvl"],
+    #r-cards:checked ~ .frame .sidebar label[for="r-cards"],
+    #r-timewarp:checked ~ .frame .sidebar label[for="r-timewarp"],
+    #r-settings:checked ~ .frame .sidebar label[for="r-settings"]{
+      background: linear-gradient(180deg, var(--mint-200), var(--mint-100));
+      color: var(--accent-dark);
+      box-shadow: inset 0 0 0 1px rgba(47,143,107,0.18);
+    }
+
+    #r-elvl:checked ~ .frame .sidebar label[for="r-elvl"] .nav-sub{
+      color: var(--accent-dark);
+      opacity: 1;
+    }
+
+    .content{
+      padding: 26px 22px 60px;
+    }
+
+    .main{
+      background: var(--panel);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border-soft);
+      overflow: hidden;
+    }
+
+    .main-inner{
+      padding: 18px 18px 24px;
+    }
+
+    .page{ display:none; }
+
+    #r-upgrades:checked ~ .frame #page-upgrades,
+    #r-ore:checked ~ .frame #page-ore,
+    #r-pickaxe:checked ~ .frame #page-pickaxe,
+    #r-elvl:checked ~ .frame #page-elvl,
+    #r-cards:checked ~ .frame #page-cards,
+    #r-timewarp:checked ~ .frame #page-timewarp,
+    #r-settings:checked ~ .frame #page-settings{
+      display:block;
+    }
+
+    .section-head{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .section-title{
+      font-size: 22px;
+      font-weight: 780;
+      letter-spacing: 0.01em;
+    }
+    .section-sub{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background: rgba(47,143,107,0.10);
+      color: var(--accent-dark);
+      border: 1px solid rgba(47,143,107,0.18);
+      white-space: nowrap;
+    }
+
+    .muted{ color: var(--muted); }
+
+    .dest-route{
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .dest-bar{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 10px 0 14px;
+      border-bottom: 1px dashed var(--border-soft);
+      margin-bottom: 16px;
+    }
+
+    .dest-pill{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--accent-dark);
+      background: linear-gradient(180deg, var(--mint-200), var(--mint-100));
+      border: 1px solid rgba(47,143,107,0.18);
+      cursor: pointer;
+      transition: transform .08s, box-shadow .15s, filter .15s, opacity .15s;
+      user-select:none;
+    }
+    .dest-pill:hover{ filter: saturate(1.05); box-shadow: var(--shadow-sm); }
+    .dest-pill:active{ transform: translateY(1px); }
+
+    .dest-pill .mini{
+      font-size: 9px;
+      background: rgba(0,0,0,0.06);
+      color: rgba(0,0,0,0.55);
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+    html[data-theme="dark"] .dest-pill .mini{
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.75);
+    }
+
+    .dest-bar .dest-pill{ opacity: .55; }
+
+    #d-point:checked ~ .dest-bar label[for="d-point"],
+    #d-blackhole:checked ~ .dest-bar label[for="d-blackhole"],
+    #d-mining:checked ~ .dest-bar label[for="d-mining"],
+    #d-transcend:checked ~ .dest-bar label[for="d-transcend"],
+    #d-star:checked ~ .dest-bar label[for="d-star"],
+    #d-sacrifice:checked ~ .dest-bar label[for="d-sacrifice"]{
+      opacity: 1;
+      box-shadow: inset 0 0 0 1px rgba(47,143,107,0.22), var(--shadow-sm);
+      filter: saturate(1.15);
+    }
+
+    .dest-panel{ display:none; }
+
+    #d-point:checked ~ .dest-content #panel-point,
+    #d-blackhole:checked ~ .dest-content #panel-blackhole,
+    #d-mining:checked ~ .dest-content #panel-mining,
+    #d-transcend:checked ~ .dest-content #panel-transcend,
+    #d-star:checked ~ .dest-content #panel-star,
+    #d-sacrifice:checked ~ .dest-content #panel-sacrifice{
+      display:block;
+    }
+
+    .table-wrap{
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-md);
+      overflow: auto;
+      background: transparent;
+    }
+
+    table{
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 640px;
+    }
+
+    thead th{
+      position: sticky;
+      top: 0;
+      background: var(--thead-bg);
+      text-align:left;
+      font-size: 11px;
+      color: var(--accent-dark);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 12px 12px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    tbody td{
+      padding: 11px 12px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border-soft);
+      color: var(--text);
+      vertical-align: top;
+    }
+
+    tbody tr:nth-child(odd){ background: var(--row-odd); }
+    tbody tr:hover{ background: var(--row-hover); }
+
+    .form-grid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 12px;
+    }
+
+    .field{
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-md);
+      padding: 12px 12px 10px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.2));
+    }
+    html[data-theme="dark"] .field{
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    }
+
+    .field label{
+      display:block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .field input[type="text"],
+    .field input[type="number"],
+    .field select{
+      width: 100%;
+      border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 10px;
+      padding: 9px 10px;
+      font-size: 13px;
+      outline: none;
+      background: var(--panel);
+      color: var(--text);
+      transition: border-color .15s, box-shadow .15s;
+    }
+    html[data-theme="dark"] .field input,
+    html[data-theme="dark"] .field select{
+      border-color: rgba(255,255,255,0.12);
+    }
+
+    .field input:focus,
+    .field select:focus{
+      border-color: rgba(47,143,107,0.5);
+      box-shadow: 0 0 0 4px rgba(47,143,107,0.12);
+    }
+
+    /* --- Pickaxe chooser UI --- */
+    .pickaxe-chooser{
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      background:
+        linear-gradient(180deg, rgba(47,143,107,0.05), transparent 40%);
+    }
+
+    .pickaxe-grid{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 12px;
+    }
+
+    .pickaxe-card{
+      border: 1px solid var(--border-soft);
+      border-radius: 12px;
+      background: var(--panel);
+      padding: 10px;
+      cursor: pointer;
+      transition: box-shadow .15s, transform .08s, border-color .15s, filter .15s;
+      position: relative;
+      outline: none;
+    }
+    .pickaxe-card:hover{
+      box-shadow: var(--shadow-sm);
+      filter: saturate(1.05);
+    }
+    .pickaxe-card:active{ transform: translateY(1px); }
+    .pickaxe-card:focus-visible{
+      box-shadow: 0 0 0 4px rgba(47,143,107,0.14);
+      border-color: rgba(47,143,107,0.45);
+    }
+
+    .pickaxe-card.selected{
+      border-color: rgba(47,143,107,0.55);
+      box-shadow:
+        0 0 0 1px rgba(47,143,107,0.12),
+        var(--shadow-sm);
+      background:
+        linear-gradient(180deg, var(--mint-200), transparent 48%),
+        var(--panel);
+    }
+
+    .pickaxe-badge{
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: 3px 6px;
+      border-radius: 999px;
+      background: rgba(47,143,107,0.14);
+      border: 1px solid rgba(47,143,107,0.25);
+      color: var(--accent-dark);
+      display: none;
+    }
+    .pickaxe-card.selected .pickaxe-badge{
+      display: inline-flex;
+    }
+
+    .pickaxe-img{
+      width: 100%;
+      aspect-ratio: 1.2 / 1;
+      object-fit: contain;
+      border-radius: 10px;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,0.02), transparent 60%);
+      border: 1px dashed var(--border-soft);
+    }
+    html[data-theme="dark"] .pickaxe-img{
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.03), transparent 60%);
+    }
+
+    .pickaxe-name{
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .pickaxe-sub{
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+      min-height: 14px;
+    }
+
+    @media (max-width: 980px){
+      .pickaxe-grid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+    @media (max-width: 560px){
+      .pickaxe-grid{ grid-template-columns: 1fr; }
+    }
+
+    /* --- Settings + misc --- */
+    .toggle{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .toggle input{
+      width: 18px; height: 18px;
+      accent-color: var(--accent);
+    }
+
+    .radio-row{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+    }
+
+    .radio-pill{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      background: rgba(0,0,0,0.02);
+      font-size: 11px;
+      font-weight: 650;
+      color: var(--muted);
+      cursor: pointer;
+      user-select:none;
+    }
+    html[data-theme="dark"] .radio-pill{
+      background: rgba(255,255,255,0.04);
+    }
+    .radio-pill input{ accent-color: var(--accent); }
+
+    .demo-box{
+      border: 1px dashed var(--border-soft);
+      border-radius: var(--radius-md);
+      padding: 10px 10px 8px;
+      margin-top: 8px;
+      background: rgba(0,0,0,0.02);
+    }
+    html[data-theme="dark"] .demo-box{
+      background: rgba(255,255,255,0.03);
+    }
+
+    .demo-row{
+      display:flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 6px 4px;
+      font-size: 12px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .demo-row:last-child{ border-bottom: none; }
+
+    .demo-k{
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .btn-row{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .btn{
+      border: 1px solid rgba(47,143,107,0.2);
+      background: linear-gradient(180deg, var(--mint-200), var(--mint-100));
+      color: var(--accent-dark);
+      font-size: 12px;
+      font-weight: 750;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 9px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      user-select: none;
+      transition: transform .08s, box-shadow .15s, filter .15s;
+    }
+    .btn:hover{ box-shadow: var(--shadow-sm); filter: saturate(1.05); }
+    .btn:active{ transform: translateY(1px); }
+
+    .btn.secondary{
+      background: var(--panel);
+      border-color: rgba(0,0,0,0.1);
+      color: var(--muted);
+    }
+    html[data-theme="dark"] .btn.secondary{
+      border-color: rgba(255,255,255,0.12);
+    }
+
+    .pickaxe-step{
+      margin-bottom: 14px;
+    }
+    .hidden{
+      display: none !important;
+    }
+
+    /* ============================================================
+       ✅ NEW ELVL LIST STYLE (your screenshot-style layout)
+       ============================================================ */
+    .elvl-list{
+      display:flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .elvl-item{
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-md);
+      background:
+        linear-gradient(180deg, rgba(47,143,107,0.06), transparent 45%),
+        var(--panel);
+      padding: 12px 14px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .elvl-item small{
+      display:block;
+      margin-top: 4px;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 700;
+      opacity: 0.9;
+    }
+
+    @media (max-width: 900px){
+      :root{ --sidebar-w: 190px; }
+      table{ min-width: 560px; }
+    }
+
+    @media (max-width: 820px){
+      .form-grid{ grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 720px){
+      .frame{ grid-template-columns: 1fr; }
+      .sidebar{
+        position: static;
+        height: auto;
+        border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        border-right: none;
+        border-bottom: 1px solid var(--border-soft);
+      }
+      .nav{ flex-direction: row; flex-wrap: wrap; }
+      .nav-btn{ flex: 1 1 auto; justify-content:center; }
+      .content{ padding: 18px 14px 50px; }
+      table{ min-width: 520px; }
+    }
+  </style>
+</head>
+
+<body>
+  <input class="route" type="radio" name="route" id="r-upgrades" checked />
+  <input class="route" type="radio" name="route" id="r-ore" />
+  <input class="route" type="radio" name="route" id="r-pickaxe" />
+  <input class="route" type="radio" name="route" id="r-elvl" />
+  <input class="route" type="radio" name="route" id="r-cards" />
+  <input class="route" type="radio" name="route" id="r-timewarp" />
+  <input class="route" type="radio" name="route" id="r-settings" />
+
+  <div class="frame">
+
+    <aside class="sidebar" aria-label="Sections">
+      <div class="sidebar-title">Core</div>
+      <nav class="nav">
+        <label class="nav-btn" for="r-upgrades"><span>Upgrades</span><span class="nav-mini">U</span></label>
+        <label class="nav-btn" for="r-ore"><span>Ore Mastery</span><span class="nav-mini">OM</span></label>
+        <label class="nav-btn" for="r-pickaxe"><span>Pickaxe/Gears</span><span class="nav-mini">P/G</span></label>
+
+        <label class="nav-btn" for="r-elvl">
+          <span class="nav-stack">
+            <span>ELvl</span>
+            <span class="nav-sub" id="elvlSidebarMilestone">No level set</span>
+          </span>
+          <span class="nav-mini">E</span>
+        </label>
+
+        <label class="nav-btn" for="r-cards"><span>Cards</span><span class="nav-mini">C</span></label>
+
+        <div class="nav-divider"></div>
+
+        <div class="sidebar-title" style="padding-top:4px;">Meta</div>
+        <label class="nav-btn" for="r-timewarp"><span>Time Warp</span><span class="nav-mini">TW</span></label>
+        <label class="nav-btn" for="r-settings"><span>Settings</span><span class="nav-mini">⚙</span></label>
+      </nav>
+    </aside>
+
+    <div class="content">
+      <main class="main">
+        <div class="main-inner">
+
+          <!-- UPGRADES -->
+          <section class="page" id="page-upgrades">
+            <input class="dest-route" type="radio" name="dest" id="d-point" checked />
+            <input class="dest-route" type="radio" name="dest" id="d-blackhole" />
+            <input class="dest-route" type="radio" name="dest" id="d-mining" />
+            <input class="dest-route" type="radio" name="dest" id="d-transcend" />
+            <input class="dest-route" type="radio" name="dest" id="d-star" />
+            <input class="dest-route" type="radio" name="dest" id="d-sacrifice" />
+
+            <div class="section-head">
+              <div>
+                <div class="section-title">Upgrades</div>
+                <div class="section-sub">Pick a destination to view its upgrade table.</div>
+              </div>
+              <span class="pill">Destinations</span>
+            </div>
+
+            <div class="dest-bar" role="tablist" aria-label="Destinations">
+              <label class="dest-pill" for="d-point" role="tab"><span>Point Basement</span><span class="mini">PB</span></label>
+              <label class="dest-pill" for="d-blackhole" role="tab"><span>Blackhole Basement</span><span class="mini">BB</span></label>
+              <label class="dest-pill" for="d-mining" role="tab"><span>Mining Baseplate</span><span class="mini">MB</span></label>
+              <label class="dest-pill" for="d-transcend" role="tab"><span>Transcend Baseplate</span><span class="mini">TB</span></label>
+              <label class="dest-pill" for="d-star" role="tab"><span>Star Tree</span><span class="mini">ST</span></label>
+              <label class="dest-pill" for="d-sacrifice" role="tab"><span>Sacrifice Baseplate</span><span class="mini">SB</span></label>
+            </div>
+
+            <div class="dest-content">
+
+              <div class="dest-panel" id="panel-point">
+                <div class="section-head">
+                  <div>
+                    <div class="section-title" style="font-size:18px;">Point Basement Upgrades</div>
+                    <div class="section-sub">Replace these rows with your real Point Basement data.</div>
+                  </div>
+                  <span class="pill">PB</span>
+                </div>
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr><th>Upgrade</th><th>Type</th><th>Cost</th><th>Requirement</th><th>Effect</th><th class="muted">Notes</th></tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Point Amplifier I</td>
+                        <td><span class="pill">Economy</span></td>
+                        <td><span data-num="150"></span> Ore</td>
+                        <td>Base Level 1</td>
+                        <td>+<span data-num="5"></span>% point gain</td>
+                        <td class="muted">Early scaling</td>
+                      </tr>
+                      <tr>
+                        <td>Basement Shield</td>
+                        <td><span class="pill">Defense</span></td>
+                        <td><span data-num="400"></span> Ore</td>
+                        <td>Complete 1 quest</td>
+                        <td>+<span data-num="10"></span>% structure HP</td>
+                        <td class="muted">Example row</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="dest-panel" id="panel-blackhole">
+                <div class="section-head">
+                  <div>
+                    <div class="section-title" style="font-size:18px;">Blackhole Basement Upgrades</div>
+                    <div class="section-sub">Replace these rows with your real Blackhole data.</div>
+                  </div>
+                  <span class="pill">BB</span>
+                </div>
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr><th>Upgrade</th><th>Type</th><th>Cost</th><th>Requirement</th><th>Effect</th><th class="muted">Notes</th></tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Gravity Well I</td>
+                        <td><span class="pill">Utility</span></td>
+                        <td><span data-num="1"></span> Void Core</td>
+                        <td>ELvl <span data-num="5"></span></td>
+                        <td>Unlock pull mechanic</td>
+                        <td class="muted">Theme core</td>
+                      </tr>
+                      <tr>
+                        <td>Singularity Forge</td>
+                        <td><span class="pill">Economy</span></td>
+                        <td><span data-num="900"></span> Ore</td>
+                        <td>Pickaxe Mk.2</td>
+                        <td>+<span data-num="1.5"></span> Ore/sec passive</td>
+                        <td class="muted">Example row</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="dest-panel" id="panel-mining">
+                <div class="section-head">
+                  <div>
+                    <div class="section-title" style="font-size:18px;">Mining Baseplate Upgrades</div>
+                    <div class="section-sub">Replace these rows with your real Mining data.</div>
+                  </div>
+                  <span class="pill">MB</span>
+                </div>
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr><th>Upgrade</th><th>Type</th><th>Cost</th><th>Requirement</th><th>Effect</th><th class="muted">Notes</th></tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Auto Miner Array</td>
+                        <td><span class="pill">Economy</span></td>
+                        <td><span data-num="1200"></span> Ore</td>
+                        <td>Base Level 2</td>
+                        <td>+<span data-num="2"></span> Ore/sec passive</td>
+                        <td class="muted">Core mining loop</td>
+                      </tr>
+                      <tr>
+                        <td>Vein Scanner</td>
+                        <td><span class="pill">Utility</span></td>
+                        <td><span data-num="3"></span> Scanner Parts</td>
+                        <td>Ore Mastery I</td>
+                        <td>+<span data-num="10"></span>% rare find chance</td>
+                        <td class="muted">Example row</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="dest-panel" id="panel-transcend">
+                <div class="section-head">
+                  <div>
+                    <div class="section-title" style="font-size:18px;">Transcend Baseplate Upgrades</div>
+                    <div class="section-sub">Replace these rows with your real Transcend data.</div>
+                  </div>
+                  <span class="pill">TB</span>
+                </div>
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr><th>Upgrade</th><th>Type</th><th>Cost</th><th>Requirement</th><th>Effect</th><th class="muted">Notes</th></tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Ascension Catalysts</td>
+                        <td><span class="pill">Progression</span></td>
+                        <td><span data-num="1"></span> Transcend Sigil</td>
+                        <td>ELvl <span data-num="25"></span></td>
+                        <td>Unlock prestige track</td>
+                        <td class="muted">Late game gate</td>
+                      </tr>
+                      <tr>
+                        <td>Echo Multipliers</td>
+                        <td><span class="pill">Economy</span></td>
+                        <td><span data-num="2"></span> Sigils</td>
+                        <td>Complete 5 trials</td>
+                        <td>+<span data-num="15"></span>% all gains</td>
+                        <td class="muted">Example row</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="dest-panel" id="panel-star">
+                <div class="section-head">
+                  <div>
+                    <div class="section-title" style="font-size:18px;">Star Tree Upgrades</div>
+                    <div class="section-sub">Replace these rows with your real Star Tree data.</div>
+                  </div>
+                  <span class="pill">ST</span>
+                </div>
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr><th>Upgrade</th><th>Type</th><th>Cost</th><th>Requirement</th><th>Effect</th><th class="muted">Notes</th></tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Starlight Sap</td>
+                        <td><span class="pill">Utility</span></td>
+                        <td><span data-num="50"></span> Star Leaves</td>
+                        <td>Ore Mastery II</td>
+                        <td>Unlock star crafting</td>
+                        <td class="muted">Theme unlock</td>
+                      </tr>
+                      <tr>
+                        <td>Constellation Boost</td>
+                        <td><span class="pill">Economy</span></td>
+                        <td><span data-num="200"></span> Leaves</td>
+                        <td>Complete 3 events</td>
+                        <td>+<span data-num="8"></span>% global gain</td>
+                        <td class="muted">Example row</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="dest-panel" id="panel-sacrifice">
+                <div class="section-head">
+                  <div>
+                    <div class="section-title" style="font-size:18px;">Sacrifice Baseplate Upgrades</div>
+                    <div class="section-sub">Replace these rows with your real Sacrifice data.</div>
+                  </div>
+                  <span class="pill">SB</span>
+                </div>
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr><th>Upgrade</th><th>Type</th><th>Cost</th><th>Requirement</th><th>Effect</th><th class="muted">Notes</th></tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Offering Engine</td>
+                        <td><span class="pill">Progression</span></td>
+                        <td><span data-num="1"></span> Relic</td>
+                        <td>ELvl <span data-num="15"></span></td>
+                        <td>Convert losses into buffs</td>
+                        <td class="muted">High-risk system</td>
+                      </tr>
+                      <tr>
+                        <td>Bloodline Pact</td>
+                        <td><span class="pill">Defense</span></td>
+                        <td><span data-num="3"></span> Relics</td>
+                        <td>Complete 2 sacrifices</td>
+                        <td>+<span data-num="12"></span>% damage resist</td>
+                        <td class="muted">Example row</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- ORE MASTERY -->
+          <section class="page" id="page-ore">
+            <div class="section-head" style="margin-top:16px;">
+  <div>
+    <div class="section-title" style="font-size:18px;">Ore Visual Library</div>
+    <div class="section-sub">All mastery ore icons (including duplicates).</div>
+  </div>
+  <span class="pill">Gallery</span>
+</div>
+<div id="oreInfo" class="ore-info">
+  Click an ore to see its details.
+</div>
+<div id="oreGallery" class="ore-gallery"></div>
+<div id="oreDrawerBackdrop" class="ore-drawer-backdrop hidden"></div>
+
+<aside id="oreDrawer"
+       class="ore-drawer from-right"
+       role="dialog"
+       aria-modal="true"
+       aria-hidden="true">
+  <div class="ore-drawer-header">
+    <div class="ore-drawer-title" id="oreDrawerTitle">Ore</div>
+    <button class="ore-drawer-close" type="button" id="oreDrawerClose" aria-label="Close">
+      ✕
+    </button>
+  </div>
+
+  <div class="ore-drawer-body">
+    <img id="oreDrawerImg" class="ore-drawer-img" alt="" />
+    <div id="oreDrawerBody"></div>
+  </div>
+</aside>
+          </section>
+
+          <!-- PICKAXE -->
+          <section class="page" id="page-pickaxe">
+            <div class="section-head">
+              <div>
+                <div class="section-title">Pickaxe</div>
+                <div class="section-sub">Pick your pickaxe, then continue to the next prompt.</div>
+              </div>
+              <span class="pill">Pickaxe</span>
+            </div>
+
+            <!-- STEP 1 -->
+            <div id="pickaxeStepChoose" class="pickaxe-step">
+              <div class="pickaxe-chooser">
+                <div class="section-head" style="margin-bottom:10px;">
+                  <div>
+                    <div class="section-title" style="font-size:16px;">Choose your pickaxe</div>
+                    <div class="section-sub">Click an image to select it.</div>
+                  </div>
+                  <span class="pill">Step 1</span>
+                </div>
+
+                <div id="pickaxeChooserGrid" class="pickaxe-grid" role="listbox" aria-label="Pickaxe choices"></div>
+              </div>
+            </div>
+
+            <!-- STEP 2 -->
+            <div id="pickaxeStepDropdown" class="pickaxe-step hidden">
+              <div class="section-head">
+                <div>
+                  <div class="section-title" style="font-size:18px;">Pickaxe Prompt</div>
+                  <div class="section-sub">Your pickaxe is locked in. Choose the next option.</div>
+                </div>
+                <span class="pill">Step 2</span>
+              </div>
+
+              <div class="form-grid">
+                <div class="field">
+                  <label>Pickaxe Selected</label>
+                  <input type="text" id="pickaxeSelectedName" readonly />
+                </div>
+
+                <div class="field">
+                  <label>Specials</label>
+                  <select id="pickaxeDropdown1">
+                    <option value="">Select an option</option>
+                    <option value="Strengthened">Strengthened</option>
+                    <option value="Critical">Critical</option>
+                    <option value="Lucky">Lucky</option>
+                    <option value="Empowered">Empowered</option>
+                    <option value="Featherweight">Featherweight</option>
+                    <option value="Supercritical">Supercritical</option>
+                    <option value="Fortuitous">Fortuitous</option>
+                    <option value="LEGENDARY">LEGENDARY</option>
+                    <option value="TETRA_LEAGUE">TETRA LEAGUE</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- STEP 3 -->
+              <div id="pickaxeFollowups" class="pickaxe-step hidden">
+                <div class="section-head" style="margin-top:12px;">
+                  <div>
+                    <div class="section-title" style="font-size:16px;">Enchants</div>
+                  </div>
+                  <span class="pill">Step 3</span>
+                </div>
+
+                <div class="form-grid">
+                  <div class="field" data-extra-idx="1">
+                    <label>Enchant 1</label>
+                    <select id="pickaxePrompt2">
+                      <option value="">Select enchant</option>
+                      <option value="Power">Power</option>
+                      <option value="Haste">Haste</option>
+                      <option value="Critical">Critical</option>
+                      <option value="Piercing">Piercing</option>
+                      <option value="Affluence">Affluence</option>
+                      <option value="Flame">Flame</option>
+                      <option value="Poison">Poison</option>
+                      <option value="Frostbite">Frostbite</option>
+                      <option value="Fragmentation">Fragmentation</option>
+                    </select>
+                  </div>
+
+                  <div class="field" data-extra-idx="2">
+                    <label>Enchant 2</label>
+                    <select id="pickaxePrompt3">
+                      <option value="">Select enchant</option>
+                      <option value="Power">Power</option>
+                      <option value="Haste">Haste</option>
+                      <option value="Critical">Critical</option>
+                      <option value="Piercing">Piercing</option>
+                      <option value="Affluence">Affluence</option>
+                      <option value="Flame">Flame</option>
+                      <option value="Poison">Poison</option>
+                      <option value="Frostbite">Frostbite</option>
+                      <option value="Fragmentation">Fragmentation</option>
+                    </select>
+                  </div>
+
+                  <div class="field" data-extra-idx="3">
+                    <label>Enchant 3</label>
+                    <select id="pickaxePrompt4">
+                      <option value="">Select enchant</option>
+                      <option value="Power">Power</option>
+                      <option value="Haste">Haste</option>
+                      <option value="Critical">Critical</option>
+                      <option value="Piercing">Piercing</option>
+                      <option value="Affluence">Affluence</option>
+                      <option value="Flame">Flame</option>
+                      <option value="Poison">Poison</option>
+                      <option value="Frostbite">Frostbite</option>
+                      <option value="Fragmentation">Fragmentation</option>
+                    </select>
+                  </div>
+
+                  <div class="field" data-extra-idx="4">
+                    <label>Enchant 4</label>
+                    <select id="pickaxePrompt5">
+                      <option value="">Select enchant</option>
+                      <option value="Power">Power</option>
+                      <option value="Haste">Haste</option>
+                      <option value="Critical">Critical</option>
+                      <option value="Piercing">Piercing</option>
+                      <option value="Affluence">Affluence</option>
+                      <option value="Flame">Flame</option>
+                      <option value="Poison">Poison</option>
+                      <option value="Frostbite">Frostbite</option>
+                      <option value="Fragmentation">Fragmentation</option>
+                    </select>
+                  </div>
+
+                  <div class="field" data-extra-idx="5">
+                    <label>Enchant 5</label>
+                    <select id="pickaxePrompt6">
+                      <option value="">Select enchant</option>
+                      <option value="Power">Power</option>
+                      <option value="Haste">Haste</option>
+                      <option value="Critical">Critical</option>
+                      <option value="Piercing">Piercing</option>
+                      <option value="Affluence">Affluence</option>
+                      <option value="Flame">Flame</option>
+                      <option value="Poison">Poison</option>
+                      <option value="Frostbite">Frostbite</option>
+                      <option value="Fragmentation">Fragmentation</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="btn-row">
+                <button class="btn secondary" type="button" id="pickaxeChangeBtn">Change Pickaxe</button>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Model</th><th>Tier</th><th>Power</th><th>Speed</th><th>Special</th><th class="muted">Notes</th></tr></thead>
+                <tbody>
+                  <tr><td>Starter Pick</td><td><span class="pill">Mk.1</span></td><td><span data-num="10"></span></td><td><span data-num="1"></span>x</td><td>None</td><td class="muted">Baseline stats</td></tr>
+                  <tr><td>Core Splitter</td><td><span class="pill">Mk.3</span></td><td><span data-num="35"></span></td><td><span data-num="1.4"></span>x</td><td>+<span data-num="5"></span>% crit</td><td class="muted">Example</td></tr>
+                  <tr><td>Celestial Drill</td><td><span class="pill">Mk.6</span></td><td><span data-num="120"></span></td><td><span data-num="2.2"></span>x</td><td>AOE break</td><td class="muted">Late game</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- ✅ ELVL (NEW LIST DISPLAY) -->
+          <section class="page" id="page-elvl">
+            <div class="section-head">
+              <div>
+                <div class="section-title">ELvl</div>
+                <div class="section-sub">Enter your ELvl to compute your milestone multipliers.</div>
+              </div>
+              <span class="pill">ELvl</span>
+            </div>
+
+            <div class="form-grid" style="margin-bottom: 14px;">
+              <div class="field">
+                <label>Current ELvl</label>
+                <input type="number" id="elvlPrompt1" placeholder="Enter level..." min="0" step="1" />
+              </div>
+            </div>
+
+            <div id="elvlMilestoneList" class="elvl-list"></div>
+          </section>
+
+          <!-- CARDS -->
+          <section class="page" id="page-cards">
+            <div class="section-head">
+              <div>
+                <div class="section-title">Cards Library</div>
+                <div class="section-sub">A different table layout for cards.</div>
+              </div>
+              <span class="pill">Cards</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Card Name</th><th>Rarity</th><th>Energy</th><th>Ability</th><th>Synergy</th><th class="muted">Notes</th></tr></thead>
+                <tbody>
+                  <tr><td>Gravity Seed</td><td><span class="pill">Rare</span></td><td><span data-num="2"></span></td><td>Pull enemies 1 tile</td><td>Blackhole set</td><td class="muted">Great for combos</td></tr>
+                  <tr><td>Ore Bloom</td><td><span class="pill">Common</span></td><td><span data-num="1"></span></td><td>Gain +<span data-num="100"></span> Ore</td><td>Mining builds</td><td class="muted">Fast economy spike</td></tr>
+                  <tr><td>Transcend Echo</td><td><span class="pill">Epic</span></td><td><span data-num="4"></span></td><td>Duplicate last effect</td><td>Combo decks</td><td class="muted">High skill ceiling</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- TIME WARP -->
+          <section class="page" id="page-timewarp">
+            <div class="section-head">
+              <div>
+                <div class="section-title">Time Warp</div>
+                <div class="section-sub">A meta system hub for boosts, cooldowns, and rewind mechanics.</div>
+              </div>
+              <span class="pill">Meta</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Warp Name</th><th>Type</th><th>Cost</th><th>Duration</th><th>Effect</th><th class="muted">Cooldown</th></tr></thead>
+                <tbody>
+                  <tr><td>Minute Skip</td><td><span class="pill">Boost</span></td><td><span data-num="1"></span> Time Shard</td><td><span data-num="60"></span>s</td><td>Instantly grant <span data-num="60"></span>s of passive income</td><td class="muted"><span data-num="5"></span>m</td></tr>
+                  <tr><td>Echo Loop</td><td><span class="pill">Utility</span></td><td><span data-num="3"></span> Shards</td><td><span data-num="120"></span>s</td><td>Repeat last upgrade effect at <span data-num="50"></span>%</td><td class="muted"><span data-num="15"></span>m</td></tr>
+                  <tr><td>Stasis Field</td><td><span class="pill">Defense</span></td><td><span data-num="2"></span> Shards</td><td><span data-num="90"></span>s</td><td>Reduce damage taken by <span data-num="20"></span>%</td><td class="muted"><span data-num="10"></span>m</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="btn-row">
+              <button class="btn" type="button">Activate Warp</button>
+              <button class="btn secondary" type="button">View History</button>
+            </div>
+          </section>
+
+          <!-- SETTINGS -->
+          <section class="page" id="page-settings">
+            <div class="section-head">
+              <div>
+                <div class="section-title">Settings</div>
+                <div class="section-sub">Number notation and theme preferences (with live preview).</div>
+              </div>
+              <span class="pill">System</span>
+            </div>
+
+            <div class="form-grid">
+              <div class="field">
+                <label>Profile Name</label>
+                <input type="text" id="profileName" placeholder="Enter display name" />
+              </div>
+
+              <div class="field">
+                <label>Default Section</label>
+                <select id="defaultSection">
+                  <option value="r-upgrades">Upgrades</option>
+                  <option value="r-ore">Ore Mastery</option>
+                  <option value="r-pickaxe">Pickaxe</option>
+                  <option value="r-elvl">ELvl</option>
+                  <option value="r-cards">Cards</option>
+                  <option value="r-timewarp">Time Warp</option>
+                  <option value="r-settings">Settings</option>
+                </select>
+                <div class="section-sub" style="margin-top:8px;">Applies on refresh (demo).</div>
+              </div>
+
+              <div class="field">
+                <label>Theme</label>
+                <div class="radio-row">
+                  <label class="radio-pill"><input type="radio" name="theme" value="light" /><span>Light</span></label>
+                  <label class="radio-pill"><input type="radio" name="theme" value="dark" /><span>Dark</span></label>
+                  <label class="radio-pill"><input type="radio" name="theme" value="system" checked /><span>System</span></label>
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Number Notation</label>
+                <div class="radio-row">
+                  <label class="radio-pill"><input type="radio" name="notation" value="suffix" checked /><span>K/M/B/T/Qd/Qn</span></label>
+                  <label class="radio-pill"><input type="radio" name="notation" value="scientific" /><span>Scientific (e)</span></label>
+                  <label class="radio-pill"><input type="radio" name="notation" value="index" /><span>Index (×10^)</span></label>
+                </div>
+
+                <div class="demo-box">
+                  <div class="demo-row"><span class="demo-k">1,234</span><span class="demo-v" data-demo="1234"></span></div>
+                  <div class="demo-row"><span class="demo-k">987,654,321</span><span class="demo-v" data-demo="987654321"></span></div>
+                  <div class="demo-row"><span class="demo-k">1,230,000,000,000,000</span><span class="demo-v" data-demo="1230000000000000"></span></div>
+                </div>
+              </div>
+
+              <div class="field">
+                <label>UI Scale</label>
+                <select id="uiScale">
+                  <option value="compact">Compact</option>
+                  <option value="comfortable" selected>Comfortable</option>
+                  <option value="spacious">Spacious</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>Gameplay Toggles</label>
+                <div class="toggle"><input type="checkbox" id="showHints" checked /><span>Show unlock hints</span></div>
+                <div class="toggle" style="margin-top:8px;"><input type="checkbox" id="hardcore" /><span>Enable hardcore mode</span></div>
+              </div>
+            </div>
+
+            <div class="btn-row">
+              <button class="btn" type="button" id="saveSettings">Save Settings</button>
+              <button class="btn secondary" type="button" id="resetSettings">Reset Defaults</button>
+            </div>
+          </section>
+
+        </div>
+      </main>
+    </div>
+
+  </div>
+
+  <script>
+    const STORAGE_KEY = "remblyx_mini_settings_v1";
+    // ✅ tiny helper so your existing .fach calls work
+if(!NodeList.prototype.fach){
+  NodeList.prototype.fach = function(cb){
+    Array.prototype.forEach.call(this, cb);
+  };
+}
+if(!Array.prototype.fach){
+  Array.prototype.fach = function(cb){
+    Array.prototype.forEach.call(this, cb);
+  };
+}
+
+
+    const DEFAULT_PROMPTS = {
+      elvl1: "",
+      pickaxeChoice: "",
+      pickaxeDropdown1: "",
+      pickaxePrompt2: "",
+      pickaxePrompt3: "",
+      pickaxePrompt4: "",
+      pickaxePrompt5: "",
+      pickaxePrompt6: ""
+    };
+
+    const DEFAULTS = {
+      theme: "system",
+      notation: "suffix",
+      profileName: "",
+      defaultSection: "r-upgrades",
+      uiScale: "comfortable",
+      showHints: true,
+      hardcore: false,
+      prompts: { ...DEFAULT_PROMPTS }
+    };
+    /* =========================
+   Ore Mastery Images (37 total)
+   ========================= */
+const ORE_MASTERY_IMAGES = [
+  // 31 unique examples
+  "images/ores/Stone.png",
+  "images/ores/Tin_Ingot.png",
+  "images/ores/Shatterstone.png",
+  "images/ores/Coal.png",
+  "images/ores/Aluminum.png",
+  "images/ores/Iron_Ingot.png",
+  "images/ores/Tin_Ingot.png",
+  "images/ores/Copper_Ingot.png",
+  "images/ores/Steel.png",
+  "images/ores/Gold_Ingot.png",
+  "images/ores/Ruby.png",
+  "images/ores/Sapphire.png",
+  "images/ores/Emerald.png",
+  "images/ores/Diamond.png",
+  "images/ores/Uranium.png",
+  "images/ores/Plutonium.png",
+  "images/ores/Amethyst.png",
+  "images/ores/Aventurine.png",
+  "images/ores/Titanium.png",
+  "images/ores/Heartstone.png",
+  "images/ores/Bismuth.png",
+  "images/ores/Garnet.png",
+  "images/ores/Tin_Ingot.png",
+  "images/ores/Prismastone.png",
+  "images/ores/Dragonstone.png",
+  "images/ores/Obsidian.png",
+  "images/ores/Tin_Ingot.png",
+  "images/ores/Tin_Ingot.png",
+  "images/ores/Tin_Ingot.png",
+  "images/ores/Tin_Ingot.png",
+  "images/ores/Isolyte.png",
+  "images/ores/Starglass.png",
+  "images/ores/Ambrosia.png",
+  "images/ores/Subspacializine.png",
+  "images/ores/Tetratyx.png",
+  "images/ores/Adrenaline.png",
+  "images/ores/Cosmic_Steel.png",
+];
+/* =========================
+   Ore Level + Milestones System
+   ========================= */
+const ORE_LEVELS_KEY = "ore_levels_v1";
+
+/** Optional: per-ore descriptions (fallback included) */
+const ORE_META = {
+  "Stone": { desc: "Basic starter ore. Reliable early-game fuel." },
+  "Coal": { desc: "Useful for smelting chains and mid-tier upgrades." },
+  "Diamond": { desc: "High-value ore often tied to milestone unlocks." },
+  "Uranium": { desc: "Late-game resource with special crafting uses." },
+  "Plutonium": { desc: "Rare and powerful—usually gated by progression." },
+};
+
+/** Default milestones shown for every ore (edit freely) */
+const ORE_DEFAULT_MILESTONES = [
+  {
+    level: 1,
+    label: "Yield multiplier",
+    display: "×",
+    formula: (oreLvl) => Math.pow(1.05, oreLvl), // example scaling
+  },
+  {
+    level: 5,
+    label: "Crit chance bonus",
+    display: "+",
+    formula: (oreLvl) => Math.min(50, oreLvl * 0.3), // example % bonus
+    suffix: "%", // optional suffix display
+  },
+  {
+    level: 10,
+    label: "Refine efficiency",
+    display: "×",
+    formula: (oreLvl) => 1 + oreLvl * 0.02,
+  },
+  {
+    level: 25,
+    label: "Passive generation",
+    display: "+",
+    formula: (oreLvl) => Math.max(1, Math.floor(oreLvl / 5)),
+    suffix: "/sec",
+  },
+  {
+    level: 50,
+    label: "Rare find chance",
+    display: "+",
+    formula: (oreLvl) => Math.min(25, oreLvl * 0.15),
+    suffix: "%", 
+  },
+];
+
+/** Optional: override milestones per ore */
+const ORE_MILESTONES_OVERRIDE = {
+  // "Diamond": [
+  //   { level: 1, label: "Gem synergy", display: "×", formula: (l) => 1.2 + l*0.01 },
+  //   { level: 20, label: "Socket unlock chance", display: "+", formula: (l) => l*0.2, suffix:"%" },
+  // ],
+};
+
+
+function loadOreLevels(){
+  try{
+    const raw = localStorage.getItem(ORE_LEVELS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  }catch{
+    return {};
+  }
+}
+
+function saveOreLevels(obj){
+  localStorage.setItem(ORE_LEVELS_KEY, JSON.stringify(obj));
+}
+
+function getOreLevel(name){
+  const store = loadOreLevels();
+  const n = Number(store[name]);
+  return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
+}
+
+function setOreLevel(name, level){
+  const store = loadOreLevels();
+  store[name] = Math.max(0, Math.floor(Number(level) || 0));
+  saveOreLevels(store);
+}
+
+function getOreMilestones(name){
+  return ORE_MILESTONES_OVERRIDE[name] ?? ORE_DEFAULT_MILESTONES;
+}
+
+// ✅ safe compute (never NaN)
+function computeOreMilestoneValue(m, oreLevel){
+  if(typeof m.formula !== "function") return null;
+  try{
+    const v = Number(m.formula(oreLevel));
+    if(!Number.isFinite(v)) return null;
+    return v;
+  }catch{
+    return null;
   }
 }
 
 
-  @media (max-width: 520px) {
-    .future-font { font-size: 28px; }
-    .telehealth-font { font-size: 36px; }
-    .item-image { width: 80%; max-width: 300px; }
-    .login-btn { font-size: 0.9rem; padding: 0.5rem 1.5rem;top: 10px; }
+function renderOreDrawerBody(name){
+  const body = document.getElementById("oreDrawerBody");
+  if(!body) return;
+
+  const level = getOreLevel(name);
+  const meta = ORE_META[name] ?? { desc: `Set your mastery level for ${name}.` };
+  const milestones = getOreMilestones(name);
+
+  body.innerHTML = `
+    <div class="ore-drawer-text">${meta.desc}</div>
+
+    <div class="ore-level-box">
+      <div class="ore-level-label">Your ${name} mastery level</div>
+      <input
+        class="ore-level-input"
+        id="oreLevelInput"
+        type="number"
+        min="0"
+        step="1"
+        value="${level}"
+        placeholder="Enter level..."
+      />
+      <div class="ore-drawer-text">
+        This is saved per ore and will persist on refresh.
+      </div>
+    </div>
+
+    <div class="ore-milestones">
+      ${milestones.map(m => {
+        const unlocked = level >= m.level;
+        const value = computeOreMilestoneValue(m, level);
+
+        // ✅ value display string using your formatter
+        const valueHTML = (value == null)
+          ? ""
+          : `
+            <span class="ore-ms-value">
+              ${m.display ?? "×"}<span data-num="${value}"></span>${m.suffix ? ` ${m.suffix}` : ""}
+            </span>
+          `;
+
+        return `
+          <div class="ore-ms-row">
+            <div class="ore-ms-left">
+              <span class="ore-ms-lv">Lv${m.level}</span>
+              <span class="ore-ms-label">${m.label}</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              ${valueHTML}
+              <span class="ore-ms-status ${unlocked ? "unlocked" : ""}">
+                ${unlocked ? "Unlocked" : "Locked"}
+              </span>
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+
+  // ✅ apply your global number formatting if available
+  try{
+    updateNumberDisplays(state?.notation ?? "suffix");
+  }catch{}
+
+  // Wire input live update
+  const input = document.getElementById("oreLevelInput");
+  if(input){
+    input.addEventListener("input", () => {
+  setOreLevel(name, input.value);
+
+  // re-render drawer UI
+  renderOreDrawerBody(name);
+
+  // ✅ update all matching cards (handles duplicates)
+  refreshOreCardLevelChips(name);
+
+  // ✅ keep info box consistent
+  updateOreInfoBox(name);
+});
+
   }
-</style>
-</head>
-<body>
-  <div class="overlay">
-    <img src="images/background.png" alt="Background" class="bg-image">
+}
+function cssEscapeSafe(str){
+  if(window.CSS && CSS.escape) return CSS.escape(str);
+  return String(str).replace(/["\\]/g, "\\$&");
+}
 
-    <!-- Header: logo + login button -->
-    <div class="header-row">
-      <img src="images/remblyxlogo.png" alt="Logo" class="logo">
-      <button class="login-btn" onclick="window.location.href='pages/login.html'">Log in</button>
-    </div>
+function refreshOreCardLevelChips(name){
+  const lvl = getOreLevel(name);
+  const safe = cssEscapeSafe(name);
+  document.querySelectorAll(`.ore-card[data-ore-name="${safe}"] .ore-level-chip`)
+    .forEach(node => node.textContent = `Lv ${lvl}`);
+}
 
-    <!-- Item image -->
-    <img src="images/itemlandingpage.png" alt="Item" class="item-image">
+function updateOreInfoBox(name){
+  const box = document.getElementById("oreInfo");
+  if(!box) return;
 
-    <!-- Text -->
-    <div class="text-container">
-      <h1>
-        <span class="future-font">The Future of</span><br>
-        <strong class="telehealth-font">Telehealth</strong>
-      </h1>
-    </div>
+  const lvl = getOreLevel(name);
+  const milestones = getOreMilestones(name).slice().sort((a,b) => a.level - b.level);
+  const next = milestones.find(m => lvl < m.level);
 
-    <!-- Buttons -->
-    <div class="button-absolute-container">
-      <button class="signup-btn" onclick="window.location.href='pages/signup.html'">Sign up</button>
-      <button class="info-btn" onclick="window.location.href='pages/info.html'">More info</button>
-    </div>
-  </div>
+  if(next){
+    const diff = next.level - lvl;
+    box.innerHTML = `<strong>${name}</strong> — Lv ${lvl}. Next milestone: Lv${next.level} (${diff} to go).`;
+  }else{
+    box.innerHTML = `<strong>${name}</strong> — Lv ${lvl}. All milestones cleared.`;
+  }
+}
+
+
+function getOreCols(host){
+  if(!host) return 6;
+  const v = getComputedStyle(host).getPropertyValue("--ore-cols").trim();
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? n : 6;
+}
+
+function openOreDrawer({ name, src, side }){
+  const drawer = document.getElementById("oreDrawer");
+  const backdrop = document.getElementById("oreDrawerBackdrop");
+  const title = document.getElementById("oreDrawerTitle");
+  const img = document.getElementById("oreDrawerImg");
+
+  if(!drawer || !backdrop) return;
+
+  drawer.classList.remove("from-left", "from-right", "open");
+  drawer.classList.add(side === "left" ? "from-left" : "from-right");
+
+  if(title) title.textContent = name;
+  if(img){
+    img.src = src;
+    img.alt = name;
+  }
+
+  // ✅ NEW: render level + milestones UI
+  renderOreDrawerBody(name);
+
+  backdrop.classList.remove("hidden");
+  drawer.setAttribute("aria-hidden", "false");
+
+  requestAnimationFrame(() => {
+    drawer.classList.add("open");
+  });
+}
+
+
+function closeOreDrawer(){
+  const drawer = document.getElementById("oreDrawer");
+  const backdrop = document.getElementById("oreDrawerBackdrop");
+  if(!drawer || !backdrop) return;
+
+  drawer.classList.remove("open");
+  drawer.setAttribute("aria-hidden", "true");
+
+  // hide backdrop after transition ends
+  const onEnd = () => {
+    backdrop.classList.add("hidden");
+    drawer.removeEventListener("transitionend", onEnd);
+  };
+  drawer.addEventListener("transitionend", onEnd);
+}
+
+function renderOreGallery(){
+  const host = document.getElementById("oreGallery");
+  if(!host) return;
+
+  host.innerHTML = "";
+
+  ORE_MASTERY_IMAGES.forEach((src, i) => {
+    const card = document.createElement("div");
+    card.className = "ore-card";
+    card.setAttribute("role", "button");
+    card.tabIndex = 0;
+
+    const file = src.split("/").pop() || `ore_${i+1}`;
+    const name = file.replace(/\.[^.]+$/, "").replace(/[_-]/g, " ");
+
+    // ✅ store name for multi-duplicate updates (Tin etc.)
+    card.dataset.oreName = name;
+
+    card.innerHTML = `
+      <img class="ore-img" src="${src}" alt="${name}" loading="lazy"
+           onerror="this.style.opacity=0.35; this.alt='Missing ore image';" />
+      <div class="ore-name">${name}</div>
+      <div class="ore-level-chip">Lv ${getOreLevel(name)}</div>
+      <button class="ore-open-btn" type="button">Details</button>
+    `;
+
+    const activate = () => {
+      // ✅ selected highlight
+      document.querySelectorAll(".ore-card.selected")
+        .forEach(c => c.classList.remove("selected"));
+      card.classList.add("selected");
+
+      // ✅ info box update
+      updateOreInfoBox(name);
+
+      const cols = getOreCols(host);
+      const col = (i % cols) + 1;
+      const half = Math.ceil(cols / 2);
+      const side = col <= half ? "right" : "left";
+
+      openOreDrawer({ name, src, side });
+    };
+
+    // ✅ button should not double-trigger card click
+    const btn = card.querySelector(".ore-open-btn");
+    if(btn){
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        activate();
+      });
+    }
+
+    card.addEventListener("click", activate);
+
+    card.addEventListener("keydown", (e) => {
+      if(e.key === "Enter" || e.key === " "){
+        e.preventDefault();
+        activate();
+      }
+    });
+
+    host.appendChild(card);
+  });
+}
+
+    // ✅ Drawer close wiring
+const oreDrawerBackdrop = document.getElementById("oreDrawerBackdrop");
+const oreDrawerClose = document.getElementById("oreDrawerClose");
+
+if(oreDrawerBackdrop){
+  oreDrawerBackdrop.addEventListener("click", closeOreDrawer);
+}
+if(oreDrawerClose){
+  oreDrawerClose.addEventListener("click", closeOreDrawer);
+}
+document.addEventListener("keydown", (e) => {
+  if(e.key === "Escape") closeOreDrawer();
+});
+
+    const PICKAXE_OPTIONS = [
+      { id: "normalp", name: "Normal Pickaxe", img: "images/pickaxe/normal_pickaxe.png" },
+      { id: "goldp", name: "Gold Pickaxe", img: "images/pickaxe/gold_pickaxe.png" },
+      { id: "diamondp", name: "Diamond Pickaxe", img: "images/pickaxe/diamond_pickaxe.png" },
+      { id: "dragonstonep", name: "Dragonstone Pickaxe", img: "images/pickaxe/dragonstone_pickaxe.png" },
+      { id: "starglassp", name: "Starglass Pickaxe", img: "images/pickaxe/starglass_pickaxe.png" },
+    ];
+
+    function loadSettings(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw){
+          return { ...DEFAULTS, prompts: { ...DEFAULT_PROMPTS } };
+        }
+        const parsed = JSON.parse(raw);
+        return {
+          ...DEFAULTS,
+          ...parsed,
+          prompts: {
+            ...DEFAULT_PROMPTS,
+            ...(parsed.prompts || {})
+          }
+        };
+      }catch{
+        return { ...DEFAULTS, prompts: { ...DEFAULT_PROMPTS } };
+      }
+    }
+
+    function saveSettingsObj(obj){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+    }
+
+    function applyTheme(theme){
+      const root = document.documentElement;
+      if(theme === "system"){
+        const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+        root.setAttribute("data-theme", prefersDark ? "dark" : "light");
+      }else{
+        root.setAttribute("data-theme", theme);
+      }
+    }
+
+    function bindSystemThemeListener(getTheme){
+      if(!window.matchMedia) return;
+      const mq = window.matchMedia("(prefers-color-scheme: dark)");
+      mq.addEventListener?.("change", () => {
+        if(getTheme() === "system") applyTheme("system");
+      });
+    }
+
+    function tidyFixed(value, decimals){
+      const n = Number(value);
+      if(!Number.isFinite(n)) return "0";
+      const fixed = n.toFixed(decimals);
+      return String(Number(fixed));
+    }
+
+    function formatSuffix(n){
+      const abs = Math.abs(n);
+      const sign = n < 0 ? "-" : "";
+      const units = [
+        { v: 1e303,  s: "Ce" },
+        { v: 1e300, s: "NoNg" },
+        { v: 1e297, s: "OcNg" },
+        { v: 1e294, s: "SpNg" },
+        { v: 1e291,  s: "SxNg" },
+        { v: 1e288, s: "QnNg" },
+        { v: 1e285, s: "QdNg" },
+        { v: 1e282, s: "TNg" },
+        { v: 1e279,  s: "DNg" },
+        { v: 1e276,  s: "UNg" },
+        { v: 1e273, s: "Ng" },
+        { v: 1e270, s: "NoOg" },
+        { v: 1e267, s: "OcOg" },
+        { v: 1e264,  s: "SpOg" },
+        { v: 1e261,  s: "SxOg" },
+        { v: 1e258,  s: "QnOg" },
+        { v: 1e255, s: "QdOg" },
+        { v: 1e252, s: "TOg" },
+        { v: 1e249, s: "DOg" },
+        { v: 1e246,  s: "UOg" },
+        { v: 1e243,  s: "Og" },
+        { v: 1e240,  s: "NoSg" },
+        { v: 1e237,  s: "OcSg" },
+        { v: 1e234, s: "SpSg" },
+        { v: 1e231, s: "SxSg" },
+        { v: 1e228, s: "QnSg" },
+        { v: 1e225,  s: "QdSg" },
+        { v: 1e222,  s: "TSg" },
+        { v: 1e219,  s: "DSg" },
+        { v: 1e216, s: "USg" },
+        { v: 1e213, s: "Sg" },
+        { v: 1e210, s: "Nosg" },
+        { v: 1e207,  s: "Ocsg" },
+        { v: 1e204,  s: "Spsg" },
+        { v: 1e201, s: "Sxsg" },
+        { v: 1e198, s: "Qnsg" },
+        { v: 1e195, s: "Qdsg" },
+        { v: 1e192,  s: "Tsg" },
+        { v: 1e189,  s: "Dsg" },
+        { v: 1e186,  s: "Usg" },
+        { v: 1e183, s: "sg" },
+        { v: 1e180, s: "NoQg" },
+        { v: 1e177, s: "OcQg" },
+        { v: 1e174,  s: "SpQg" },
+        { v: 1e171,  s: "SxQg" },
+        { v: 1e168,  s: "QnQg" },
+        { v: 1e165,  s: "QdQg" },
+        { v: 1e162, s: "TQg" },
+        { v: 1e159, s: "DQg" },
+        { v: 1e156, s: "UQg" },
+        { v: 1e153,  s: "Qg" },
+        { v: 1e150,  s: "Noqg" },
+        { v: 1e147,  s: "Ocqg" },
+        { v: 1e144, s: "Spqg" },
+        { v: 1e141, s: "Sxqg" },
+        { v: 1e138, s: "Qnqg" },
+        { v: 1e135,  s: "Qdqg" },
+        { v: 1e132,  s: "Tqg" },
+        { v: 1e129, s: "Dqg" },
+        { v: 1e126, s: "Uqg" },
+        { v: 1e123, s: "qg" },
+        { v: 1e120,  s: "NoTg" },
+        { v: 1e117,  s: "OcTg" },
+        { v: 1e114,  s: "SpTg" },
+        { v: 1e111, s: "SxTg" },
+        { v: 1e108, s: "QnTg" },
+        { v: 1e105, s: "QdTg" },
+        { v: 1e102,  s: "TTg" },
+        { v: 1e99,  s: "DTg" },
+        { v: 1e96,  s: "UTg" },
+        { v: 1e93,  s: "Tg" },
+        { v: 1e90, s: "NoVt" },
+        { v: 1e87, s: "OcVt" },
+        { v: 1e84, s: "SpVt" },
+        { v: 1e81,  s: "SxVt" },
+        { v: 1e78,  s: "QnVt" },
+        { v: 1e75,  s: "QdVt" },
+        { v: 1e72, s: "TVt" },
+        { v: 1e69, s: "DVt" },
+        { v: 1e66, s: "UVt" },
+        { v: 1e63,  s: "Vt" },
+        { v: 1e60,  s: "NoDe" },
+        { v: 1e57, s: "OcDe" },
+        { v: 1e54, s: "SpDe" },
+        { v: 1e51, s: "SxDe" },
+        { v: 1e48,  s: "QnDe" },
+        { v: 1e45,  s: "QdDe" },
+        { v: 1e42,  s: "TDe" },
+        { v: 1e39, s: "DDe" },
+        { v: 1e36, s: "UDe" },
+        { v: 1e33, s: "De" },
+        { v: 1e30,  s: "No" },
+        { v: 1e27,  s: "Oc" },
+        { v: 1e24,  s: "Sp" },
+        { v: 1e21,  s: "Sx" },
+        { v: 1e18, s: "Qn" },
+        { v: 1e15, s: "Qd" },
+        { v: 1e12, s: "T" },
+        { v: 1e9,  s: "B" },
+        { v: 1e6,  s: "M" },
+        { v: 1e3,  s: "K" },
+      ];
+      for(const u of units){
+        if(abs >= u.v){
+          const val = abs / u.v;
+          const dec = val >= 100 ? 0 : val >= 10 ? 1 : 2;
+          return sign + tidyFixed(val, dec) + u.s;
+        }
+      }
+      const dec = abs >= 100 ? 0 : abs >= 10 ? 1 : 2;
+      return sign + tidyFixed(abs, dec);
+    }
+
+    function formatScientific(n){
+      const abs = Math.abs(n);
+      if(abs === 0) return "0";
+      if(abs < 1000) return String(n);
+      return Number(n).toExponential(2).replace("e+","e");
+    }
+
+    function formatIndexHTML(n){
+      const abs = Math.abs(n);
+      if(abs === 0) return "0";
+      if(abs < 1000) return String(n);
+      const exp = Math.floor(Math.log10(abs));
+      const mant = n / Math.pow(10, exp);
+      const am = Math.abs(mant);
+      const dec = am >= 100 ? 0 : am >= 10 ? 1 : 2;
+      const mantStr = tidyFixed(mant, dec);
+      return `${mantStr}×10<sup>${exp}</sup>`;
+    }
+
+    function formatNumber(n, mode){
+      if(mode === "scientific") return { text: formatScientific(n), html: null };
+      if(mode === "index") return { text: null, html: formatIndexHTML(n) };
+      return { text: formatSuffix(n), html: null };
+    }
+
+    function updateNumberDisplays(mode){
+      document.querySelectorAll("[data-num]").fach(node => {
+        const n = Number(node.getAttribute("data-num"));
+        const out = formatNumber(n, mode);
+        if(out.html) node.innerHTML = out.html; else node.textContent = out.text ?? String(n);
+      });
+
+      document.querySelectorAll("[data-demo]").fach(node => {
+        const n = Number(node.getAttribute("data-demo"));
+        const out = formatNumber(n, mode);
+        if(out.html) node.innerHTML = out.html; else node.textContent = out.text ?? String(n);
+      });
+    }
+
+    function setRouteById(id){
+      const input = document.getElementById(id);
+      if(input && input.classList.contains("route")) input.checked = true;
+    }
+
+    const state = loadSettings();
+
+    applyTheme(state.theme);
+    bindSystemThemeListener(() => state.theme);
+    setRouteById(state.defaultSection);
+
+    // SETTINGS refs
+const profileName = document.getElementById("profileName");
+const defaultSection = document.getElementById("defaultSection");
+const uiScale = document.getElementById("uiScale");
+const showHints = document.getElementById("showHints");
+const hardcore = document.getElementById("hardcore"); // ✅ correct id
+
+if(profileName) profileName.value = state.profileName;
+if(defaultSection) defaultSection.value = state.defaultSection;
+if(uiScale) uiScale.value = state.uiScale;
+if(showHints) showHints.checked = !!state.showHints;
+if(hardcore) hardcore.checked = !!state.hardcore;
+
+
+    document.querySelectorAll('input[name="theme"]').fach(r => { r.checked = (r.value === state.theme); });
+    document.querySelectorAll('input[name="notation"]').fach(r => { r.checked = (r.value === state.notation); });
+
+    updateNumberDisplays(state.notation);
+
+    // THEME listeners
+    document.querySelectorAll('input[name="theme"]').fach(r => {
+      r.addEventListener("change", () => {
+        state.theme = r.value;
+        applyTheme(state.theme);
+      });
+    });
+
+    // NOTATION listeners
+    document.querySelectorAll('input[name="notation"]').fach(r => {
+      r.addEventListener("change", () => {
+        state.notation = r.value;
+        updateNumberDisplays(state.notation);
+        renderElvlMilestoneList();
+      });
+    });
+
+    const saveBtn = document.getElementById("saveSettings");
+    const resetBtn = document.getElementById("resetSettings");
+
+    function collectStateFromUI(){
+  state.profileName = profileName?.value ?? "";
+  state.defaultSection = defaultSection?.value ?? "r-upgrades";
+  state.uiScale = uiScale?.value ?? "comfortable";
+  state.showHints = showHints?.checked ?? true;
+  state.hardcore = hardcore?.checked ?? false; // ✅
+
+  const themeSel = document.querySelector('input[name="theme"]:checked');
+  const notationSel = document.querySelector('input[name="notation"]:checked');
+  state.theme = themeSel?.value ?? "system";
+  state.notation = notationSel?.value ?? "suffix";
+}
+
+
+
+
+
+
+
+    if(saveBtn){
+      saveBtn.addEventListener("click", () => {
+        collectStateFromUI();
+        saveSettingsObj(state);
+        applyTheme(state.theme);
+        updateNumberDisplays(state.notation);
+        renderElvlMilestoneList();
+        saveBtn.textContent = "Saved";
+        window.setTimeout(() => saveBtn.textContent = "Save Settings", 700);
+      });
+    }
+
+    // --- PROMPTS (ELvl + Pickaxe Flow) ---
+    const elvlPrompt1 = document.getElementById("elvlPrompt1");
+
+    // Pickaxe UI refs
+    const pickaxeGrid = document.getElementById("pickaxeChooserGrid");
+    const pickaxeStepChoose = document.getElementById("pickaxeStepChoose");
+    const pickaxeStepDropdown = document.getElementById("pickaxeStepDropdown");
+    const pickaxeSelectedName = document.getElementById("pickaxeSelectedName");
+    const pickaxeDropdown1 = document.getElementById("pickaxeDropdown1");
+    const pickaxeChangeBtn = document.getElementById("pickaxeChangeBtn");
+    const pickaxeFollowups = document.getElementById("pickaxeFollowups");
+    const pickaxePrompt2 = document.getElementById("pickaxePrompt2");
+    const pickaxePrompt3 = document.getElementById("pickaxePrompt3");
+    const pickaxePrompt4 = document.getElementById("pickaxePrompt4");
+    const pickaxePrompt5 = document.getElementById("pickaxePrompt5");
+    const pickaxePrompt6 = document.getElementById("pickaxePrompt6");
+
+    function ensurePrompts(){
+      if(!state.prompts) state.prompts = { ...DEFAULT_PROMPTS };
+    }
+
+    function getCurrentElvl(){
+      const raw = (elvlPrompt1?.value ?? "").trim();
+      const n = Number(raw);
+      if(!Number.isFinite(n)) return null;
+      return Math.max(0, Math.floor(n));
+    }
+
+    /* ============================================================
+       ✅ EDIT YOUR 14 MILESTONES HERE
+       - level: used for sidebar "next milestone" logic
+       - label: what shows in your list (like your screenshot)
+       - formula: returns the raw multiplier value
+       ============================================================ */
+    const ELVL_MILESTONES = [
+      {
+        id: 1,
+        level: 1,
+        label: "XP, AXP & ₱ gain",
+        formula: (elvl) => Math.pow(1.25, elvl),          // ✅ 1.25^elvl
+      },
+      {
+        id: 2,
+        level: 2,
+        label: "λ gain",
+        formula: (elvl) => Math.pow(1.25, (elvl - 1)),    // ✅ 1.25^(elvl-1)
+      },
+      {
+        id: 3,
+        level: 3,
+        label: "₹ gain",
+        formula: (elvl) => Math.pow(1.15, (elvl - 2))                    // placeholder
+      },
+      {
+        id: 4,
+        level: 4,
+        label: "Ƀ gain",
+        formula: (elvl) => Math.pow(1.2, (elvl - 3)),                    // placeholder
+      },
+      {
+        id: 5,
+        level: 5,
+        label: "₱X gain",
+        formula: (elvl) => Math.pow(1.2, (elvl - 4)),                    // placeholder
+      },
+      {
+        id: 6,
+        level: 6,
+        label: "☉ gain",
+        formula: (elvl) => Math.pow(1.2, (elvl - 5)),                    // placeholder
+      },
+      {
+        id: 7,
+        level: 7,
+        label: "τ gain",
+        formula: (elvl) => Math.pow(1.15, (elvl - 6)),                    // placeholder
+      },
+      {
+        id: 8,
+        level: 8,
+        label: "Λ gain",
+        formula: (elvl) => Math.pow(1.4, (elvl - 7)),                    // placeholder
+      },
+      {
+        id: 9,
+        level: 9,
+        label: "Ore gain",
+        formula: (elvl) => Math.pow(1.15, (elvl - 8)),                    // placeholder
+      },
+      {
+        id: 10,
+        level: 10,
+        label: "ψ gain",
+        formula: (elvl) => Math.pow(1.075, (elvl - 10)),                    // placeholder
+      },
+      {
+        id: 11,
+        level: 11,
+        label: "Foraging speed",
+        formula: (elvl) => Math.pow(1.1, (elvl - 11)),                    // placeholder
+      },
+      {
+        id: 12,
+        level: 12,
+        label: "γ gain",
+        formula: (elvl) => Math.pow(2, (elvl - 12)),                    // placeholder
+      },
+    ];
+    const RESOURCE_TOKENS = [
+  // keep longer tokens first
+  { key: "₱X", cls: "res-px" },
+  { key: "AXP", cls: "res-axp" },
+  { key: "XP", cls: "res-xp" },
+  { key: "₱", cls: "res-peso" },
+  { key: "λ", cls: "res-lambda" },
+  { key: "₹", cls: "res-rupee" },
+  { key: "Ƀ", cls: "res-bit" },
+  { key: "☉", cls: "res-sun" },
+  { key: "τ", cls: "res-tau" },
+  { key: "Λ", cls: "res-L" },
+  { key: "γ", cls: "res-gamma" },
+  { key: "ψ", cls: "res-psi" },
+];
+
+const TOKEN_MAP = Object.fromEntries(RESOURCE_TOKENS.map(t => [t.key, t.cls]));
+
+function escapeRegex(s){
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+const TOKEN_REGEX = new RegExp(
+  RESOURCE_TOKENS.map(t => escapeRegex(t.key)).join("|"),
+  "g"
+);
+
+function colorizeLabel(label){
+  if(!label) return "";
+  return String(label).replace(TOKEN_REGEX, (match) => {
+    const cls = TOKEN_MAP[match] || "";
+    return `<span class="res ${cls}">${match}</span>`;
+  });
+}
+
+    function getSortedElvlMilestones(){
+      return [...ELVL_MILESTONES].sort((a,b) => a.level - b.level);
+    }
+
+    function getNextMilestone(level){
+      for(const m of getSortedElvlMilestones()){
+        if(level < m.level) return m;
+      }
+      return null;
+    }
+
+    function getLatestMilestone(level){
+      let latest = null;
+      for(const m of getSortedElvlMilestones()){
+        if(level >= m.level) latest = m;
+      }
+      return latest;
+    }
+
+    // ✅ clamp rule: never below 1x
+    function computeMilestoneValue(milestone, currentElvl){
+      try{
+        const v = milestone.formula(currentElvl);
+        const num = Number(v);
+        if(!Number.isFinite(num)) return 1;
+        return Math.max(1, num);
+      }catch{
+        return 1;
+      }
+    }
+
+    function updateElvlSidebarMilestone(){
+      const node = document.getElementById("elvlSidebarMilestone");
+      if(!node) return;
+
+      const lvl = getCurrentElvl();
+
+      if(lvl == null){
+        node.textContent = "No level set";
+        return;
+      }
+
+      const next = getNextMilestone(lvl);
+
+      if(next){
+        const diff = next.level - lvl;
+        node.textContent = `Next: Lv${next.level} • ${next.label} (${diff} to go)`;
+        return;
+      }
+
+      const latest = getLatestMilestone(lvl);
+      if(latest){
+        node.textContent = `All milestones cleared • Lv${latest.level}`;
+      }else{
+        node.textContent = "Milestones ready";
+      }
+    }
+
+    function renderElvlMilestoneList(){
+  const host = document.getElementById("elvlMilestoneList");
+  if(!host) return;
+
+  const lvl = getCurrentElvl();
+  const rows = getSortedElvlMilestones();
+
+  host.innerHTML = "";
+
+  rows.fach(m => {
+    const value = (lvl == null) ? null : computeMilestoneValue(m, lvl);
+    const labelHTML = colorizeLabel(m.label);
+
+    const item = document.createElement("div");
+    item.className = "elvl-item";
+
+    item.innerHTML = `
+      ${value == null
+        ? `×— ${labelHTML}`
+        : `×<span data-num="${value}"></span> ${labelHTML}`
+      }
+      <small>Milestone Lv${m.level}</small>
+    `;
+
+    host.appendChild(item);
+  });
+
+  updateNumberDisplays(state.notation);
+}
+    // --- Pickaxe followups limiter ---
+    function getAllowedPickaxeFollowups(){
+      return state.prompts.pickaxeChoice === "normalp" ? 3 : 5;
+    }
+
+    function updatePickaxeFollowupsUI(){
+      if(!pickaxeFollowups) return;
+
+      const firstAnswered = !!(state.prompts.pickaxeDropdown1);
+
+      if(!firstAnswered){
+        pickaxeFollowups.classList.add("hidden");
+        return;
+      }
+
+      pickaxeFollowups.classList.remove("hidden");
+
+      const allowed = getAllowedPickaxeFollowups();
+
+      pickaxeFollowups.querySelectorAll("[data-extra-idx]").fach(field => {
+        const idx = Number(field.getAttribute("data-extra-idx"));
+        field.classList.toggle("hidden", idx > allowed);
+      });
+    }
+
+    function showPickaxeStep(step){
+      if(!pickaxeStepChoose || !pickaxeStepDropdown) return;
+
+      if(step === "dropdown"){
+        pickaxeStepChoose.classList.add("hidden");
+        pickaxeStepDropdown.classList.remove("hidden");
+      }else{
+        pickaxeStepDropdown.classList.add("hidden");
+        pickaxeStepChoose.classList.remove("hidden");
+      }
+    }
+
+    function syncPickaxeSelectedName(){
+      if(!pickaxeSelectedName) return;
+      const selectedId = state.prompts.pickaxeChoice;
+      const obj = PICKAXE_OPTIONS.find(o => o.id === selectedId);
+      pickaxeSelectedName.value = obj ? obj.name : "";
+    }
+
+    function setPickaxeChoice(id){
+      ensurePrompts();
+      state.prompts.pickaxeChoice = id;
+
+      saveSettingsObj(state);
+      renderPickaxeChooser(id);
+      syncPickaxeSelectedName();
+      showPickaxeStep("dropdown");
+      updatePickaxeFollowupsUI();
+    }
+
+    function renderPickaxeChooser(selectedId){
+      if(!pickaxeGrid) return;
+
+      pickaxeGrid.innerHTML = "";
+
+      PICKAXE_OPTIONS.fach(opt => {
+        const card = document.createElement("div");
+        card.className = "pickaxe-card" + (opt.id === selectedId ? " selected" : "");
+        card.setAttribute("role", "option");
+        card.setAttribute("aria-selected", opt.id === selectedId ? "true" : "false");
+        card.tabIndex = 0;
+        card.dataset.pickaxeId = opt.id;
+
+        card.innerHTML = `
+          <span class="pickaxe-badge">Selected</span>
+          <img class="pickaxe-img" src="${opt.img}" alt="${opt.name}" loading="lazy"
+               onerror="this.style.opacity=0.35; this.alt='Missing image';" />
+          <div class="pickaxe-name">${opt.name}</div>
+          <div class="pickaxe-sub">${opt.sub ?? ""}</div>
+        `;
+
+        const activate = () => setPickaxeChoice(opt.id);
+
+        card.addEventListener("click", activate);
+        card.addEventListener("keydown", (e) => {
+          if(e.key === "Enter" || e.key === " "){
+            e.preventDefault();
+            activate();
+          }
+        });
+
+        pickaxeGrid.appendChild(card);
+      });
+    }
+
+    function loadPromptsToUI(){
+      ensurePrompts();
+      const p = state.prompts;
+
+      if(elvlPrompt1) elvlPrompt1.value = p.elvl1 ?? "";
+
+      renderPickaxeChooser(p.pickaxeChoice ?? "");
+      if(pickaxeDropdown1) pickaxeDropdown1.value = p.pickaxeDropdown1 ?? "";
+      if(pickaxePrompt2) pickaxePrompt2.value = p.pickaxePrompt2 ?? "";
+      if(pickaxePrompt3) pickaxePrompt3.value = p.pickaxePrompt3 ?? "";
+      if(pickaxePrompt4) pickaxePrompt4.value = p.pickaxePrompt4 ?? "";
+      if(pickaxePrompt5) pickaxePrompt5.value = p.pickaxePrompt5 ?? "";
+      if(pickaxePrompt6) pickaxePrompt6.value = p.pickaxePrompt6 ?? "";
+
+      syncPickaxeSelectedName();
+
+      if(p.pickaxeChoice){
+        showPickaxeStep("dropdown");
+      }else{
+        showPickaxeStep("choose");
+      }
+
+      updatePickaxeFollowupsUI();
+      renderElvlMilestoneList();
+      updateElvlSidebarMilestone();
+    }
+
+    function collectPromptsFromUI(){
+      ensurePrompts();
+      state.prompts.elvl1 = elvlPrompt1?.value ?? "";
+      state.prompts.pickaxeDropdown1 = pickaxeDropdown1?.value ?? "";
+      state.prompts.pickaxePrompt2 = pickaxePrompt2?.value ?? "";
+      state.prompts.pickaxePrompt3 = pickaxePrompt3?.value ?? "";
+      state.prompts.pickaxePrompt4 = pickaxePrompt4?.value ?? "";
+      state.prompts.pickaxePrompt5 = pickaxePrompt5?.value ?? "";
+      state.prompts.pickaxePrompt6 = pickaxePrompt6?.value ?? "";
+    }
+
+    function wirePromptAutosave(){
+      const inputs = [
+        elvlPrompt1,
+        pickaxeDropdown1,
+        pickaxePrompt2,
+        pickaxePrompt3,
+        pickaxePrompt4,
+        pickaxePrompt5,
+        pickaxePrompt6
+      ].filter(Boolean);
+
+      const handler = () => {
+        collectPromptsFromUI();
+        saveSettingsObj(state);
+        syncPickaxeSelectedName();
+        updatePickaxeFollowupsUI();
+        renderElvlMilestoneList();
+        updateElvlSidebarMilestone();
+      };
+
+      inputs.fach(el => {
+        el.addEventListener("input", handler);
+        el.addEventListener("change", handler);
+      });
+    }
+
+    if(pickaxeChangeBtn){
+      pickaxeChangeBtn.addEventListener("click", () => {
+        ensurePrompts();
+        showPickaxeStep("choose");
+      });
+    }
+
+    loadPromptsToUI();
+    wirePromptAutosave();
+    renderOreGallery();
+
+    if(resetBtn){
+      resetBtn.addEventListener("click", () => {
+        state.theme = DEFAULTS.theme;
+        state.notation = DEFAULTS.notation;
+        state.profileName = DEFAULTS.profileName;
+        state.defaultSection = DEFAULTS.defaultSection;
+        state.uiScale = DEFAULTS.uiScale;
+        state.showHints = DEFAULTS.showHints;
+        state.hardcore = DEFAULTS.hardcore;
+        state.prompts = { ...DEFAULT_PROMPTS };
+
+        saveSettingsObj(state);
+        applyTheme(state.theme);
+        setRouteById(state.defaultSection);
+
+        if(profileName) profileName.value = "";
+        if(defaultSection) defaultSection.value = DEFAULTS.defaultSection;
+        if(uiScale) uiScale.value = DEFAULTS.uiScale;
+        if(showHints) showHints.checked = DEFAULTS.showHints;
+        if(hardcore) hardcore.checked = DEFAULTS.hardcore;
+
+        document.querySelectorAll('input[name="theme"]').forEach(r => { r.checked = (r.value === DEFAULTS.theme); });
+        document.querySelectorAll('input[name="notation"]').forEach(r => { r.checked = (r.value === DEFAULTS.notation); });
+
+        updateNumberDisplays(state.notation);
+        loadPromptsToUI();
+
+        resetBtn.textContent = "Reset";
+        window.setTimeout(() => resetBtn.textContent = "Reset Defaults", 700);
+      });
+    }
+  </script>
 </body>
 </html>
